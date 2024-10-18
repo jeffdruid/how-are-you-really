@@ -3,6 +3,7 @@ import { firestore } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 
 const CommentForm = ({ postId }) => {
   const { currentUser, username } = useAuth(); // Destructure username from context
@@ -45,63 +46,33 @@ const CommentForm = ({ postId }) => {
   };
 
   return (
-    <div style={styles.commentFormContainer}>
-      {error && <p style={styles.errorText}>{error}</p>}
-      <form onSubmit={handleAddComment}>
-        <textarea
-          value={commentContent}
-          onChange={(e) => setCommentContent(e.target.value)}
-          placeholder="Add a comment..."
-          rows="2"
-          required
-          style={styles.textarea}
-        ></textarea>
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={isAnonymous}
-              onChange={(e) => setIsAnonymous(e.target.checked)}
-              style={{ marginRight: '5px' }}
-            />
-            Post Anonymously
-          </label>
-        </div>
-        <button type="submit" disabled={loading} style={styles.submitButton}>
-          {loading ? 'Posting...' : 'Post Comment'}
-        </button>
-      </form>
+    <div className="mt-3">
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Form onSubmit={handleAddComment}>
+        <Form.Group controlId="commentContent">
+          <Form.Control
+            as="textarea"
+            value={commentContent}
+            onChange={(e) => setCommentContent(e.target.value)}
+            placeholder="Add a comment..."
+            rows={2}
+            required
+          />
+        </Form.Group>
+        <Form.Group className="mt-2">
+          <Form.Check
+            type="checkbox"
+            label="Post Anonymously"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+          />
+        </Form.Group>
+        <Button type="submit" variant="success" className="mt-3" disabled={loading}>
+          {loading ? <Spinner animation="border" size="sm" /> : 'Post Comment'}
+        </Button>
+      </Form>
     </div>
   );
-};
-
-// Simple inline styles (can be adjusted or removed)
-const styles = {
-  commentFormContainer: {
-    marginTop: '10px',
-    paddingTop: '10px',
-    borderTop: '1px solid #eee',
-  },
-  textarea: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: '3px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-    marginBottom: '5px',
-  },
-  submitButton: {
-    padding: '5px 10px',
-    backgroundColor: '#2ecc71',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: '5px',
-  },
 };
 
 export default CommentForm;

@@ -3,6 +3,7 @@ import { firestore } from '../firebase';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -62,113 +63,68 @@ const Comment = ({ comment, postId }) => {
   };
 
   return (
-    <div style={styles.commentContainer}>
-      {error && <p style={styles.errorText}>{error}</p>}
+    <div className="mt-3">
+      {error && <Alert variant="danger">{error}</Alert>}
 
       {isEditing ? (
-        <form onSubmit={handleEdit}>
-          <textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
-            rows="2"
-            required
-            style={styles.textarea}
-          ></textarea>
-          <button type="submit" disabled={loading} style={styles.saveButton}>
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-          <button type="button" onClick={() => setIsEditing(false)} style={styles.cancelButton}>
+        <Form onSubmit={handleEdit}>
+          <Form.Group controlId={`editComment-${comment.id}`}>
+            <Form.Control
+              as="textarea"
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              rows={2}
+              required
+            />
+          </Form.Group>
+          <Button
+            type="submit"
+            variant="primary"
+            className="mt-2 me-2"
+            disabled={loading}
+          >
+            {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+          </Button>
+          <Button
+            variant="secondary"
+            className="mt-2"
+            onClick={() => setIsEditing(false)}
+          >
             Cancel
-          </button>
-        </form>
+          </Button>
+        </Form>
       ) : (
         <>
-          <p style={styles.content}>{comment.content}</p>
-          <p style={styles.meta}>
-            <strong>{comment.isAnonymous ? 'Anonymous' : comment.username}</strong> | <em>{comment.created_at?.toDate().toLocaleString()}</em>
+          <p>{comment.content}</p>
+          <p className="text-muted">
+            <strong>{comment.isAnonymous ? 'Anonymous' : comment.username}</strong> |{' '}
+            <em>{comment.created_at?.toDate().toLocaleString()}</em>
           </p>
 
           {isOwnComment && (
-            <div style={styles.buttonGroup}>
-              <button onClick={() => setIsEditing(true)} style={styles.editButton}>Edit</button>
-              <button onClick={handleDelete} disabled={loading} style={styles.deleteButton}>
-                {loading ? 'Deleting...' : 'Delete'}
-              </button>
+            <div>
+              <Button
+                variant="warning"
+                className="me-2"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                {loading ? <Spinner animation="border" size="sm" /> : 'Delete'}
+              </Button>
             </div>
           )}
         </>
       )}
     </div>
   );
-};
-
-// Simple inline styles (can be adjusted or removed)
-const styles = {
-  commentContainer: {
-    borderTop: '1px solid #eee',
-    paddingTop: '10px',
-    marginTop: '10px',
-  },
-  content: {
-    fontSize: '14px',
-    marginBottom: '5px',
-  },
-  meta: {
-    fontSize: '12px',
-    color: '#555',
-    marginBottom: '5px',
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '10px',
-  },
-  editButton: {
-    padding: '3px 7px',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    fontSize: '12px',
-  },
-  deleteButton: {
-    padding: '3px 7px',
-    backgroundColor: '#f44336',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    fontSize: '12px',
-  },
-  saveButton: {
-    padding: '5px 10px',
-    backgroundColor: '#2196F3',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    marginRight: '10px',
-  },
-  cancelButton: {
-    padding: '5px 10px',
-    backgroundColor: '#bbb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  textarea: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: '3px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-    marginBottom: '5px',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: '5px',
-  },
 };
 
 export default Comment;

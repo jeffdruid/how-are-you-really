@@ -6,6 +6,7 @@ import LikeButton from './LikeButton';
 import Comment from './Comment';
 import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
@@ -84,7 +85,6 @@ const Post = ({ post }) => {
       const postRef = doc(firestore, 'Posts', post.id);
       await deleteDoc(postRef);
       console.log('Post deleted successfully:', post.id);
-      // No need to manually remove the post from UI as real-time listener handles it
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
@@ -95,133 +95,66 @@ const Post = ({ post }) => {
   };
 
   return (
-    <div style={styles.postContainer}>
-      {error && <p style={styles.errorText}>{error}</p>}
+    <Card className="mb-4">
+      <Card.Body>
+        {error && <Alert variant="danger">{error}</Alert>}
 
-      {isEditing ? (
-        <form onSubmit={handleEdit}>
-          <textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
-            rows="3"
-            required
-            style={styles.textarea}
-          ></textarea>
-          <button type="submit" disabled={loading} style={styles.saveButton}>
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-          <button type="button" onClick={() => setIsEditing(false)} style={styles.cancelButton}>
-            Cancel
-          </button>
-        </form>
-      ) : (
-        <>
-          <p style={styles.content}>{post.content}</p>
-          <p style={styles.meta}>
-            <strong>Mood:</strong> {post.mood} | <strong>Author:</strong> {post.isAnonymous ? 'Anonymous' : post.username} | <em>{post.created_at?.toDate().toLocaleString()}</em>
-          </p>
+        {isEditing ? (
+          <Form onSubmit={handleEdit}>
+            <Form.Group controlId="editContent">
+              <Form.Control
+                as="textarea"
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                rows="3"
+                required
+              />
+            </Form.Group>
+            <Button type="submit" variant="success" disabled={loading} className="mt-2">
+              {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+            </Button>
+            <Button variant="secondary" className="mt-2 ms-2" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+          </Form>
+        ) : (
+          <>
+            <Card.Text>{post.content}</Card.Text>
+            <Card.Subtitle className="text-muted mb-2">
+              <strong>Mood:</strong> {post.mood} | <strong>Author:</strong> {post.isAnonymous ? 'Anonymous' : post.username} | <em>{post.created_at?.toDate().toLocaleString()}</em>
+            </Card.Subtitle>
 
-          {/* Like Button */}
-          <LikeButton postId={post.id} />
+            {/* Like Button */}
+            <LikeButton postId={post.id} />
 
-          {isOwnPost && (
-            <div style={styles.buttonGroup}>
-              <button onClick={() => setIsEditing(true)} style={styles.editButton}>Edit</button>
-              <button onClick={handleDelete} disabled={loading} style={styles.deleteButton}>
-                {loading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          )}
-
-          {/* Comments Section */}
-          <div style={styles.commentsSection}>
-            <h4>Comments</h4>
-            {comments.length === 0 ? (
-              <p>No comments yet.</p>
-            ) : (
-              comments.map((comment) => (
-                <Comment key={comment.id} comment={comment} postId={post.id} />
-              ))
+            {isOwnPost && (
+              <div className="mt-3">
+                <Button variant="warning" onClick={() => setIsEditing(true)} className="me-2">
+                  Edit
+                </Button>
+                <Button variant="danger" onClick={handleDelete} disabled={loading}>
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Delete'}
+                </Button>
+              </div>
             )}
-            {currentUser && <CommentForm postId={post.id} />}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+          </>
+        )}
 
-// Simple styling for the component (can be adjusted or removed as needed)
-const styles = {
-  postContainer: {
-    border: '1px solid #ddd',
-    padding: '15px',
-    borderRadius: '5px',
-    marginBottom: '10px',
-    backgroundColor: '#fff',
-  },
-  content: {
-    fontSize: '16px',
-    marginBottom: '10px',
-  },
-  meta: {
-    fontSize: '14px',
-    color: '#555',
-    marginBottom: '10px',
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '10px',
-  },
-  editButton: {
-    padding: '5px 10px',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  deleteButton: {
-    padding: '5px 10px',
-    backgroundColor: '#f44336',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  saveButton: {
-    padding: '5px 10px',
-    backgroundColor: '#2196F3',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    marginRight: '10px',
-  },
-  cancelButton: {
-    padding: '5px 10px',
-    backgroundColor: '#bbb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-  },
-  textarea: {
-    width: '100%',
-    padding: '10px',
-    marginBottom: '10px',
-    borderRadius: '3px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: '10px',
-  },
-  commentsSection: {
-    marginTop: '20px',
-  },
+        {/* Comments Section */}
+        <div className="mt-4">
+          <h4>Comments</h4>
+          {comments.length === 0 ? (
+            <p>No comments yet.</p>
+          ) : (
+            comments.map((comment) => (
+              <Comment key={comment.id} comment={comment} postId={post.id} />
+            ))
+          )}
+          {currentUser && <CommentForm postId={post.id} />}
+        </div>
+      </Card.Body>
+    </Card>
+  );
 };
 
 export default Post;

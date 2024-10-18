@@ -1,9 +1,8 @@
-// src/components/LikeButton.js
-
 import React, { useEffect, useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { Button } from 'react-bootstrap';
 
 const LikeButton = ({ postId }) => {
   const { currentUser } = useAuth();
@@ -66,22 +65,17 @@ const LikeButton = ({ postId }) => {
   };
 
   return (
-    <div>
-      <button onClick={toggleLike} style={buttonStyle(liked)}>
+    <div className="d-flex align-items-center">
+      <Button
+        onClick={toggleLike}
+        variant={liked ? 'danger' : 'outline-secondary'}
+        size="sm"
+      >
         {liked ? '❤️ Unlike' : '🤍 Like'}
-      </button>
-      <span style={{ marginLeft: '8px' }}>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
+      </Button>
+      <span className="ms-2">{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
     </div>
   );
 };
-
-// Simple inline styles for the button
-const buttonStyle = (liked) => ({
-  backgroundColor: 'transparent',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: '16px',
-  color: liked ? '#e74c3c' : '#555',
-});
 
 export default LikeButton;

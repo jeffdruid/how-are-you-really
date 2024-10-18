@@ -1,10 +1,9 @@
-// src/components/CreatePost.js
-
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { collection, setDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'; // Removed addDoc, added setDoc
+import { collection, setDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Form, Button, Alert } from 'react-bootstrap';
 
 const CreatePost = () => {
   const { currentUser } = useAuth();
@@ -42,14 +41,14 @@ const CreatePost = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-  
+
     // Basic validation
     if (content.trim() === '') {
       setError('Post content cannot be empty.');
       setLoading(false);
       return;
     }
-  
+
     try {
       const newPostRef = doc(collection(firestore, 'Posts')); // Generate a new post reference
       await setDoc(newPostRef, {
@@ -74,46 +73,43 @@ const CreatePost = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div>
       <h3>Create a New Post</h3>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleCreatePost}>
-        <div>
-          <textarea
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Form onSubmit={handleCreatePost}>
+        <Form.Group className="mb-3" controlId="postContent">
+          <Form.Control
+            as="textarea"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            rows="4"
+            rows={4}
             required
-            style={{ width: '100%', padding: '10px', borderRadius: '5px', borderColor: '#ccc' }}
-          ></textarea>
-        </div>
-        <div>
-          <label>Mood:</label>
-          <select value={mood} onChange={(e) => setMood(e.target.value)} style={{ marginLeft: '10px', padding: '5px' }}>
+          />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Mood:</Form.Label>
+          <Form.Select value={mood} onChange={(e) => setMood(e.target.value)}>
             <option value="happy">😊 Happy</option>
             <option value="sad">😢 Sad</option>
             <option value="anxious">😟 Anxious</option>
             {/* Add more moods as needed */}
-          </select>
-        </div>
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={isAnonymous}
-              onChange={(e) => setIsAnonymous(e.target.checked)}
-              style={{ marginRight: '5px' }}
-            />
-            Post Anonymously
-          </label>
-        </div>
-        <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '10px 20px', cursor: 'pointer' }}>
+          </Form.Select>
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="postAnonymously">
+          <Form.Check
+            type="checkbox"
+            label="Post Anonymously"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+          />
+        </Form.Group>
+        <Button type="submit" variant="primary" disabled={loading} block>
           {loading ? 'Posting...' : 'Post'}
-        </button>
-      </form>
+        </Button>
+      </Form>
     </div>
   );
 };
