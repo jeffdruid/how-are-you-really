@@ -1,17 +1,16 @@
-// src/components/ProfileView.js
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestore, storage } from '../firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'; // Removed unused imports
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Removed deleteObject
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'; 
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 import { useParams } from 'react-router-dom';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import DeleteAccount from './DeleteAccount'; // Import DeleteAccount component
+import DeleteAccount from './DeleteAccount'; 
+import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar } from 'react-bootstrap';
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
-  const { userId } = useParams(); // Extract userId from URL parameters
+  const { userId } = useParams(); 
   const isOwnProfile = !userId || userId === currentUser.uid;
 
   const [username, setUsername] = useState('');
@@ -54,7 +53,6 @@ const ProfileView = () => {
     setError('');
     setMessage('');
 
-    // Basic validation
     if (username.trim() === '') {
       setError('Username cannot be empty.');
       setLoading(false);
@@ -72,7 +70,7 @@ const ProfileView = () => {
       const updatedData = {
         username,
         bio,
-        updated_at: serverTimestamp(), // Now correctly defined
+        updated_at: serverTimestamp(),
       };
 
       if (profilePic) {
@@ -100,57 +98,64 @@ const ProfileView = () => {
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+    <Container className="mt-5">
       <h2>{isOwnProfile ? 'Your Profile' : `${username}'s Profile`}</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      
-      {profilePicUrl && (
-        <div>
-          <img
-            src={profilePicUrl}
-            alt="Profile"
-            style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-          />
-        </div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
+      {message && <Alert variant="success">{message}</Alert>}
 
-      {isOwnProfile ? (
-        <form onSubmit={handleProfileUpdate}>
-          <div>
-            <label>Username:</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
+      <Row className="align-items-center mb-4">
+        <Col xs={12} md={3}>
+          {profilePicUrl && (
+            <Image
+              src={profilePicUrl}
+              alt="Profile"
+              roundedCircle
+              style={{ width: '150px', height: '150px', objectFit: 'cover' }}
             />
-          </div>
-          <div>
-            <label>Bio:</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows="4"
-              maxLength="300"
-            ></textarea>
-            <p>{bio.length}/300</p>
-          </div>
-          <div>
-            <label>Profile Picture:</label>
-            <input type="file" accept="image/*" onChange={handleProfilePicChange} />
-          </div>
-          <button type="submit" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Profile'}
-          </button>
-        </form>
-      ) : (
-        <div>
-          <p><strong>Username:</strong> {username}</p>
-          <p><strong>Bio:</strong> {bio}</p>
-          {/* Add more fields or interactions if necessary */}
-        </div>
-      )}
+          )}
+        </Col>
+        <Col xs={12} md={9}>
+          {isOwnProfile ? (
+            <Form onSubmit={handleProfileUpdate}>
+              <Form.Group controlId="username">
+                <Form.Label>Username</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group controlId="bio" className="mt-3">
+                <Form.Label>Bio</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  maxLength="300"
+                />
+                <ProgressBar now={(bio.length / 300) * 100} label={`${bio.length}/300`} className="mt-1" />
+              </Form.Group>
+
+              <Form.Group controlId="profilePic" className="mt-3">
+                <Form.Label>Profile Picture</Form.Label>
+                <Form.Control type="file" accept="image/*" onChange={handleProfilePicChange} />
+              </Form.Group>
+
+              <Button variant="primary" type="submit" className="mt-4" disabled={loading}>
+                {loading ? 'Updating...' : 'Update Profile'}
+              </Button>
+            </Form>
+          ) : (
+            <div>
+              <p><strong>Username:</strong> {username}</p>
+              <p><strong>Bio:</strong> {bio}</p>
+            </div>
+          )}
+        </Col>
+      </Row>
 
       {isOwnProfile && (
         <>
@@ -159,7 +164,7 @@ const ProfileView = () => {
           <DeleteAccount />
         </>
       )}
-    </div>
+    </Container>
   );
 };
 

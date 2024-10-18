@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { sendEmailVerification } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { Button, Alert, Container } from 'react-bootstrap';
 
 const VerifyEmail = () => {
   const [message, setMessage] = useState('');
@@ -31,14 +32,22 @@ const VerifyEmail = () => {
   };
 
   return (
-    <div>
-      <h2>Email Verification</h2>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>Please verify your email to access all features of the application.</p>
-      <button onClick={handleResendVerification}>Resend Verification Email</button>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
+    <Container className="mt-5">
+      <h2 className="text-center">Email Verification</h2>
+      {message && <Alert variant="success">{message}</Alert>}
+      {error && <Alert variant="danger">{error}</Alert>}
+      <p className="text-center">
+        Please verify your email to access all features of the application.
+      </p>
+      <div className="d-flex justify-content-center gap-3">
+        <Button variant="primary" onClick={handleResendVerification}>
+          Resend Verification Email
+        </Button>
+        <Button variant="danger" onClick={handleLogout}>
+          Logout
+        </Button>
+      </div>
+    </Container>
   );
 };
 

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { auth, firestore } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-// import { useNavigate } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
 import { validatePassword } from '../utils/validatePassword';
-import { firebaseErrorMessages } from '../utils/firebaseErrors'; // Import error mapping
+import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Form, Button, Alert, Container } from 'react-bootstrap';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,6 @@ const SignUp = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [message, setMessage] = useState('');
-//   const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -32,7 +31,9 @@ const SignUp = () => {
 
     // Validate password strength
     if (!validatePassword(password)) {
-      setPasswordError('Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters.');
+      setPasswordError(
+        'Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters.'
+      );
       valid = false;
     } else {
       setPasswordError('');
@@ -54,7 +55,7 @@ const SignUp = () => {
         username,
         email,
         bio: '',
-        emailVerified: user.emailVerified, // Store verification status
+        emailVerified: user.emailVerified,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       });
@@ -62,9 +63,6 @@ const SignUp = () => {
       // Inform the user to verify their email
       setMessage('Registration successful! Please check your email to verify your account.');
       setError('');
-      
-      // Optionally, redirect to a "Verify Your Email" page
-      // navigate('/verify-email');
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage);
@@ -72,37 +70,51 @@ const SignUp = () => {
   };
 
   return (
-    <div>
+    <Container className="mt-5">
       <h2>Sign Up</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      <form onSubmit={handleSignUp}>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-          required
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-        />
-        {emailError && <p style={{ color: 'red' }}>{emailError}</p>}
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
-        {passwordError && <p style={{ color: 'red' }}>{passwordError}</p>}
-        <button type="submit">Sign Up</button>
-      </form>
-    </div>
+      {error && <Alert variant="danger">{error}</Alert>}
+      {message && <Alert variant="success">{message}</Alert>}
+      <Form onSubmit={handleSignUp}>
+        <Form.Group controlId="formUsername">
+          <Form.Label>Username</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group controlId="formEmail" className="mt-3">
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            placeholder="Enter email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          {emailError && <Alert variant="danger">{emailError}</Alert>}
+        </Form.Group>
+
+        <Form.Group controlId="formPassword" className="mt-3">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {passwordError && <Alert variant="danger">{passwordError}</Alert>}
+        </Form.Group>
+
+        <Button variant="primary" type="submit" className="mt-4" block>
+          Sign Up
+        </Button>
+      </Form>
+    </Container>
   );
 };
 

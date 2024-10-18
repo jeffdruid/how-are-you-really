@@ -4,6 +4,7 @@ import { deleteUser } from 'firebase/auth';
 import { doc, deleteDoc, query, collection, where, getDocs, writeBatch } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+import { Form, Button, Alert } from 'react-bootstrap';
 
 const DeleteAccount = () => {
   const [error, setError] = useState('');
@@ -76,34 +77,32 @@ const DeleteAccount = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '20px auto' }}>
+    <div className="mt-4">
       <h3>Delete Your Account</h3>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <Alert variant="danger">{error}</Alert>}
       <p>
         This action is irreversible. All your data will be permanently deleted.
         Please type <strong>DELETE</strong> to confirm.
       </p>
-      <input
-        type="text"
-        value={confirmText}
-        onChange={(e) => setConfirmText(e.target.value)}
-        placeholder="Type DELETE to confirm"
-        style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-      />
-      <button
-        onClick={handleDeleteAccount}
-        style={{
-          width: '100%',
-          padding: '10px',
-          backgroundColor: 'red',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-        disabled={loading}
-      >
-        {loading ? 'Deleting...' : 'Delete Account'}
-      </button>
+      <Form>
+        <Form.Group controlId="confirmDelete">
+          <Form.Control
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="Type DELETE to confirm"
+          />
+        </Form.Group>
+        <Button
+          className="mt-3"
+          variant="danger"
+          onClick={handleDeleteAccount}
+          block
+          disabled={loading}
+        >
+          {loading ? 'Deleting...' : 'Delete Account'}
+        </Button>
+      </Form>
     </div>
   );
 };

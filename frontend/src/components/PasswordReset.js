@@ -3,7 +3,7 @@ import { auth } from '../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
-// import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import { Form, Button, Alert, Container } from 'react-bootstrap';
 
 const PasswordReset = () => {
   const [email, setEmail] = useState('');
@@ -38,21 +38,27 @@ const PasswordReset = () => {
   };
 
   return (
-    <div>
+    <Container className="mt-5">
       <h2>Password Reset</h2>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handlePasswordReset}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          required
-        />
-        <button type="submit">Send Reset Email</button>
-      </form>
-    </div>
+      {message && <Alert variant="success">{message}</Alert>}
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Form onSubmit={handlePasswordReset}>
+        <Form.Group controlId="formEmail">
+          <Form.Label>Enter your email</Form.Label>
+          <Form.Control
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Button variant="primary" type="submit" className="mt-3">
+          Send Reset Email
+        </Button>
+      </Form>
+    </Container>
   );
 };
 
