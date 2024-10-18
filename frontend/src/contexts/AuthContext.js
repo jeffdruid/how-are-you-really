@@ -23,13 +23,14 @@ export const AuthProvider = ({ children }) => {
           const userDocRef = doc(firestore, 'Users', user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
-            setUsername(userDoc.data().username || '');
+            const data = userDoc.data();
+            setUsername(data.username || 'User');
           } else {
-            setUsername('');
+            setUsername('User'); // Fallback if user document doesn't exist
           }
         } catch (err) {
           console.error('Error fetching user data:', err);
-          setUsername('');
+          setUsername('User'); // Fallback on error
         }
       } else {
         setCurrentUser(null);
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    username,
+    username, // Provide username in context
   };
 
   return (
