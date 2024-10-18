@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Form, Button, Spinner, Alert } from 'react-bootstrap';
+import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -13,6 +13,25 @@ const Comment = ({ comment, postId }) => {
   const [editedContent, setEditedContent] = useState(comment.content);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState('');
+
+  useEffect(() => {
+    const fetchProfilePic = async () => {
+      try {
+        const userDocRef = doc(firestore, 'Users', comment.userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setProfilePicUrl(userDoc.data().profilePicUrl || '');
+        }
+      } catch (err) {
+        console.error('Error fetching profile picture:', err);
+      }
+    };
+
+    if (comment.userId) {
+      fetchProfilePic();
+    }
+  }, [comment.userId]);
 
   const handleEdit = async (e) => {
     e.preventDefault();
@@ -95,11 +114,20 @@ const Comment = ({ comment, postId }) => {
         </Form>
       ) : (
         <>
-          <p>{comment.content}</p>
-          <p className="text-muted">
+          <div className="d-flex align-items-center mb-2">
+            {profilePicUrl && (
+              <Image
+                src={profilePicUrl}
+                roundedCircle
+                width={30}
+                height={30}
+                className="me-2"
+              />
+            )}
             <strong>{comment.isAnonymous ? 'Anonymous' : comment.username}</strong> |{' '}
             <em>{comment.created_at?.toDate().toLocaleString()}</em>
-          </p>
+          </div>
+          <p>{comment.content}</p>
 
           {isOwnComment && (
             <div>
