@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import LikeButton from './LikeButton'; // Import the LikeButton component
+import LikeButton from './LikeButton';
+import Comment from './Comment';
+import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
-  
+
   // Debugging: Log currentUser and post data
   console.log('Current User:', currentUser);
   console.log('Post Data:', post);
@@ -22,6 +24,26 @@ const Post = ({ post }) => {
   const [editedContent, setEditedContent] = useState(post.content);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // State for comments
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
+    const q = query(commentsRef, orderBy('created_at', 'asc')); // Order comments by creation time
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const commentsData = [];
+      snapshot.forEach((doc) => {
+        commentsData.push({ id: doc.id, ...doc.data() });
+      });
+      setComments(commentsData);
+    }, (error) => {
+      console.error('Error fetching comments:', error);
+    });
+
+    return () => unsubscribe();
+  }, [post.id]);
 
   const handleEdit = async (e) => {
     e.preventDefault();
@@ -75,7 +97,7 @@ const Post = ({ post }) => {
   return (
     <div style={styles.postContainer}>
       {error && <p style={styles.errorText}>{error}</p>}
-      
+
       {isEditing ? (
         <form onSubmit={handleEdit}>
           <textarea
@@ -98,7 +120,7 @@ const Post = ({ post }) => {
           <p style={styles.meta}>
             <strong>Mood:</strong> {post.mood} | <strong>Author:</strong> {post.isAnonymous ? 'Anonymous' : post.username} | <em>{post.created_at?.toDate().toLocaleString()}</em>
           </p>
-          
+
           {/* Like Button */}
           <LikeButton postId={post.id} />
 
@@ -110,15 +132,26 @@ const Post = ({ post }) => {
               </button>
             </div>
           )}
-          
-          {/* Add Like and Comment functionalities here */}
+
+          {/* Comments Section */}
+          <div style={styles.commentsSection}>
+            <h4>Comments</h4>
+            {comments.length === 0 ? (
+              <p>No comments yet.</p>
+            ) : (
+              comments.map((comment) => (
+                <Comment key={comment.id} comment={comment} postId={post.id} />
+              ))
+            )}
+            {currentUser && <CommentForm postId={post.id} />}
+          </div>
         </>
       )}
     </div>
   );
 };
 
-// Simple styling for the component (can be removed or adjusted as needed)
+// Simple styling for the component (can be adjusted or removed as needed)
 const styles = {
   postContainer: {
     border: '1px solid #ddd',
@@ -139,6 +172,7 @@ const styles = {
   buttonGroup: {
     display: 'flex',
     gap: '10px',
+    marginBottom: '10px',
   },
   editButton: {
     padding: '5px 10px',
@@ -184,6 +218,9 @@ const styles = {
   errorText: {
     color: 'red',
     marginBottom: '10px',
+  },
+  commentsSection: {
+    marginTop: '20px',
   },
 };
 
