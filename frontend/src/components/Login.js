@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import SocialLogin from './SocialLogin';
+import { Form, Button, Container, Alert } from 'react-bootstrap';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -40,36 +41,50 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-        />
-        {emailError && <p style={{ color: 'red' }}>{emailError}</p>}
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      <p>
-        Forgot your password? <Link to="/password-reset">Reset Password</Link>
-      </p>
-      
-      <hr />
+    <Container className="mt-5">
+      <h2 className="text-center mb-4">Login</h2>
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Form onSubmit={handleLogin}>
+        <Form.Group className="mb-3" controlId="formEmail">
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            isInvalid={!!emailError}
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            {emailError}
+          </Form.Control.Feedback>
+        </Form.Group>
 
-      {/* Social Login Options */}
-      <SocialLogin />
-    </div>
+        <Form.Group className="mb-3" controlId="formPassword">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+          />
+        </Form.Group>
+
+        <Button variant="primary" type="submit" block="true" className="mb-3">
+          Login
+        </Button>
+      </Form>
+
+      <div className="text-center">
+        <p>
+          Forgot your password? <Link to="/password-reset">Reset Password</Link>
+        </p>
+        <hr />
+        {/* Social Login Options */}
+        <SocialLogin />
+      </div>
+    </Container>
   );
 };
 

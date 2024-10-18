@@ -1,12 +1,11 @@
-// src/components/SocialLogin.js
-
 import React, { useState } from 'react';
 import { auth, googleProvider, firestore } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { FaGoogle } from 'react-icons/fa'; 
+import { FaGoogle } from 'react-icons/fa';
+import { Button, Spinner, Alert } from 'react-bootstrap';
 
 const SocialLogin = () => {
   const navigate = useNavigate();
@@ -46,29 +45,27 @@ const SocialLogin = () => {
 
   return (
     <div>
-      <h3>Or sign in with:</h3>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+      {error && <Alert variant="danger">{error}</Alert>}
+      <div className="d-flex justify-content-center gap-3">
         {/* Google Sign-In */}
-        <button
+        <Button
+          variant="primary"
           onClick={() => handleSocialLogin(googleProvider)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '10px',
-            border: 'none',
-            borderRadius: '5px',
-            backgroundColor: '#4285F4',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
           disabled={loading} // Disable button during loading
+          className="d-flex align-items-center"
         >
-          {loading ? 'Signing in...' : <>
-            <FaGoogle style={{ marginRight: '5px' }} />
-            Google
-          </>}
-        </button>
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />
+              Signing in...
+            </>
+          ) : (
+            <>
+              <FaGoogle className="me-2" />
+              Sign in with Google
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

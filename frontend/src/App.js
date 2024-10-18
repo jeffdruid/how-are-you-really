@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import NavigationBar from './components/NavBar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Home from './components/Home';
@@ -11,6 +12,8 @@ import ProfileView from './components/ProfileView';
 const App = () => {
   return (
     <Router>
+       {/* Navigation bar will be visible on every page */}
+       <NavigationBar />
       <Routes>
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />

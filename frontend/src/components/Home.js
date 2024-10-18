@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import PostFeed from './PostFeed'; 
 import CreatePost from './CreatePost';
+import { Container, Button, Alert } from 'react-bootstrap';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,26 +21,36 @@ const Home = () => {
   };
 
   return (
-    <div>
-      <h1>Welcome to "How Are You Really"</h1>
-      <p>
-        Logged in as: {currentUser.email} {currentUser.emailVerified ? '(Verified)' : '(Not Verified)'}
-      </p>
-      {!currentUser.emailVerified && (
-        <p style={{ color: 'orange' }}>
-          Your email is not verified. Please check your inbox for a verification email.
+    <Container className="mt-4">
+      <h1 className="text-center mb-4">Welcome to "How Are You Really"</h1>
+      <div className="text-center mb-4">
+        <p>
+          Logged in as: {currentUser.email}{' '}
+          {currentUser.emailVerified ? (
+            <span className="text-success">(Verified)</span>
+          ) : (
+            <span className="text-warning">(Not Verified)</span>
+          )}
         </p>
-      )}
-      <button onClick={handleLogout}>Logout</button>
-      <br />
-      <Link to="/profile">Go to Your Profile</Link>
+        {!currentUser.emailVerified && (
+          <Alert variant="warning">
+            Your email is not verified. Please check your inbox for a verification email.
+          </Alert>
+        )}
+        <Button variant="danger" onClick={handleLogout} className="me-2">
+          Logout
+        </Button>
+        <Button variant="primary" as={Link} to="/profile">
+          Go to Your Profile
+        </Button>
+      </div>
       <hr />
       {/* Create Post Section */}
       <CreatePost />
       <hr />
       {/* Post Feed Section */}
       <PostFeed />
-    </div>
+    </Container>
   );
 };
 
