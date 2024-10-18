@@ -2,15 +2,32 @@ import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
+import { validateEmail } from '../utils/validateEmail';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    let valid = true;
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address.');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+
+    if (!valid) {
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/'); // Redirect to Home upon successful login
@@ -31,6 +48,7 @@ const Login = () => {
           placeholder="Email"
           required
         />
+        {emailError && <p style={{ color: 'red' }}>{emailError}</p>}
         <input
           type="password"
           value={password}
