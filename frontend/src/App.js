@@ -6,6 +6,7 @@ import Home from './components/Home';
 import PrivateRoute from './components/PrivateRoute';
 import PasswordReset from './components/PasswordReset';
 import VerifyEmail from './components/VerifyEmail'; 
+import Profile from './components/Profile';
 
 const App = () => {
   return (
@@ -16,7 +17,15 @@ const App = () => {
         <Route path="/password-reset" element={<PasswordReset />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         
-        {/* Protected Home Route */}
+        {/* Protected Routes */}
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/"
           element={

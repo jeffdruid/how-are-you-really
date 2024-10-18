@@ -1,7 +1,7 @@
 import React from 'react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Home = () => {
@@ -29,6 +29,8 @@ const Home = () => {
         </p>
       )}
       <button onClick={handleLogout}>Logout</button>
+      <br />
+      <Link to="/profile">Go to Profile</Link> {/* Added Link to Profile */}
     </div>
   );
 };
