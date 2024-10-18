@@ -4,6 +4,19 @@ import { doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from 'firebase/fir
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+
+const fetchDefaultProfilePicUrl = async () => {
+  const storage = getStorage(); // Initialize Firebase Storage
+  const profilePicRef = ref(storage, 'default_profile.jpg'); // Reference to the image in storage
+  try {
+    const url = await getDownloadURL(profilePicRef); // Get the download URL
+    return url;
+  } catch (err) {
+    console.error('Error fetching default profile picture:', err);
+    return null;
+  }
+};
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -18,20 +31,31 @@ const Comment = ({ comment, postId }) => {
   useEffect(() => {
     const fetchProfilePic = async () => {
       try {
-        const userDocRef = doc(firestore, 'Users', comment.userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setProfilePicUrl(userDoc.data().profilePicUrl || '');
+        if (comment.isAnonymous) {
+          const defaultUrl = await fetchDefaultProfilePicUrl();
+          setProfilePicUrl(defaultUrl);
+        } else {
+          const userDocRef = doc(firestore, 'Users', comment.userId);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setProfilePicUrl(userDoc.data().profilePicUrl || await fetchDefaultProfilePicUrl());
+          } else {
+            const defaultUrl = await fetchDefaultProfilePicUrl();
+            setProfilePicUrl(defaultUrl);
+          }
         }
       } catch (err) {
         console.error('Error fetching profile picture:', err);
+        const defaultUrl = await fetchDefaultProfilePicUrl();
+        setProfilePicUrl(defaultUrl);
       }
     };
-
+  
     if (comment.userId) {
       fetchProfilePic();
     }
-  }, [comment.userId]);
+  }, [comment.userId, comment.isAnonymous]);
+  
 
   const handleEdit = async (e) => {
     e.preventDefault();

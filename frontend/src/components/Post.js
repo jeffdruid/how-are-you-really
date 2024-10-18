@@ -7,10 +7,22 @@ import Comment from './Comment';
 import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+
+const fetchDefaultProfilePicUrl = async () => {
+  const storage = getStorage(); // Initialize Firebase Storage
+  const profilePicRef = ref(storage, 'default_profile.jpg'); // Reference to the image in storage
+  try {
+    const url = await getDownloadURL(profilePicRef); // Get the download URL
+    return url;
+  } catch (err) {
+    console.error('Error fetching default profile picture:', err);
+    return null;
+  }
+};
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
-
 
   // Enhanced ownership logic
   const isOwnPost = currentUser && post.userId && currentUser.uid === post.userId;
@@ -28,21 +40,31 @@ const Post = ({ post }) => {
   useEffect(() => {
     const fetchProfilePic = async () => {
       try {
-        const userDocRef = doc(firestore, 'Users', post.userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setProfilePicUrl(userDoc.data().profilePicUrl || '');
+        if (post.isAnonymous) {
+          const defaultUrl = await fetchDefaultProfilePicUrl();
+          setProfilePicUrl(defaultUrl);
+        } else {
+          const userDocRef = doc(firestore, 'Users', post.userId);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setProfilePicUrl(userDoc.data().profilePicUrl || await fetchDefaultProfilePicUrl());
+          } else {
+            const defaultUrl = await fetchDefaultProfilePicUrl();
+            setProfilePicUrl(defaultUrl);
+          }
         }
       } catch (err) {
         console.error('Error fetching profile picture:', err);
+        const defaultUrl = await fetchDefaultProfilePicUrl();
+        setProfilePicUrl(defaultUrl);
       }
     };
-
+  
     if (post.userId) {
       fetchProfilePic();
     }
-  }, [post.userId]);
-
+  }, [post.userId, post.isAnonymous]);
+  
   useEffect(() => {
     const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
     const q = query(commentsRef, orderBy('created_at', 'asc')); // Order comments by creation time
@@ -134,15 +156,13 @@ const Post = ({ post }) => {
         ) : (
           <>
             <div className="d-flex align-items-center mb-2">
-              {profilePicUrl && (
-                <Image
-                  src={profilePicUrl}
-                  roundedCircle
-                  width={40}
-                  height={40}
-                  className="me-2"
-                />
-              )}
+              <Image
+                src={profilePicUrl}
+                roundedCircle
+                width={40}
+                height={40}
+                className="me-2"
+              />
               <Card.Subtitle className="text-muted">
                 <strong>{post.isAnonymous ? 'Anonymous' : post.username}</strong> | <em>{post.created_at?.toDate().toLocaleString()}</em>
               </Card.Subtitle>
