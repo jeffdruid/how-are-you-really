@@ -3,6 +3,7 @@ import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
+import { firebaseErrorMessages } from '../utils/firebaseErrors'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -32,7 +33,8 @@ const Login = () => {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/'); // Redirect to Home upon successful login
     } catch (err) {
-      setError(err.message);
+      const friendlyMessage = firebaseErrorMessages(err.code);
+      setError(friendlyMessage);
     }
   };
 

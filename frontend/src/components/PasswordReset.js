@@ -3,6 +3,7 @@ import { auth } from '../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
+// import { firebaseErrorMessages } from '../utils/firebaseErrors';
 
 const PasswordReset = () => {
   const [email, setEmail] = useState('');

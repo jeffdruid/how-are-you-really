@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 // import { useNavigate } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
 import { validatePassword } from '../utils/validatePassword';
+import { firebaseErrorMessages } from '../utils/firebaseErrors'; // Import error mapping
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -65,7 +66,8 @@ const SignUp = () => {
       // Optionally, redirect to a "Verify Your Email" page
       // navigate('/verify-email');
     } catch (err) {
-      setError(err.message);
+      const friendlyMessage = firebaseErrorMessages(err.code);
+      setError(friendlyMessage);
     }
   };
 
