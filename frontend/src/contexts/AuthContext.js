@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
           uid: user.uid,
           email: user.email,
           emailVerified: user.emailVerified,
+          displayName: user.displayName || '',
           // Add other user properties if needed
         });
       } else {

@@ -3,7 +3,8 @@ import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
-import { firebaseErrorMessages } from '../utils/firebaseErrors'; 
+import { firebaseErrorMessages } from '../utils/firebaseErrors';
+import SocialLogin from './SocialLogin';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -63,6 +64,11 @@ const Login = () => {
       <p>
         Forgot your password? <Link to="/password-reset">Reset Password</Link>
       </p>
+      
+      <hr />
+
+      {/* Social Login Options */}
+      <SocialLogin />
     </div>
   );
 };

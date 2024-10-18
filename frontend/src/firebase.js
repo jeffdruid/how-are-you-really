@@ -1,8 +1,6 @@
-// src/firebase.js
-
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 // Import other services as needed, e.g., storage, functions
 
@@ -23,7 +21,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 // Initialize other services as needed
+const googleProvider = new GoogleAuthProvider();
 
 // Export the services for use in your components
-export { auth, firestore };
+export { auth, firestore, googleProvider };
 export default app;
