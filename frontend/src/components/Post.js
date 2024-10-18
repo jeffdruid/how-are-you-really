@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import LikeButton from './LikeButton'; // Import the LikeButton component
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 
 const Post = ({ post }) => {
@@ -98,6 +99,9 @@ const Post = ({ post }) => {
             <strong>Mood:</strong> {post.mood} | <strong>Author:</strong> {post.isAnonymous ? 'Anonymous' : post.username} | <em>{post.created_at?.toDate().toLocaleString()}</em>
           </p>
           
+          {/* Like Button */}
+          <LikeButton postId={post.id} />
+
           {isOwnPost && (
             <div style={styles.buttonGroup}>
               <button onClick={() => setIsEditing(true)} style={styles.editButton}>Edit</button>
@@ -114,7 +118,7 @@ const Post = ({ post }) => {
   );
 };
 
-// TODO Remove from here
+// Simple styling for the component (can be removed or adjusted as needed)
 const styles = {
   postContainer: {
     border: '1px solid #ddd',

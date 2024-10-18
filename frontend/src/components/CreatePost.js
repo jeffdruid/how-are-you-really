@@ -1,6 +1,8 @@
+// src/components/CreatePost.js
+
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, setDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore'; // Removed addDoc, added setDoc
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 
@@ -40,28 +42,29 @@ const CreatePost = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+  
     // Basic validation
     if (content.trim() === '') {
       setError('Post content cannot be empty.');
       setLoading(false);
       return;
     }
-
+  
     try {
-      await addDoc(collection(firestore, 'Posts'), {
+      const newPostRef = doc(collection(firestore, 'Posts')); // Generate a new post reference
+      await setDoc(newPostRef, {
         userId: currentUser.uid, // Always set userId to currentUser.uid
         username: isAnonymous ? 'Anonymous' : username, // Set username based on isAnonymous
         content,
         mood,
         isAnonymous,
+        likeCount: 0, // Initialize likeCount
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       });
       setContent('');
       setMood('happy');
       setIsAnonymous(false);
-      // Optionally, show a success message or toast notification
       console.log('Post created successfully');
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
@@ -71,7 +74,7 @@ const CreatePost = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <div>
       <h3>Create a New Post</h3>
