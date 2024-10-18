@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, query, orderBy, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LikeButton from './LikeButton';
 import Comment from './Comment';
 import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-
-const fetchDefaultProfilePicUrl = async () => {
-  const storage = getStorage(); // Initialize Firebase Storage
-  const profilePicRef = ref(storage, 'default_profile.jpg'); // Reference to the image in storage
-  try {
-    const url = await getDownloadURL(profilePicRef); // Get the download URL
-    return url;
-  } catch (err) {
-    console.error('Error fetching default profile picture:', err);
-    return null;
-  }
-};
+import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
-
-  // Enhanced ownership logic
   const isOwnPost = currentUser && post.userId && currentUser.uid === post.userId;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -33,38 +19,19 @@ const Post = ({ post }) => {
   const [loading, setLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState('');
 
-  // State for comments
   const [comments, setComments] = useState([]);
 
-  // Fetch the profile picture URL when the component mounts
   useEffect(() => {
     const fetchProfilePic = async () => {
-      try {
-        if (post.isAnonymous) {
-          const defaultUrl = await fetchDefaultProfilePicUrl();
-          setProfilePicUrl(defaultUrl);
-        } else {
-          const userDocRef = doc(firestore, 'Users', post.userId);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setProfilePicUrl(userDoc.data().profilePicUrl || await fetchDefaultProfilePicUrl());
-          } else {
-            const defaultUrl = await fetchDefaultProfilePicUrl();
-            setProfilePicUrl(defaultUrl);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching profile picture:', err);
-        const defaultUrl = await fetchDefaultProfilePicUrl();
-        setProfilePicUrl(defaultUrl);
-      }
+      const url = await fetchProfilePicUrl(post.userId, post.isAnonymous);
+      setProfilePicUrl(url);
     };
-  
+
     if (post.userId) {
       fetchProfilePic();
     }
   }, [post.userId, post.isAnonymous]);
-  
+
   useEffect(() => {
     const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
     const q = query(commentsRef, orderBy('created_at', 'asc')); // Order comments by creation time
