@@ -30,7 +30,11 @@ const Home = () => {
       )}
       <button onClick={handleLogout}>Logout</button>
       <br />
-      <Link to="/profile">Go to Profile</Link> {/* Added Link to Profile */}
+      <Link to="/profile">Go to Your Profile</Link>
+      <br />
+      {/* Example: Link to another user's profile */}
+      {/* In a real application, this would be dynamically generated based on available users */}
+      <Link to="/users/USER_ID_HERE">View Another User's Profile</Link>
     </div>
   );
 };

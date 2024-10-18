@@ -6,7 +6,7 @@ import Home from './components/Home';
 import PrivateRoute from './components/PrivateRoute';
 import PasswordReset from './components/PasswordReset';
 import VerifyEmail from './components/VerifyEmail'; 
-import Profile from './components/Profile';
+import ProfileView from './components/ProfileView';
 
 const App = () => {
   return (
@@ -17,23 +17,20 @@ const App = () => {
         <Route path="/password-reset" element={<PasswordReset />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         
-        {/* Protected Routes */}
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        />
+        {/* Profile Routes */}
+        <Route path="/profile" element={
+          <PrivateRoute>
+            <ProfileView />
+          </PrivateRoute>
+        } />
+        <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
+        
+        {/* Protected Home Route */}
+        <Route path="/" element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        } />
       </Routes>
     </Router>
   );
