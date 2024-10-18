@@ -10,7 +10,12 @@ const PrivateRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  // User is authenticated; render the child component
+  if (!currentUser.emailVerified) {
+    // User is authenticated but email is not verified; redirect to a verification prompt
+    return <Navigate to="/verify-email" />;
+  }
+
+  // User is authenticated and email is verified; render the child component
   return children;
 };
 

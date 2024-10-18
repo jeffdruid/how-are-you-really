@@ -4,7 +4,8 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Home from './components/Home';
 import PrivateRoute from './components/PrivateRoute';
-import PasswordReset from './components/PasswordReset'; 
+import PasswordReset from './components/PasswordReset';
+import VerifyEmail from './components/VerifyEmail'; 
 
 const App = () => {
   return (
@@ -12,7 +13,8 @@ const App = () => {
       <Routes>
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/password-reset" element={<PasswordReset />} /> {/* Add PasswordReset Route */}
+        <Route path="/password-reset" element={<PasswordReset />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         
         {/* Protected Home Route */}
         <Route

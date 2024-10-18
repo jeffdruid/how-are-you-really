@@ -7,7 +7,9 @@ const AuthStatus = () => {
   return (
     <div>
       {currentUser ? (
-        <p>Logged in as: {currentUser.email}</p>
+        <p>
+          Logged in as: {currentUser.email} {currentUser.emailVerified ? '(Verified)' : '(Not Verified)'}
+        </p>
       ) : (
         <p>Not logged in</p>
       )}

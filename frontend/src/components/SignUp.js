@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { auth, firestore } from '../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { validateEmail } from '../utils/validateEmail';
 import { validatePassword } from '../utils/validatePassword';
 
@@ -13,7 +13,8 @@ const SignUp = () => {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const navigate = useNavigate();
+  const [message, setMessage] = useState('');
+//   const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -44,15 +45,25 @@ const SignUp = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Send verification email
+      await sendEmailVerification(user);
+
+      // Create a user document in Firestore
       await setDoc(doc(firestore, 'Users', user.uid), {
         username,
         email,
         bio: '',
+        emailVerified: user.emailVerified, // Store verification status
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       });
 
-      navigate('/'); // Redirect to Home upon successful sign-up
+      // Inform the user to verify their email
+      setMessage('Registration successful! Please check your email to verify your account.');
+      setError('');
+      
+      // Optionally, redirect to a "Verify Your Email" page
+      // navigate('/verify-email');
     } catch (err) {
       setError(err.message);
     }
@@ -62,6 +73,7 @@ const SignUp = () => {
     <div>
       <h2>Sign Up</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p style={{ color: 'green' }}>{message}</p>}
       <form onSubmit={handleSignUp}>
         <input
           type="text"
