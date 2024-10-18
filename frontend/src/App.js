@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import PasswordReset from './components/PasswordReset';
 import VerifyEmail from './components/VerifyEmail'; 
 import ProfileView from './components/ProfileView';
+import NotFound from './components/NotFound';
 
 const App = () => {
   return (
@@ -34,6 +35,9 @@ const App = () => {
             <Home />
           </PrivateRoute>
         } />
+
+        {/* This route should be at the end */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
