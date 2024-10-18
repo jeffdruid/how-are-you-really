@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../firebase';
+import React, { useContext, useState, useEffect, createContext } from 'react';
+import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -10,20 +11,29 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser({
-          uid: user.uid,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          displayName: user.displayName || '',
-          // Add other user properties if needed
-        });
+        setCurrentUser(user);
+        // Fetch user data from Firestore
+        try {
+          const userDocRef = doc(firestore, 'Users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUsername(userDoc.data().username || '');
+          } else {
+            setUsername('');
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          setUsername('');
+        }
       } else {
         setCurrentUser(null);
+        setUsername('');
       }
       setLoading(false);
     });
@@ -33,6 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    username,
   };
 
   return (

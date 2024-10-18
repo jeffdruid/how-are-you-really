@@ -3,6 +3,8 @@ import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import PostFeed from './PostFeed'; 
+import CreatePost from './CreatePost';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -31,10 +33,12 @@ const Home = () => {
       <button onClick={handleLogout}>Logout</button>
       <br />
       <Link to="/profile">Go to Your Profile</Link>
-      <br />
-      {/* Example: Link to another user's profile */}
-      {/* In a real application, this would be dynamically generated based on available users */}
-      <Link to="/users/USER_ID_HERE">View Another User's Profile</Link>
+      <hr />
+      {/* Create Post Section */}
+      <CreatePost />
+      <hr />
+      {/* Post Feed Section */}
+      <PostFeed />
     </div>
   );
 };
