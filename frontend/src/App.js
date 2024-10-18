@@ -4,6 +4,7 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Home from './components/Home';
 import PrivateRoute from './components/PrivateRoute';
+import PasswordReset from './components/PasswordReset'; 
 
 const App = () => {
   return (
@@ -11,6 +12,7 @@ const App = () => {
       <Routes>
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/password-reset" element={<PasswordReset />} /> {/* Add PasswordReset Route */}
         
         {/* Protected Home Route */}
         <Route
@@ -21,19 +23,6 @@ const App = () => {
             </PrivateRoute>
           }
         />
-
-        {/* Add more protected routes as needed */}
-        {/* 
-        Example:
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        */}
       </Routes>
     </Router>
   );
