@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 import { useAuth } from '../contexts/AuthContext';
 import LikeButton from './LikeButton';
@@ -98,7 +99,13 @@ const Reply = ({ reply, postId, commentId }) => {
               height={20}
               className="me-2"
             />
-            <strong>{reply.username}</strong> |{' '}
+            <strong>
+              {reply.username && (
+                <Link to={`/users/${reply.userId}`} className="text-decoration-none">
+                  {reply.username}
+                </Link>
+              )}
+            </strong> |{' '}
             <em>{reply.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{reply.content}</p>

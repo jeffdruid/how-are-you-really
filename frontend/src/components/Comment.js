@@ -4,6 +4,7 @@ import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, que
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 import Reply from './Reply';
 import LikeButton from './LikeButton'; // Import the LikeButton component
@@ -159,7 +160,13 @@ const Comment = ({ comment, postId }) => {
                 className="me-2"
               />
             )}
-            <strong>{comment.isAnonymous ? 'Anonymous' : comment.username}</strong> |{' '}
+            <strong>
+              {comment.isAnonymous ? 'Anonymous' : (
+                <Link to={`/users/${comment.userId}`} className="text-decoration-none">
+                  {comment.username}
+                </Link>
+              )}
+            </strong> |{' '}
             <em>{comment.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{comment.content}</p>

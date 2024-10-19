@@ -7,6 +7,7 @@ import Comment from './Comment';
 import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 
 const Post = ({ post }) => {
@@ -131,7 +132,14 @@ const Post = ({ post }) => {
                 className="me-2"
               />
               <Card.Subtitle className="text-muted">
-                <strong>{post.isAnonymous ? 'Anonymous' : post.username}</strong> | <em>{post.created_at?.toDate().toLocaleString()}</em>
+                <strong>
+                  {post.isAnonymous ? 'Anonymous' : (
+                    <Link to={`/users/${post.userId}`} className="text-decoration-none">
+                      {post.username}
+                    </Link>
+                  )}
+                </strong> | <em>{post.created_at?.toDate().toLocaleString()}</em>
+                
               </Card.Subtitle>
             </div>
             <Card.Text>{post.content}</Card.Text>
