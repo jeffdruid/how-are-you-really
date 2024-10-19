@@ -4,6 +4,7 @@ import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 import { useAuth } from '../contexts/AuthContext';
+import LikeButton from './LikeButton';
 
 const Reply = ({ reply, postId, commentId }) => {
   const { currentUser } = useAuth();
@@ -101,6 +102,8 @@ const Reply = ({ reply, postId, commentId }) => {
             <em>{reply.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{reply.content}</p>
+          {/* Like Button for Reply */}
+          <LikeButton postId={postId} commentId={commentId} replyId={reply.id} />
           {isOwnReply && (
             <>
               <Button variant="warning" className="me-2" size="sm" onClick={() => setIsEditing(true)}>

@@ -5,7 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
-import Reply from './Reply'; // Import the new Reply component
+import Reply from './Reply';
+import LikeButton from './LikeButton'; // Import the LikeButton component
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -162,6 +163,9 @@ const Comment = ({ comment, postId }) => {
             <em>{comment.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{comment.content}</p>
+
+          {/* Like Button for Comment */}
+          <LikeButton postId={postId} commentId={comment.id} />
 
           {/* Nested replies */}
           {replies.length > 0 && (
