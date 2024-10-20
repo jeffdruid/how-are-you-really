@@ -5,7 +5,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
-import ImageUploader from './ImageUploader'; // Import the ImageUploader component
+import ImageUploader from './ImageUploader';
 
 const CreatePost = () => {
   const { currentUser } = useAuth();
@@ -17,7 +17,7 @@ const CreatePost = () => {
   const [loading, setLoading] = useState(false);
 
   // New states for image upload
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState(null);
   const [uploading, setUploading] = useState(false);
 
   // Fetch username from Firestore when component mounts
@@ -69,38 +69,39 @@ const CreatePost = () => {
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
         imageUrl: null, // Initialize imageUrl as null
+        thumbnailUrl: null, // Initialize thumbnailUrl as null
       });
 
       const postId = newPostRef.id; // Get the generated postId
 
-      let imageUrl = null;
-
-      if (image) {
+      if (images) {
         setUploading(true);
 
-        // Create a unique file name using postId and image name
-        const imageRef = ref(storage, `post_images/${postId}/${image.name}`);
+        // Upload original image
+        const originalRef = ref(storage, `post_images/${postId}/original_${images.original.name}`);
+        await uploadBytes(originalRef, images.original);
+        const originalURL = await getDownloadURL(originalRef);
 
-        // Upload the image
-        const uploadTask = await uploadBytes(imageRef, image);
+        // Upload thumbnail image
+        const thumbnailRef = ref(storage, `post_images/${postId}/thumbnail_${images.thumbnail.name}`);
+        await uploadBytes(thumbnailRef, images.thumbnail);
+        const thumbnailURL = await getDownloadURL(thumbnailRef);
 
-        // Get the download URL
-        imageUrl = await getDownloadURL(uploadTask.ref);
-
-        setUploading(false);
-
-        // Update the post document with the image URL
+        // Update the post document with image URLs
         await updateDoc(newPostRef, {
-          imageUrl,
+          imageUrl: originalURL,
+          thumbnailUrl: thumbnailURL,
           updated_at: serverTimestamp(),
         });
+
+        setUploading(false);
       }
 
       // Reset form fields
       setContent('');
       setMood('happy');
       setIsAnonymous(false);
-      setImage(null);
+      setImages(null);
       console.log('Post created successfully');
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
@@ -129,7 +130,7 @@ const CreatePost = () => {
 
         {/* Image Upload Component */}
         <ImageUploader
-          onImageSelected={(file) => setImage(file)}
+          onImageSelected={(files) => setImages(files)}
           maxSize={5 * 1024 * 1024} // 5MB
           accept="image/*"
         />

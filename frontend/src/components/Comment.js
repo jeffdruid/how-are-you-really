@@ -154,6 +154,7 @@ const Comment = ({ comment, postId }) => {
             {profilePicUrl && (
               <Image
                 src={profilePicUrl}
+                loading="lazy"
                 roundedCircle
                 width={30}
                 height={30}

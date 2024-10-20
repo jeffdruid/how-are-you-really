@@ -131,6 +131,7 @@ const Post = ({ post }) => {
                 width={40}
                 height={40}
                 className="me-2"
+                loading="lazy"
               />
               <Card.Subtitle className="text-muted">
                 <strong>
@@ -144,10 +145,18 @@ const Post = ({ post }) => {
             </div>
             <Card.Text>{post.content}</Card.Text>
 
-            {/* Display Image if available */}
-            {post.imageUrl && (
+            {/* Display Thumbnail Image if available */}
+            {post.thumbnailUrl && (
               <div className="mb-3">
-                <Image src={post.imageUrl} alt="Post Image" fluid rounded />
+                <Image
+                  src={post.thumbnailUrl}
+                  alt="Post Thumbnail"
+                  fluid
+                  rounded
+                  loading="lazy"
+                  onClick={() => window.open(post.imageUrl, '_blank')}
+                  style={{ cursor: 'pointer' }}
+                />
               </div>
             )}
 
