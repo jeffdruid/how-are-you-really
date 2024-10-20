@@ -12,6 +12,7 @@ import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar, Spinner }
 import UserStats from './UserStats';
 import UserPosts from './UserPosts';
 import ImageUploader from './ImageUploader';
+import ImageModal from './ImageModal'; // Import ImageModal component
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -28,6 +29,10 @@ const ProfileView = () => {
   // New states for image upload
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+
+  // Modal state
+  const [modalShow, setModalShow] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -113,101 +118,117 @@ const ProfileView = () => {
     }
   };
 
+  const handleImageClick = (imageUrl) => {
+    setModalImageUrl(imageUrl);
+    setModalShow(true);
+  };
+
   return (
-    <Container className="mt-5">
-      <h2>{isOwnProfile ? 'Your Profile' : `${username}'s Profile`}</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+    <>
+      <Container className="mt-5">
+        <h2>{isOwnProfile ? 'Your Profile' : `${username}'s Profile`}</h2>
+        {error && <Alert variant="danger">{error}</Alert>}
+        {message && <Alert variant="success">{message}</Alert>}
 
-      <Row className="align-items-center mb-4">
-        <Col xs={12} md={3}>
-          {profilePicUrl && (
-            <Image
-              src={profilePicUrl}
-              alt="Profile"
-              roundedCircle
-              style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-              loading="lazy"
-            />
-          )}
-        </Col>
-        <Col xs={12} md={9}>
-          {isOwnProfile ? (
-            <Form onSubmit={handleProfileUpdate}>
-              <Form.Group controlId="username">
-                <Form.Label>Username</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </Form.Group>
+        <Row className="align-items-center mb-4">
+          <Col xs={12} md={3}>
+            {profilePicUrl && (
+              <Image
+                src={profilePicUrl}
+                alt="Profile"
+                roundedCircle
+                style={{ width: '150px', height: '150px', objectFit: 'cover', cursor: 'pointer' }}
+                loading="lazy"
+                onClick={() => handleImageClick(profilePicUrl)}
+              />
+            )}
+          </Col>
+          <Col xs={12} md={9}>
+            {isOwnProfile ? (
+              <Form onSubmit={handleProfileUpdate}>
+                <Form.Group controlId="username">
+                  <Form.Label>Username</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </Form.Group>
 
-              <Form.Group controlId="bio" className="mt-3">
-                <Form.Label>Bio</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={4}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  maxLength="300"
-                />
-                <ProgressBar
-                  now={(bio.length / 300) * 100}
-                  label={`${bio.length}/300`}
-                  className="mt-1"
-                />
-              </Form.Group>
+                <Form.Group controlId="bio" className="mt-3">
+                  <Form.Label>Bio</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={4}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    maxLength="300"
+                  />
+                  <ProgressBar
+                    now={(bio.length / 300) * 100}
+                    label={`${bio.length}/300`}
+                    className="mt-1"
+                  />
+                </Form.Group>
 
-              {/* ImageUploader for Profile Picture */}
-              <Form.Group controlId="profilePic" className="mt-3">
-                <Form.Label>Profile Picture</Form.Label>
-                <ImageUploader
-                  onImageSelected={(files) => setImage(files)}
-                  maxSize={5 * 1024 * 1024} // 5MB
-                  accept="image/*"
-                />
-              </Form.Group>
+                {/* ImageUploader for Profile Picture */}
+                <Form.Group controlId="profilePic" className="mt-3">
+                  <Form.Label>Profile Picture</Form.Label>
+                  <ImageUploader
+                    onImageSelected={(files) => setImage(files)}
+                    maxSize={5 * 1024 * 1024} // 5MB
+                    accept="image/*"
+                  />
+                </Form.Group>
 
-              {/* Display upload progress */}
-              {uploading && (
-                <div className="mt-3">
-                  <Spinner animation="border" size="sm" /> Uploading image...
-                </div>
-              )}
+                {/* Display upload progress */}
+                {uploading && (
+                  <div className="mt-3">
+                    <Spinner animation="border" size="sm" /> Uploading image...
+                  </div>
+                )}
 
-              <Button variant="primary" type="submit" className="mt-4" disabled={loading || uploading}>
-                {loading ? 'Updating...' : 'Update Profile'}
-              </Button>
-            </Form>
-          ) : (
-            <div>
-              <p>
-                <strong>Username:</strong> {username}
-              </p>
-              <p>
-                <strong>Bio:</strong> {bio}
-              </p>
-              {/* Follow Button */}
-              <FollowButton targetUserId={userId} />
-            </div>
-          )}
-          {/* Follow Stats */}
-          <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
-          <UserStats userId={isOwnProfile ? currentUser.uid : userId} />
-        </Col>
-      </Row>
-      <UserPosts userId={isOwnProfile ? currentUser.uid : userId} />
+                <Button variant="primary" type="submit" className="mt-4" disabled={loading || uploading}>
+                  {loading ? 'Updating...' : 'Update Profile'}
+                </Button>
+              </Form>
+            ) : (
+              <div>
+                <p>
+                  <strong>Username:</strong> {username}
+                </p>
+                <p>
+                  <strong>Bio:</strong> {bio}
+                </p>
+                {/* Follow Button */}
+                <FollowButton targetUserId={userId} />
+              </div>
+            )}
+            {/* Follow Stats */}
+            <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
+            <UserStats userId={isOwnProfile ? currentUser.uid : userId} />
+          </Col>
+        </Row>
+        <UserPosts userId={isOwnProfile ? currentUser.uid : userId} />
 
-      {isOwnProfile && (
-        <>
-          <hr />
-          {/* Delete Account Section */}
-          <DeleteAccount />
-        </>
-      )}
-    </Container>
+        {isOwnProfile && (
+          <>
+            <hr />
+            {/* Delete Account Section */}
+            <DeleteAccount />
+          </>
+        )}
+      </Container>
+
+      {/* Image Modal */}
+      <ImageModal
+        show={modalShow}
+        handleClose={() => setModalShow(false)}
+        imageUrl={modalImageUrl}
+        altText="Profile Picture"
+      />
+    </>
   );
 };
 
