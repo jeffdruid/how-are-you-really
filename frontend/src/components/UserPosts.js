@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+} from 'firebase/firestore';
 import Post from './Post';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Spinner, Alert } from 'react-bootstrap';
@@ -101,6 +109,7 @@ const UserPosts = ({ userId }) => {
           posts.map(post => <Post key={post.id} post={post} />)
         )}
       </InfiniteScroll>
+      {hasMore && <Spinner animation="border" />}
     </div>
   );
 };

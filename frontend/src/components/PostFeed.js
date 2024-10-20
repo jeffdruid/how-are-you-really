@@ -1,6 +1,14 @@
+// src/components/PostFeed.js
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+} from 'firebase/firestore';
 import Post from './Post';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Spinner, Alert } from 'react-bootstrap';
@@ -79,7 +87,11 @@ const PostFeed = () => {
         dataLength={posts.length}
         next={fetchMorePosts}
         hasMore={hasMore}
-        loader={<div className="text-center my-4"><Spinner animation="border" /></div>}
+        loader={
+          <div className="text-center my-4">
+            <Spinner animation="border" />
+          </div>
+        }
         endMessage={
           <p style={{ textAlign: 'center' }}>
             <b>No more posts to display.</b>
