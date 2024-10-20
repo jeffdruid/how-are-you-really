@@ -1,72 +1,49 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  startAfter,
-  getDocs,
-} from 'firebase/firestore';
-import Post from './Post'; 
+import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import Post from './Post';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { Spinner, Alert } from 'react-bootstrap';
 
 const UserPosts = ({ userId }) => {
   const [posts, setPosts] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState('');
 
-  const POSTS_PER_PAGE = 10;
+  const POSTS_PER_PAGE = 2;
 
-  // Fetch initial posts
-  useEffect(() => {
-    const fetchInitialPosts = async () => {
-      setLoading(true);
-      try {
-        const initialQuery = query(
-          collection(firestore, 'Posts'),
-          where('userId', '==', userId),
-          where('isAnonymous', '==', false),
-          orderBy('created_at', 'desc'),
-          limit(POSTS_PER_PAGE)
-        );
+  // Fetch initial user posts
+  const fetchInitialPosts = async () => {
+    try {
+      const initialQuery = query(
+        collection(firestore, 'Posts'),
+        where('userId', '==', userId),
+        where('isAnonymous', '==', false),
+        orderBy('created_at', 'desc'),
+        limit(POSTS_PER_PAGE)
+      );
 
-        const unsubscribe = onSnapshot(
-          initialQuery,
-          (snapshot) => {
-            const postsData = [];
-            snapshot.forEach((doc) => postsData.push({ id: doc.id, ...doc.data() }));
-            setPosts(postsData);
-            const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-            setLastDoc(lastVisible);
-            if (snapshot.docs.length < POSTS_PER_PAGE) {
-              setHasMore(false);
-            }
-          },
-          (error) => {
-            console.error('Error fetching user posts:', error);
-          }
-        );
+      const snapshot = await getDocs(initialQuery);
+      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPosts(postsData);
 
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-      } catch (err) {
-        console.error('Error fetching initial user posts:', err);
-      } finally {
-        setLoading(false);
+      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+      setLastDoc(lastVisible);
+
+      if (snapshot.docs.length < POSTS_PER_PAGE) {
+        setHasMore(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching user posts:', err);
+      setError('Failed to load user posts. Please try again later.');
+    }
+  };
 
-    fetchInitialPosts();
-  }, [userId]);
-
-  // Fetch more posts
-  const fetchMorePosts = useCallback(async () => {
+  // Fetch more user posts
+  const fetchMorePosts = async () => {
     if (!lastDoc) return;
 
-    setLoading(true);
     try {
       const nextQuery = query(
         collection(firestore, 'Posts'),
@@ -78,9 +55,8 @@ const UserPosts = ({ userId }) => {
       );
 
       const snapshot = await getDocs(nextQuery);
-      const postsData = [];
-      snapshot.forEach((doc) => postsData.push({ id: doc.id, ...doc.data() }));
-      setPosts((prevPosts) => [...prevPosts, ...postsData]);
+      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPosts(prevPosts => [...prevPosts, ...postsData]);
 
       const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
       setLastDoc(newLastDoc);
@@ -90,38 +66,41 @@ const UserPosts = ({ userId }) => {
       }
     } catch (err) {
       console.error('Error fetching more user posts:', err);
-    } finally {
-      setLoading(false);
+      setError('Failed to load more user posts. Please try again later.');
     }
-  }, [lastDoc, userId]);
+  };
 
-  // Handle scroll event for infinite scroll
   useEffect(() => {
-    const handleScroll = () => {
-      if (loading || !hasMore) return;
-
-      if (
-        window.innerHeight + document.documentElement.scrollTop + 100 >=
-        document.documentElement.offsetHeight
-      ) {
-        fetchMorePosts();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, hasMore, fetchMorePosts]);
+    // Reset state when userId changes
+    setPosts([]);
+    setLastDoc(null);
+    setHasMore(true);
+    setError('');
+    fetchInitialPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   return (
     <div>
       <h3>User Posts</h3>
-      {posts.length === 0 ? (
-        <p>This user hasn't posted anything yet.</p>
-      ) : (
-        posts.map((post) => <Post key={post.id} post={post} />)
-      )}
-      {loading && <p>Loading more posts...</p>}
-      {!hasMore && <p>No more posts to display.</p>}
+      {error && <Alert variant="danger">{error}</Alert>}
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={fetchMorePosts}
+        hasMore={hasMore}
+        loader={<div className="text-center my-4"><Spinner animation="border" /></div>}
+        endMessage={
+          <p style={{ textAlign: 'center' }}>
+            <b>No more posts to display.</b>
+          </p>
+        }
+      >
+        {posts.length === 0 ? (
+          <p>This user hasn't posted anything yet.</p>
+        ) : (
+          posts.map(post => <Post key={post.id} post={post} />)
+        )}
+      </InfiniteScroll>
     </div>
   );
 };
