@@ -11,7 +11,7 @@ import FollowStats from './FollowStats';
 import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar, Spinner } from 'react-bootstrap';
 import UserStats from './UserStats';
 import UserPosts from './UserPosts';
-import ImageUploader from './ImageUploader'; // Import the ImageUploader component
+import ImageUploader from './ImageUploader';
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -84,18 +84,21 @@ const ProfileView = () => {
       if (image) {
         setUploading(true);
 
-        // Create a unique file name using userId and image name
-        const imageRef = ref(storage, `profile_pictures/${currentUser.uid}/${image.name}`);
+        // Upload original image
+        const originalRef = ref(storage, `profile_pictures/${currentUser.uid}/original_${image.original.name}`);
+        await uploadBytes(originalRef, image.original);
+        const originalURL = await getDownloadURL(originalRef);
 
-        // Upload the image
-        await uploadBytes(imageRef, image);
+        // Upload thumbnail image
+        const thumbnailRef = ref(storage, `profile_pictures/${currentUser.uid}/thumbnail_${image.thumbnail.name}`);
+        await uploadBytes(thumbnailRef, image.thumbnail);
+        const thumbnailURL = await getDownloadURL(thumbnailRef);
 
-        // Get the download URL
-        const downloadURL = await getDownloadURL(imageRef);
+        // Update Firestore with both URLs
+        updatedData.profilePicUrl = originalURL;
+        updatedData.profilePicThumbnail = thumbnailURL;
+        setProfilePicUrl(thumbnailURL); // Display thumbnail
 
-        // Update the post document with the image URL
-        updatedData.profilePicUrl = downloadURL;
-        setProfilePicUrl(downloadURL);
         setUploading(false);
       }
 
@@ -124,6 +127,7 @@ const ProfileView = () => {
               alt="Profile"
               roundedCircle
               style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+              loading="lazy"
             />
           )}
         </Col>
@@ -156,11 +160,11 @@ const ProfileView = () => {
                 />
               </Form.Group>
 
-              {/* Replace the existing File Input with ImageUploader */}
+              {/* ImageUploader for Profile Picture */}
               <Form.Group controlId="profilePic" className="mt-3">
                 <Form.Label>Profile Picture</Form.Label>
                 <ImageUploader
-                  onImageSelected={(file) => setImage(file)}
+                  onImageSelected={(files) => setImage(files)}
                   maxSize={5 * 1024 * 1024} // 5MB
                   accept="image/*"
                 />

@@ -80,6 +80,7 @@ const UserListModal = ({ show, handleClose, userId, type }) => {
                   width={40}
                   height={40}
                   className="me-3"
+                  loading='lazy'
                 />
                 <Link to={`/users/${user.id}`}>{user.username || 'Anonymous'}</Link>
               </ListGroup.Item>

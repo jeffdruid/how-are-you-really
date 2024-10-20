@@ -98,6 +98,7 @@ const Reply = ({ reply, postId, commentId }) => {
               width={20}
               height={20}
               className="me-2"
+              loading="lazy"
             />
             <strong>
               {reply.username && (
