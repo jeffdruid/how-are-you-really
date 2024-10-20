@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestore, storage } from '../firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'; 
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useParams } from 'react-router-dom';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import DeleteAccount from './DeleteAccount'; 
+import DeleteAccount from './DeleteAccount';
+import FollowButton from './FollowButton';
+import FollowStats from './FollowStats';
 import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar } from 'react-bootstrap';
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
-  const { userId } = useParams(); 
+  const { userId } = useParams();
   const isOwnProfile = !userId || userId === currentUser.uid;
 
   const [username, setUsername] = useState('');
@@ -136,7 +138,11 @@ const ProfileView = () => {
                   onChange={(e) => setBio(e.target.value)}
                   maxLength="300"
                 />
-                <ProgressBar now={(bio.length / 300) * 100} label={`${bio.length}/300`} className="mt-1" />
+                <ProgressBar
+                  now={(bio.length / 300) * 100}
+                  label={`${bio.length}/300`}
+                  className="mt-1"
+                />
               </Form.Group>
 
               <Form.Group controlId="profilePic" className="mt-3">
@@ -150,10 +156,18 @@ const ProfileView = () => {
             </Form>
           ) : (
             <div>
-              <p><strong>Username:</strong> {username}</p>
-              <p><strong>Bio:</strong> {bio}</p>
+              <p>
+                <strong>Username:</strong> {username}
+              </p>
+              <p>
+                <strong>Bio:</strong> {bio}
+              </p>
+              {/* Follow Button */}
+              <FollowButton targetUserId={userId} />
             </div>
           )}
+          {/* Follow Stats */}
+          <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
         </Col>
       </Row>
 
