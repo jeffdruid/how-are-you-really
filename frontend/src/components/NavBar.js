@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -8,6 +8,14 @@ import { Link, useNavigate } from 'react-router-dom';
 const NavigationBar = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Load dark mode preference from localStorage on initial load
+  useEffect(() => {
+    const savedMode = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(savedMode);
+    document.body.classList.toggle('dark-mode', savedMode);
+  }, []);
 
   // Handle logout functionality
   const handleLogout = async () => {
@@ -19,59 +27,36 @@ const NavigationBar = () => {
     }
   };
 
+  // Toggle dark mode and save preference to localStorage
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    document.body.classList.toggle('dark-mode', newMode);
+    localStorage.setItem('darkMode', newMode);
+  };
 
   return (
-    <Navbar bg="light" expand="lg" sticky="top">
+    <Navbar bg="" expand="lg" sticky="top">
       <Container>
-        {/* Navbar brand */}
-        <Navbar.Brand as={Link} to="/">
-          How Are You Really
-        </Navbar.Brand>
-
-        {/* Toggle button for smaller screens */}
+        <Navbar.Brand as={Link} to="/">How Are You Really</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
-
-        {/* Navbar links and dropdown */}
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            {/* Home link */}
-            <Nav.Link as={Link} to="/">
-              Home
-            </Nav.Link>
-
-            {/* Conditional Profile link (only if user is logged in) */}
-            {currentUser && (
-              <Nav.Link as={Link} to="/profile">
-                Profile
-              </Nav.Link>
-            )}
-
-            {/* Dropdown for additional options */}
-            <NavDropdown title="More" id="basic-nav-dropdown">
-              <NavDropdown.Item as={Link} to="/about">
-                About Us
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/contact">
-                Contact
-              </NavDropdown.Item>
-            </NavDropdown>
+            <Nav.Link as={Link} to="/">Home</Nav.Link>
+            {currentUser && <Nav.Link as={Link} to="/profile">Profile</Nav.Link>}
           </Nav>
-
-          {/* Conditional buttons (login/signup vs logout) */}
           <Nav>
+            {/* Dark Mode Toggle Button */}
+            <Button onClick={toggleDarkMode} variant={darkMode ? 'light' : 'dark'}>
+              {darkMode ? 'Light Mode' : 'Dark Mode'}
+            </Button>
             {!currentUser ? (
               <>
-                <Nav.Link as={Link} to="/login">
-                  Login
-                </Nav.Link>
-                <Button as={Link} to="/signup" variant="primary" className="ms-2">
-                  Sign Up
-                </Button>
+                <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                <Button as={Link} to="/signup" variant="primary" className="ms-2">Sign Up</Button>
               </>
             ) : (
-              <Button onClick={handleLogout} variant="danger">
-                Logout
-              </Button>
+              <Button onClick={handleLogout} variant="danger">Logout</Button>
             )}
           </Nav>
         </Navbar.Collapse>

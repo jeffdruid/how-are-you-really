@@ -91,7 +91,11 @@ const CreatePost = () => {
         </Form.Group>
         <Form.Group className="mb-3">
           <Form.Label>Mood:</Form.Label>
-          <Form.Select value={mood} onChange={(e) => setMood(e.target.value)}>
+          <Form.Select
+            className="bg-dark text-light"
+            value={mood}
+            onChange={(e) => setMood(e.target.value)}
+          >
             <option value="happy">😊 Happy</option>
             <option value="sad">😢 Sad</option>
             <option value="anxious">😟 Anxious</option>
