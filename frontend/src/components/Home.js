@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PostFeed from './PostFeed'; 
 import CreatePost from './CreatePost';
 import { Container, Button, Alert } from 'react-bootstrap';
+import SearchBar from './SearchBar';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ const Home = () => {
           Go to Your Profile
         </Button>
       </div>
+      {/* Search Bar Section */}
+      <SearchBar />
       <hr />
       {/* Create Post Section */}
       <CreatePost />

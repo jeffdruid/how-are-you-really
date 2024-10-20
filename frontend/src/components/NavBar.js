@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Link, useNavigate } from 'react-router-dom';
-import SearchBar from './SearchBar';
 
 const NavigationBar = () => {
   const { currentUser } = useAuth();
@@ -40,7 +39,6 @@ const NavigationBar = () => {
     <Navbar bg="" expand="lg" sticky="top">
       <Container>
         <Navbar.Brand as={Link} to="/">How Are You Really</Navbar.Brand>
-        <SearchBar />
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
