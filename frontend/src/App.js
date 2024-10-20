@@ -9,6 +9,7 @@ import PasswordReset from './components/PasswordReset';
 import VerifyEmail from './components/VerifyEmail'; 
 import ProfileView from './components/ProfileView';
 import NotFound from './components/NotFound';
+import PostDetail from './components/PostDetail';
 import './App.css';
 
 const App = () => {
@@ -50,7 +51,8 @@ const App = () => {
           </PrivateRoute>
         } />
         <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
-        
+        <Route path="/posts/:id" element={<PostDetail />} />
+
         {/* Protected Home Route */}
         <Route path="/" element={
           <PrivateRoute>
