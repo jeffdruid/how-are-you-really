@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Form, Alert, Image } from 'react-bootstrap';
 import PropTypes from 'prop-types';
+import imageCompression from 'browser-image-compression';
 
 const ImageUploader = ({ onImageSelected, maxSize = 5 * 1024 * 1024, accept = 'image/*' }) => {
   const [error, setError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     setError('');
     const file = e.target.files[0];
 
@@ -27,8 +28,22 @@ const ImageUploader = ({ onImageSelected, maxSize = 5 * 1024 * 1024, accept = 'i
         return;
       }
 
-      setPreviewUrl(URL.createObjectURL(file));
-      onImageSelected(file);
+      try {
+        // Generate thumbnail
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 200,
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        const thumbnailUrl = URL.createObjectURL(compressedFile);
+
+        setPreviewUrl(thumbnailUrl);
+        onImageSelected({ original: file, thumbnail: compressedFile });
+      } catch (err) {
+        setError('Error generating thumbnail.');
+        onImageSelected(null);
+      }
     } else {
       setPreviewUrl('');
       onImageSelected(null);
