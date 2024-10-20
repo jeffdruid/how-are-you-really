@@ -1,13 +1,15 @@
-// FollowStats.js
-
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import UserListModal from './UserListModal';
 
 const FollowStats = ({ userId }) => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [error, setError] = useState('');
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState('followers');
 
   useEffect(() => {
     let unsubscribeFollowers;
@@ -47,19 +49,48 @@ const FollowStats = ({ userId }) => {
     };
   }, [userId]);
 
+  const handleShowFollowers = () => {
+    setModalType('followers');
+    setShowModal(true);
+  };
+
+  const handleShowFollowing = () => {
+    setModalType('following');
+    setShowModal(true);
+  };
+
   if (error) {
-    // Optionally, display the error to the user
     console.error(error);
   }
 
   return (
     <div className="mt-4">
       <p>
-        <strong>Followers:</strong> {followersCount}
+        <strong>Followers:</strong>{' '}
+        <span
+          onClick={handleShowFollowers}
+          style={{ cursor: 'pointer', color: 'blue' }}
+        >
+          {followersCount}
+        </span>
       </p>
       <p>
-        <strong>Following:</strong> {followingCount}
+        <strong>Following:</strong>{' '}
+        <span
+          onClick={handleShowFollowing}
+          style={{ cursor: 'pointer', color: 'blue' }}
+        >
+          {followingCount}
+        </span>
       </p>
+
+      {/* User List Modal */}
+      <UserListModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        userId={userId}
+        type={modalType}
+      />
     </div>
   );
 };

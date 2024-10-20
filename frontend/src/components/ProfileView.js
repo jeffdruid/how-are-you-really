@@ -9,6 +9,7 @@ import DeleteAccount from './DeleteAccount';
 import FollowButton from './FollowButton';
 import FollowStats from './FollowStats';
 import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar } from 'react-bootstrap';
+import UserStats from './UserStats';
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -168,6 +169,7 @@ const ProfileView = () => {
           )}
           {/* Follow Stats */}
           <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
+          <UserStats userId={isOwnProfile ? currentUser.uid : userId} />
         </Col>
       </Row>
 
