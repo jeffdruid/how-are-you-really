@@ -65,6 +65,7 @@ const Post = ({ post }) => {
       const postRef = doc(firestore, 'Posts', post.id);
       await updateDoc(postRef, {
         content: editedContent,
+        content_lower: editedContent.toLowerCase(), // Update the lowercase content
         updated_at: serverTimestamp(),
       });
       setIsEditing(false);
@@ -139,10 +140,17 @@ const Post = ({ post }) => {
                     </Link>
                   )}
                 </strong> | <em>{post.created_at?.toDate().toLocaleString()}</em>
-                
               </Card.Subtitle>
             </div>
             <Card.Text>{post.content}</Card.Text>
+
+            {/* Display Image if available */}
+            {post.imageUrl && (
+              <div className="mb-3">
+                <Image src={post.imageUrl} alt="Post Image" fluid rounded />
+              </div>
+            )}
+
             <Card.Text className="text-muted">
               <strong>Mood:</strong> {post.mood}
             </Card.Text>

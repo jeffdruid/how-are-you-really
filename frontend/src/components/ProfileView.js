@@ -8,9 +8,10 @@ import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import DeleteAccount from './DeleteAccount';
 import FollowButton from './FollowButton';
 import FollowStats from './FollowStats';
-import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar, Spinner } from 'react-bootstrap';
 import UserStats from './UserStats';
 import UserPosts from './UserPosts';
+import ImageUploader from './ImageUploader'; // Import the ImageUploader component
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -19,11 +20,14 @@ const ProfileView = () => {
 
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
   const [profilePicUrl, setProfilePicUrl] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // New states for image upload
+  const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -77,27 +81,32 @@ const ProfileView = () => {
         updated_at: serverTimestamp(),
       };
 
-      if (profilePic) {
-        const storageRef = ref(storage, `profilePictures/${currentUser.uid}`);
-        await uploadBytes(storageRef, profilePic);
-        const downloadURL = await getDownloadURL(storageRef);
+      if (image) {
+        setUploading(true);
+
+        // Create a unique file name using userId and image name
+        const imageRef = ref(storage, `profile_pictures/${currentUser.uid}/${image.name}`);
+
+        // Upload the image
+        await uploadBytes(imageRef, image);
+
+        // Get the download URL
+        const downloadURL = await getDownloadURL(imageRef);
+
+        // Update the post document with the image URL
         updatedData.profilePicUrl = downloadURL;
         setProfilePicUrl(downloadURL);
+        setUploading(false);
       }
 
       await updateDoc(userDocRef, updatedData);
       setMessage('Profile updated successfully!');
+      setImage(null);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleProfilePicChange = (e) => {
-    if (e.target.files[0]) {
-      setProfilePic(e.target.files[0]);
     }
   };
 
@@ -147,12 +156,24 @@ const ProfileView = () => {
                 />
               </Form.Group>
 
+              {/* Replace the existing File Input with ImageUploader */}
               <Form.Group controlId="profilePic" className="mt-3">
                 <Form.Label>Profile Picture</Form.Label>
-                <Form.Control type="file" accept="image/*" onChange={handleProfilePicChange} />
+                <ImageUploader
+                  onImageSelected={(file) => setImage(file)}
+                  maxSize={5 * 1024 * 1024} // 5MB
+                  accept="image/*"
+                />
               </Form.Group>
 
-              <Button variant="primary" type="submit" className="mt-4" disabled={loading}>
+              {/* Display upload progress */}
+              {uploading && (
+                <div className="mt-3">
+                  <Spinner animation="border" size="sm" /> Uploading image...
+                </div>
+              )}
+
+              <Button variant="primary" type="submit" className="mt-4" disabled={loading || uploading}>
                 {loading ? 'Updating...' : 'Update Profile'}
               </Button>
             </Form>
