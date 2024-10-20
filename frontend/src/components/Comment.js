@@ -151,6 +151,7 @@ const Comment = ({ comment, postId }) => {
       ) : (
         <>
           <div className="d-flex align-items-center mb-2">
+            <Link to={`/users/${comment.userId}`} className="text-decoration-none">
             {profilePicUrl && (
               <Image
                 src={profilePicUrl}
@@ -162,12 +163,9 @@ const Comment = ({ comment, postId }) => {
               />
             )}
             <strong>
-              {comment.isAnonymous ? 'Anonymous' : (
-                <Link to={`/users/${comment.userId}`} className="text-decoration-none">
-                  {comment.username}
-                </Link>
-              )}
+              {comment.isAnonymous ? 'Anonymous' : comment.username}
             </strong> |{' '}
+            </Link>
             <em>{comment.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{comment.content}</p>

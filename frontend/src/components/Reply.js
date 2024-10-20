@@ -92,6 +92,7 @@ const Reply = ({ reply, postId, commentId }) => {
       ) : (
         <>
           <div className="d-flex align-items-center">
+            <Link to={`/users/${reply.userId}`} className="text-decoration-none">
             <Image
               src={profilePicUrl}
               roundedCircle
@@ -102,11 +103,10 @@ const Reply = ({ reply, postId, commentId }) => {
             />
             <strong>
               {reply.username && (
-                <Link to={`/users/${reply.userId}`} className="text-decoration-none">
-                  {reply.username}
-                </Link>
+                  reply.username
               )}
             </strong> |{' '}
+            </Link>
             <em>{reply.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{reply.content}</p>
