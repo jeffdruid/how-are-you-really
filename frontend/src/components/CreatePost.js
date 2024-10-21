@@ -197,7 +197,7 @@ const CreatePost = () => {
                 onChange={(e) => setIsAnonymous(e.target.checked)}
               />
             </Form.Group>
-            <Button type="submit" variant="primary" disabled={loading || uploading} block>
+            <Button type="submit" variant="primary" disabled={loading || uploading}>
               {loading ? 'Posting...' : 'Post'}
             </Button>
           </Form>
