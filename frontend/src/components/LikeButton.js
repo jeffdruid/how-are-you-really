@@ -1,10 +1,21 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { firestore } from '../firebase';
-import { doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDoc, // Import getDoc
+} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from 'react-bootstrap';
+import { increment } from 'firebase/firestore';
 
-const LikeButton = ({ postId, commentId, replyId }) => {
+const LikeButton = ({ postId, commentId = null, replyId = null, postOwnerId = null }) => {
   const { currentUser } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -12,7 +23,17 @@ const LikeButton = ({ postId, commentId, replyId }) => {
   // Memoize the function using useCallback to prevent re-creation on every render
   const getLikeDocRef = useCallback(() => {
     if (replyId) {
-      return doc(firestore, 'Posts', postId, 'Comments', commentId, 'Replies', replyId, 'Likes', currentUser.uid);
+      return doc(
+        firestore,
+        'Posts',
+        postId,
+        'Comments',
+        commentId,
+        'Replies',
+        replyId,
+        'Likes',
+        currentUser.uid
+      );
     } else if (commentId) {
       return doc(firestore, 'Posts', postId, 'Comments', commentId, 'Likes', currentUser.uid);
     } else {
@@ -78,8 +99,60 @@ const LikeButton = ({ postId, commentId, replyId }) => {
           likedAt: new Date(),
         });
         await updateDoc(itemDocRef, {
-          likeCount: (likeCount || 0) + 1,
+          likeCount: increment(1),
         });
+
+        // Create notification if liking and not own post/comment/reply
+        if (currentUser.uid !== postOwnerId) {
+          let notificationTargetUserId = postOwnerId;
+          console.log('postOwnerId:', postOwnerId);
+          if (commentId) {
+            // Fetch comment owner ID
+            const commentDocRef = doc(firestore, 'Posts', postId, 'Comments', commentId);
+            const commentDoc = await getDoc(commentDocRef); // Use getDoc
+            if (commentDoc.exists()) {
+              notificationTargetUserId = commentDoc.data().userId;
+            }
+          } else if (replyId) {
+            // Fetch reply owner ID
+            const replyDocRef = doc(
+              firestore,
+              'Posts',
+              postId,
+              'Comments',
+              commentId,
+              'Replies',
+              replyId
+            );
+            const replyDoc = await getDoc(replyDocRef); // Use getDoc
+            if (replyDoc.exists()) {
+              notificationTargetUserId = replyDoc.data().userId;
+            }
+          }
+          if (!notificationTargetUserId) {
+            console.error('Notification target user ID is undefined.');
+            return;
+          }
+
+          if (currentUser.uid !== notificationTargetUserId) {
+            console.log('notificationTargetUserId:', notificationTargetUserId);
+            const notificationsRef = collection(
+              firestore,
+              'Users',
+              notificationTargetUserId,
+              'Notifications'
+            );
+            await addDoc(notificationsRef, {
+              type: 'like',
+              fromUserId: currentUser.uid,
+              postId,
+              commentId: commentId || null,
+              replyId: replyId || null,
+              created_at: serverTimestamp(),
+              read: false,
+            });
+          }
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -96,7 +169,9 @@ const LikeButton = ({ postId, commentId, replyId }) => {
       >
         {liked ? '❤️ Unlike' : '🤍 Like'}
       </Button>
-      <span className="ms-2">{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
+      <span className="ms-2">
+        {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
+      </span>
     </div>
   );
 };

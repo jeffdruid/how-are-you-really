@@ -1,5 +1,3 @@
-// FollowButton.js
-
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import {
@@ -13,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { Button } from 'react-bootstrap';
 
 const FollowButton = ({ targetUserId }) => {
   const { currentUser } = useAuth();
@@ -56,6 +55,17 @@ const FollowButton = ({ targetUserId }) => {
       });
       setIsFollowing(true);
       setFollowDocId(docRef.id);
+
+      // Create notification if not following self
+      if (currentUser.uid !== targetUserId) {
+        const notificationsRef = collection(firestore, 'Users', targetUserId, 'Notifications');
+        await addDoc(notificationsRef, {
+          type: 'follow',
+          fromUserId: currentUser.uid,
+          created_at: serverTimestamp(),
+          read: false,
+        });
+      }
     } catch (err) {
       console.error('Failed to follow user:', err);
       setError('Failed to follow user.');
@@ -86,12 +96,13 @@ const FollowButton = ({ targetUserId }) => {
   }
 
   return (
-    <button
+    <Button
       onClick={isFollowing ? handleUnfollow : handleFollow}
-      className="btn btn-primary mt-3"
+      variant={isFollowing ? 'danger' : 'primary'}
+      className="mt-3"
     >
       {isFollowing ? 'Unfollow' : 'Follow'}
-    </button>
+    </Button>
   );
 };
 
