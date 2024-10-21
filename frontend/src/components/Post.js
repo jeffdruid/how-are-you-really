@@ -1,4 +1,3 @@
-// src/components/Post.js
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import {
@@ -10,7 +9,6 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where,
 } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LikeButton from './LikeButton';
@@ -214,8 +212,13 @@ const Post = ({ post }) => {
                 <strong>Mood:</strong> {post.mood}
               </Card.Text>
 
-              {/* Like Button */}
-              <LikeButton postId={post.id} />
+              {/* // Correctly pass postOwnerId to LikeButton */}
+              <LikeButton
+                postId={post.id}
+                postOwnerId={post.userId}
+                commentId={null}    // Ensure these are null when not needed
+                replyId={null}
+              />
 
               {/* Toggle Comments Button */}
               <Button
