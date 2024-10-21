@@ -44,10 +44,11 @@ const NavigationBar = () => {
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
             {currentUser && <Nav.Link as={Link} to="/profile">Profile</Nav.Link>}
+            {currentUser && <Nav.Link as={Link} to="/notifications">Notifications</Nav.Link>}
           </Nav>
           <Nav>
             {/* Dark Mode Toggle Button */}
-            <Button onClick={toggleDarkMode} variant={darkMode ? 'light' : 'dark'}>
+            <Button onClick={toggleDarkMode} variant={darkMode ? 'light' : 'dark'} className="me-2">
               {darkMode ? 'Light Mode' : 'Dark Mode'}
             </Button>
             {!currentUser ? (
