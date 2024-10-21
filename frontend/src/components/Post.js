@@ -1,12 +1,23 @@
+// src/components/Post.js
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  where,
+} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import LikeButton from './LikeButton';
 import Comment from './Comment';
 import CommentForm from './CommentForm';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
+import { Card, Button, Form, Alert, Spinner, Image, Collapse } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
 import ImageModal from './ImageModal'; // Import ImageModal component
@@ -27,6 +38,11 @@ const Post = ({ post }) => {
   const [modalShow, setModalShow] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
 
+  // Collapsible comments state
+  const [showComments, setShowComments] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState('');
+
   useEffect(() => {
     const fetchProfilePic = async () => {
       const url = await fetchProfilePicUrl(post.userId, post.isAnonymous);
@@ -38,22 +54,41 @@ const Post = ({ post }) => {
     }
   }, [post.userId, post.isAnonymous]);
 
+  // Fetch comments when comments section is expanded
   useEffect(() => {
-    const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
-    const q = query(commentsRef, orderBy('created_at', 'asc')); // Order comments by creation time
+    let unsubscribe;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const commentsData = [];
-      snapshot.forEach((doc) => {
-        commentsData.push({ id: doc.id, ...doc.data() });
-      });
-      setComments(commentsData);
-    }, (error) => {
-      console.error('Error fetching comments:', error);
-    });
+    const fetchComments = () => {
+      setCommentsLoading(true);
+      setCommentsError('');
 
-    return () => unsubscribe();
-  }, [post.id]);
+      const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
+      const commentsQuery = query(commentsRef, orderBy('created_at', 'asc'));
+
+      unsubscribe = onSnapshot(
+        commentsQuery,
+        (snapshot) => {
+          const commentsData = [];
+          snapshot.forEach((doc) => commentsData.push({ id: doc.id, ...doc.data() }));
+          setComments(commentsData);
+          setCommentsLoading(false);
+        },
+        (error) => {
+          console.error('Error fetching comments:', error);
+          setCommentsError('Failed to load comments.');
+          setCommentsLoading(false);
+        }
+      );
+    };
+
+    if (showComments) {
+      fetchComments();
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [showComments, post.id]);
 
   const handleEdit = async (e) => {
     e.preventDefault();
@@ -107,6 +142,10 @@ const Post = ({ post }) => {
   const handleImageClick = (imageUrl) => {
     setModalImageUrl(imageUrl);
     setModalShow(true);
+  };
+
+  const toggleComments = () => {
+    setShowComments((prev) => !prev);
   };
 
   return (
@@ -178,6 +217,41 @@ const Post = ({ post }) => {
               {/* Like Button */}
               <LikeButton postId={post.id} />
 
+              {/* Toggle Comments Button */}
+              <Button
+                variant="link"
+                onClick={toggleComments}
+                aria-controls={`comments-${post.id}`}
+                aria-expanded={showComments}
+                className="mt-3 p-0"
+              >
+                {showComments ? 'Hide Comments' : 'Show Comments'}
+              </Button>
+
+              {/* Collapsible Comments Section */}
+              <Collapse in={showComments}>
+                <div id={`comments-${post.id}`}>
+                  <hr />
+                  <h5>Comments</h5>
+                  {commentsError && <Alert variant="danger">{commentsError}</Alert>}
+                  {commentsLoading ? (
+                    <Spinner animation="border" />
+                  ) : (
+                    <>
+                      {comments.length === 0 ? (
+                        <p>No comments yet.</p>
+                      ) : (
+                        comments.map((comment) => (
+                          <Comment key={comment.id} comment={comment} postId={post.id} />
+                        ))
+                      )}
+                      {currentUser && <CommentForm postId={post.id} />}
+                    </>
+                  )}
+                </div>
+              </Collapse>
+
+              {/* Edit and Delete Buttons */}
               {isOwnPost && (
                 <div className="mt-3">
                   <Button variant="warning" onClick={() => setIsEditing(true)} className="me-2">
@@ -190,19 +264,6 @@ const Post = ({ post }) => {
               )}
             </>
           )}
-
-          {/* Comments Section */}
-          <div className="mt-4">
-            <h4>Comments</h4>
-            {comments.length === 0 ? (
-              <p>No comments yet.</p>
-            ) : (
-              comments.map((comment) => (
-                <Comment key={comment.id} comment={comment} postId={post.id} />
-              ))
-            )}
-            {currentUser && <CommentForm postId={post.id} />}
-          </div>
         </Card.Body>
       </Card>
 
