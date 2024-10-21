@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 
-const CommentForm = ({ postId }) => {
+const CommentForm = ({ postId, postOwnerId }) => {
   const { currentUser, username } = useAuth(); // Destructure username from context
   const [commentContent, setCommentContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false); // Added state for anonymity
@@ -25,14 +25,29 @@ const CommentForm = ({ postId }) => {
     }
 
     try {
-      await addDoc(collection(firestore, 'Posts', postId, 'Comments'), {
+      const commentRef = await addDoc(collection(firestore, 'Posts', postId, 'Comments'), {
         userId: currentUser.uid, // Associate comment with user
         username: isAnonymous ? 'Anonymous' : username, // Set username based on anonymity
         content: commentContent,
         isAnonymous, // Store the anonymity flag
+        likeCount: 0, // Initialize like count
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       });
+
+      // Create notification if commenter is not the post owner
+      if (currentUser.uid !== postOwnerId) {
+        const notificationsRef = collection(firestore, 'Users', postOwnerId, 'Notifications');
+        await addDoc(notificationsRef, {
+          type: 'comment',
+          fromUserId: currentUser.uid,
+          postId,
+          commentId: commentRef.id,
+          created_at: serverTimestamp(),
+          read: false,
+        });
+      }
+
       setCommentContent('');
       setIsAnonymous(false);
       console.log('Comment added successfully');
