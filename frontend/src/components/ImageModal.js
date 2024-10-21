@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Image } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
-const ImageModal = ({ show, handleClose, imageUrl, altText }) => {
+const ImageModal = ({ show, handleClose, imageUrl, altText = 'Image' }) => {
   return (
     <Modal show={show} onHide={handleClose} centered size="lg">
       <Modal.Body className="p-0">
@@ -19,8 +19,5 @@ ImageModal.propTypes = {
   altText: PropTypes.string,
 };
 
-ImageModal.defaultProps = {
-  altText: 'Image',
-};
 
 export default ImageModal;
