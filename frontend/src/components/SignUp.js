@@ -110,7 +110,7 @@ const SignUp = () => {
           {passwordError && <Alert variant="danger">{passwordError}</Alert>}
         </Form.Group>
 
-        <Button variant="primary" type="submit" className="mt-4" block>
+        <Button variant="primary" type="submit" className="mt-4" >
           Sign Up
         </Button>
       </Form>

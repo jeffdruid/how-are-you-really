@@ -97,7 +97,6 @@ const DeleteAccount = () => {
           className="mt-3"
           variant="danger"
           onClick={handleDeleteAccount}
-          block
           disabled={loading}
         >
           {loading ? 'Deleting...' : 'Delete Account'}
