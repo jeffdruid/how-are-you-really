@@ -10,6 +10,7 @@ import VerifyEmail from './components/VerifyEmail';
 import ProfileView from './components/ProfileView';
 import NotFound from './components/NotFound';
 import PostDetail from './components/PostDetail';
+import NotificationsList from './components/NotificationsList';
 import './App.css';
 
 const App = () => {
@@ -53,12 +54,25 @@ const App = () => {
         <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
         <Route path="/posts/:id" element={<PostDetail />} />
 
+        {/* Notifications Route */}
+        <Route
+          path="/notifications"
+          element={
+            <PrivateRoute>
+              <NotificationsList />
+            </PrivateRoute>
+          }
+        />
+
         {/* Protected Home Route */}
-        <Route path="/" element={
-          <PrivateRoute>
-            <Home />
-          </PrivateRoute>
-        } />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
 
         {/* This route should be at the end */}
         <Route path="*" element={<NotFound />} />
