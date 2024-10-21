@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import NavigationBar from './components/NavBar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
@@ -12,9 +12,13 @@ import NotFound from './components/NotFound';
 import PostDetail from './components/PostDetail';
 import NotificationsList from './components/NotificationsList';
 import './App.css';
+import { auth, firestore } from './firebase';
+import { getRedirectResult } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const App = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if the user has a preferred theme from localStorage
@@ -35,8 +39,37 @@ const App = () => {
     localStorage.setItem('dark-mode', !darkMode); // Save the theme preference
   };
 
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const user = result.user;
+          const userDocRef = doc(firestore, 'Users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+              username: user.displayName || '',
+              email: user.email,
+              bio: '',
+              emailVerified: user.emailVerified,
+              created_at: serverTimestamp(),
+              updated_at: serverTimestamp(),
+            });
+          }
+          navigate('/'); // Redirect to Home after successful login
+        }
+      } catch (err) {
+        console.error('Error handling redirect result:', err);
+      }
+    };
+
+    handleRedirect();
+  }, [navigate]);
+
   return (
-    <Router>
+    <>
       {/* Navigation bar will be visible on every page */}
       <NavigationBar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       <Routes>
@@ -77,7 +110,7 @@ const App = () => {
         {/* This route should be at the end */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Router>
+    </>
   );
 };
 
