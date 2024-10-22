@@ -21,7 +21,7 @@ const CreatePost = () => {
   const [uploading, setUploading] = useState(false);
 
   // State to control form visibility
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch username from Firestore when component mounts
