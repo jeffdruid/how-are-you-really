@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,11 +6,15 @@ import { firebaseErrorMessages } from '../utils/firebaseErrors';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 
 const CommentForm = ({ postId, postOwnerId }) => {
-  const { currentUser, username } = useAuth(); // Destructure username from context
+  const { currentUser, username } = useAuth();
   const [commentContent, setCommentContent] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false); // Added state for anonymity
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    console.log('Post Owner ID:', postOwnerId);
+  }, [postOwnerId]);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -25,36 +29,47 @@ const CommentForm = ({ postId, postOwnerId }) => {
     }
 
     try {
+      // Add the comment to Firestore
       const commentRef = await addDoc(collection(firestore, 'Posts', postId, 'Comments'), {
-        userId: currentUser.uid, // Associate comment with user
-        username: isAnonymous ? 'Anonymous' : username, // Set username based on anonymity
+        userId: currentUser.uid,
+        username: isAnonymous ? 'Anonymous' : username,
         content: commentContent,
-        isAnonymous, // Store the anonymity flag
-        likeCount: 0, // Initialize like count
+        isAnonymous,
+        likeCount: 0,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       });
-
-      // Create notification if commenter is not the post owner
-      if (currentUser.uid !== postOwnerId) {
-        const notificationsRef = collection(firestore, 'Users', postOwnerId, 'Notifications');
-        await addDoc(notificationsRef, {
-          type: 'comment',
-          fromUserId: currentUser.uid,
-          postId,
-          commentId: commentRef.id,
-          created_at: serverTimestamp(),
-          read: false,
-        });
+  
+      console.log('Comment added successfully:', commentRef.id);
+  
+      // Ensure postOwnerId is passed correctly and notification logic is correct
+      if (postOwnerId) {
+        if (currentUser.uid !== postOwnerId) {
+          console.log('Sending notification to post owner:', postOwnerId);
+          const notificationsRef = collection(firestore, 'Users', postOwnerId, 'Notifications');
+          await addDoc(notificationsRef, {
+            type: 'comment',
+            fromUserId: currentUser.uid,
+            postId,
+            commentId: commentRef.id,
+            created_at: serverTimestamp(),
+            read: false,
+          });
+          console.log('Notification sent to post owner:', postOwnerId);
+        } else {
+          console.log('The commenter is the post owner. No notification sent.');
+        }
+      } else {
+        console.log('postOwnerId is missing.');
       }
-
+      
+  
       setCommentContent('');
       setIsAnonymous(false);
-      console.log('Comment added successfully');
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
-      console.error('Error adding comment:', err);
+      console.error('Error adding comment or notification:', err);
     } finally {
       setLoading(false);
     }

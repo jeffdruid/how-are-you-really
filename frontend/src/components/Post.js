@@ -248,7 +248,8 @@ const Post = ({ post }) => {
                           <Comment key={comment.id} comment={comment} postId={post.id} />
                         ))
                       )}
-                      {currentUser && <CommentForm postId={post.id} />}
+                      {/* Correctly pass postOwnerId to CommentForm */}
+                      {currentUser && <CommentForm postId={post.id} postOwnerId={post.userId} />}
                     </>
                   )}
                 </div>
