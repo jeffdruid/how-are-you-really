@@ -45,7 +45,8 @@ const NavigationBar = () => {
             <Nav.Link as={Link} to="/">Home</Nav.Link>
             {currentUser && <Nav.Link as={Link} to="/profile">Profile</Nav.Link>}
             {currentUser && <Nav.Link as={Link} to="/notifications">Notifications</Nav.Link>}
-            {currentUser && <Nav.Link as={Link} to="/mood-analytics">Mood Analytics</Nav.Link>} {/* New link for Mood Analytics */}
+            {currentUser && <Nav.Link as={Link} to="/mood-analytics">Mood Analytics</Nav.Link>}
+            {currentUser && <Nav.Link as={Link} to="/post-performance">Post Performance</Nav.Link>}
           </Nav>
           <Nav>
             {/* Dark Mode Toggle Button */}

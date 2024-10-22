@@ -12,11 +12,13 @@ import NotFound from './components/NotFound';
 import PostDetail from './components/PostDetail';
 import NotificationsList from './components/NotificationsList';
 import MoodAnalytics from './components/MoodAnalytics';
+import PostPerformance from './components/PostPerformance';
 import './App.css';
 import { auth, firestore } from './firebase';
 import { getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 const App = () => {
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
@@ -88,6 +90,7 @@ const App = () => {
         <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
         <Route path="/posts/:id" element={<PostDetail />} />
         <Route path="/mood-analytics" element={<MoodAnalytics />} /> {/* New route for Mood Analytics */}
+        <Route path="/post-performance" element={<PostPerformance />} /> {/* New route for Post Performance */}
 
         {/* Notifications Route */}
         <Route
