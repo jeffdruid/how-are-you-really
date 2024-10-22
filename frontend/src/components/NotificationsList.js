@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, writeBatch, limit, startAfter } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, writeBatch, limit, startAfter, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationItem from './NotificationItem';
 import { Spinner, Alert, Button, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
@@ -18,15 +18,27 @@ const NotificationsList = () => {
   // Memoized fetchNotifications function to avoid re-creating it on every render
   const fetchNotifications = useCallback(
     (loadMore = false) => {
-      if (!currentUser || (!loadMore && notifications.length > 0)) return; // Prevent re-fetching on every render
+      if (!currentUser || (!loadMore && notifications.length > 0)) return;
       setLoading(true);
 
       const notificationsRef = collection(firestore, 'Users', currentUser.uid, 'Notifications');
-      let notificationsQuery = query(
-        notificationsRef,
-        orderBy('created_at', 'desc'),
-        limit(NOTIFICATIONS_LIMIT)
-      );
+      let notificationsQuery;
+
+      // Filter notifications based on the selected filter
+      if (filter === 'unread') {
+        notificationsQuery = query(
+          notificationsRef,
+          where('read', '==', false),
+          orderBy('created_at', 'desc'),
+          limit(NOTIFICATIONS_LIMIT)
+        );
+      } else {
+        notificationsQuery = query(
+          notificationsRef,
+          orderBy('created_at', 'desc'),
+          limit(NOTIFICATIONS_LIMIT)
+        );
+      }
 
       if (loadMore && lastVisible) {
         notificationsQuery = query(
@@ -63,12 +75,12 @@ const NotificationsList = () => {
 
       return () => unsubscribe();
     },
-    [currentUser, lastVisible, notifications.length]
+    [currentUser, lastVisible, filter, notifications.length]
   );
 
   useEffect(() => {
-    fetchNotifications(false); // Only load initial notifications when the component mounts
-  }, [fetchNotifications]);
+    fetchNotifications(false);
+  }, [fetchNotifications, filter]);
 
   const markAllAsRead = async () => {
     try {
@@ -144,10 +156,9 @@ const NotificationsList = () => {
       {notifications.length === 0 ? (
         <p>No notifications.</p>
       ) : (
-        // 
         notifications.map((notification, index) => (
           <NotificationItem key={`${notification.id}-${index}`} notification={notification} />
-        ) )
+        ))
       )}
 
       {loading && <Spinner animation="border" />}
