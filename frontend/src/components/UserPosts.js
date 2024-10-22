@@ -11,13 +11,14 @@ import {
 } from 'firebase/firestore';
 import Post from './Post';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner, Alert } from 'react-bootstrap';
+import { Spinner, Alert, Button, Collapse } from 'react-bootstrap';
 
 const UserPosts = ({ userId }) => {
   const [posts, setPosts] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
 
   const POSTS_PER_PAGE = 2;
 
@@ -91,25 +92,42 @@ const UserPosts = ({ userId }) => {
   return (
     <div>
       <h3>User Posts</h3>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <InfiniteScroll
-        dataLength={posts.length}
-        next={fetchMorePosts}
-        hasMore={hasMore}
-        loader={<div className="text-center my-4"><Spinner animation="border" /></div>}
-        endMessage={
-          <p style={{ textAlign: 'center' }}>
-            <b>No more posts to display.</b>
-          </p>
-        }
+
+      {/* Toggle Button for Posts */}
+      <Button
+        onClick={() => setOpen(!open)}
+        aria-controls="user-posts-list"
+        aria-expanded={open}
+        variant="secondary"
+        className="mb-3"
       >
-        {posts.length === 0 ? (
-          <p>This user hasn't posted anything yet.</p>
-        ) : (
-          posts.map(post => <Post key={post.id} post={post} />)
-        )}
-      </InfiniteScroll>
-      {hasMore && <Spinner animation="border" />}
+        {open ? 'Hide User Posts' : 'Show User Posts'}
+      </Button>
+
+      {/* Collapsible Posts */}
+      <Collapse in={open}>
+        <div id="user-posts-list">
+          {error && <Alert variant="danger">{error}</Alert>}
+          <InfiniteScroll
+            dataLength={posts.length}
+            next={fetchMorePosts}
+            hasMore={hasMore}
+            loader={<div className="text-center my-4"><Spinner animation="border" /></div>}
+            endMessage={
+              <p style={{ textAlign: 'center' }}>
+                <b>No more posts to display.</b>
+              </p>
+            }
+          >
+            {posts.length === 0 ? (
+              <p>This user hasn't posted anything yet.</p>
+            ) : (
+              posts.map(post => <Post key={post.id} post={post} />)
+            )}
+          </InfiniteScroll>
+          {hasMore && <Spinner animation="border" />}
+        </div>
+      </Collapse>
     </div>
   );
 };
