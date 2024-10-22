@@ -11,6 +11,7 @@ import ProfileView from './components/ProfileView';
 import NotFound from './components/NotFound';
 import PostDetail from './components/PostDetail';
 import NotificationsList from './components/NotificationsList';
+import MoodAnalytics from './components/MoodAnalytics';
 import './App.css';
 import { auth, firestore } from './firebase';
 import { getRedirectResult } from 'firebase/auth';
@@ -86,6 +87,7 @@ const App = () => {
         } />
         <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
         <Route path="/posts/:id" element={<PostDetail />} />
+        <Route path="/mood-analytics" element={<MoodAnalytics />} /> {/* New route for Mood Analytics */}
 
         {/* Notifications Route */}
         <Route
