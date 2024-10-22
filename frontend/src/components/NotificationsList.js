@@ -1,26 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  onSnapshot, 
+  doc, 
+  writeBatch 
+} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationItem from './NotificationItem';
-import { Spinner, Alert, Button } from 'react-bootstrap';
+import { Spinner, Alert, Button, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
 
 const NotificationsList = () => {
   const { currentUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all' or 'unread'
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false); // Track unread status
 
   useEffect(() => {
     if (!currentUser) return;
 
     const notificationsRef = collection(firestore, 'Users', currentUser.uid, 'Notifications');
-    const notificationsQuery = query(notificationsRef, orderBy('created_at', 'desc'));
+    let notificationsQuery = query(notificationsRef, orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(
       notificationsQuery,
       (snapshot) => {
-        const notificationsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        let notificationsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        
+        // Check if there are any unread notifications
+        const unreadNotifications = notificationsData.filter(notification => !notification.read);
+        setHasUnreadNotifications(unreadNotifications.length > 0);
+
+        if (filter === 'unread') {
+          notificationsData = unreadNotifications;
+        }
+
         setNotifications(notificationsData);
         setLoading(false);
       },
@@ -32,11 +50,11 @@ const NotificationsList = () => {
     );
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [currentUser, filter]);
 
   const markAllAsRead = async () => {
     try {
-      const batch = firestore.batch();
+      const batch = writeBatch(firestore); // Correct batch initialization
       notifications.forEach((notification) => {
         if (!notification.read) {
           const notificationRef = doc(
@@ -52,29 +70,51 @@ const NotificationsList = () => {
       await batch.commit();
     } catch (err) {
       console.error('Error marking notifications as read:', err);
+      setError('Failed to mark notifications as read.');
     }
+  };
+
+  const handleFilterChange = (val) => {
+    setFilter(val);
   };
 
   if (loading) {
     return <Spinner animation="border" />;
   }
 
-  if (error) {
-    return <Alert variant="danger">{error}</Alert>;
-  }
-
-  if (notifications.length === 0) {
-    return <p>No notifications.</p>;
-  }
-
   return (
     <div>
-      <Button variant="link" onClick={markAllAsRead}>
-        Mark all as read
-      </Button>
-      {notifications.map((notification) => (
-        <NotificationItem key={notification.id} notification={notification} />
-      ))}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <ToggleButtonGroup 
+          type="radio" 
+          name="filter" 
+          value={filter} 
+          onChange={handleFilterChange}
+        >
+          <ToggleButton id="tbg-radio-1" value="all" variant="outline-primary">
+            All
+          </ToggleButton>
+          <ToggleButton id="tbg-radio-2" value="unread" variant="outline-primary">
+            Unread
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        {hasUnreadNotifications && filter === 'all' && (
+          <Button variant="link" onClick={markAllAsRead}>
+            Mark all as read
+          </Button>
+        )}
+      </div>
+
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      {notifications.length === 0 ? (
+        <p>No notifications.</p>
+      ) : (
+        notifications.map((notification) => (
+          <NotificationItem key={notification.id} notification={notification} />
+        ))
+      )}
     </div>
   );
 };

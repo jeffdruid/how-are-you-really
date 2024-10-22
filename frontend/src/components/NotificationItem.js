@@ -1,9 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from 'react-bootstrap';
+import { firestore } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 const NotificationItem = ({ notification }) => {
-  const { type, fromUserId, postId, created_at, read } = notification;
+  const { type, fromUserId, postId, created_at, read, id } = notification;
+  const { currentUser } = useAuth();
 
   const renderNotificationMessage = () => {
     switch (type) {
@@ -32,10 +36,33 @@ const NotificationItem = ({ notification }) => {
     }
   };
 
+  const handleMarkAsRead = async () => {
+    if (!read) {
+      try {
+        const notificationRef = doc(
+          firestore,
+          'Users',
+          currentUser.uid,
+          'Notifications',
+          id
+        );
+        await updateDoc(notificationRef, { read: true });
+      } catch (err) {
+        console.error('Error marking notification as read:', err);
+      }
+    }
+  };
+
   return (
-    <Card className={`mb-2 ${read ? '' : 'bg-light'}`}>
+    <Card 
+      className={`mb-2 ${read ? '' : 'bg-light'}`} 
+      onClick={handleMarkAsRead} 
+      style={{ cursor: 'pointer' }}
+    >
       <Card.Body>
-        <Card.Text>{renderNotificationMessage()}</Card.Text>
+        <Card.Text className={read ? 'fw-normal' : 'fw-bold'}>
+          {renderNotificationMessage()}
+        </Card.Text>
         <small className="text-muted">
           {created_at?.toDate().toLocaleString()}
         </small>
