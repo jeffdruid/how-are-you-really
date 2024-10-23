@@ -4,6 +4,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  addDoc,
   serverTimestamp,
   collection,
   onSnapshot,
@@ -26,8 +27,9 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
-import ImageModal from "./ImageModal"; // Import ImageModal component
+import ImageModal from "./ImageModal";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
+import ResourceModal from "./ResourceModal"; // Import ResourceModal component
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
@@ -49,6 +51,8 @@ const Post = ({ post }) => {
   const [commentsError, setCommentsError] = useState("");
 
   const { checkModeration } = useModeration(); // Use moderation hook
+  const [showResources, setShowResources] = useState(false); // State to control modal
+  const [flaggedType, setFlaggedType] = useState(null); // Type of flagged content
 
   useEffect(() => {
     const fetchProfilePic = async () => {
@@ -115,9 +119,24 @@ const Post = ({ post }) => {
       editedContent,
       currentUser.accessToken
     );
+
     if (!isSafe) {
-      setError("Your post contains sensitive words. Please modify it.");
-      setLoading(false);
+      // Instead of showing an error, we set the flaggedType and show the modal
+      setFlaggedType("suicide");
+      setShowResources(true); // Show the resources modal
+      setLoading(false); // Stop loading
+      // Save the post to a moderation queue instead of updating it directly in the Posts collection
+      try {
+        await addDoc(collection(firestore, "ModerationQueue"), {
+          userId: currentUser.uid,
+          content: editedContent,
+          created_at: serverTimestamp(),
+          status: "pending",
+        });
+        console.log("Post flagged and saved for moderation");
+      } catch (err) {
+        console.error("Error saving post to moderation queue", err);
+      }
       return;
     }
 
@@ -179,6 +198,11 @@ const Post = ({ post }) => {
       <Card className="mb-4">
         <Card.Body>
           {error && <Alert variant="danger">{error}</Alert>}
+          <ResourceModal
+            show={showResources}
+            handleClose={() => setShowResources(false)}
+            flaggedType={flaggedType}
+          />
 
           {isEditing ? (
             <Form onSubmit={handleEdit}>
