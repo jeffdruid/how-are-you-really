@@ -1,4 +1,3 @@
-// src/components/PostFeed.js
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
 import {
@@ -7,6 +6,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  onSnapshot,
   getDocs,
 } from 'firebase/firestore';
 import Post from './Post';
@@ -21,32 +21,37 @@ const PostFeed = () => {
 
   const POSTS_PER_PAGE = 2;
 
-  // Fetch initial posts
-  const fetchInitialPosts = async () => {
-    try {
-      const initialQuery = query(
-        collection(firestore, 'Posts'),
-        orderBy('created_at', 'desc'),
-        limit(POSTS_PER_PAGE)
-      );
+  // Real-time listener for initial posts
+  useEffect(() => {
+    const initialQuery = query(
+      collection(firestore, 'Posts'),
+      orderBy('created_at', 'desc'),
+      limit(POSTS_PER_PAGE)
+    );
 
-      const snapshot = await getDocs(initialQuery);
-      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPosts(postsData);
+    const unsubscribe = onSnapshot(
+      initialQuery,
+      (snapshot) => {
+        const postsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setPosts(postsData);
 
-      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      setLastDoc(lastVisible);
+        const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+        setLastDoc(lastVisible);
 
-      if (snapshot.docs.length < POSTS_PER_PAGE) {
-        setHasMore(false);
+        if (snapshot.docs.length < POSTS_PER_PAGE) {
+          setHasMore(false);
+        }
+      },
+      (err) => {
+        console.error('Error fetching initial posts:', err);
+        setError('Failed to load posts. Please try again later.');
       }
-    } catch (err) {
-      console.error('Error fetching initial posts:', err);
-      setError('Failed to load posts. Please try again later.');
-    }
-  };
+    );
 
-  // Fetch more posts
+    return () => unsubscribe(); // Clean up the listener when the component unmounts
+  }, []);
+
+  // Fetch more posts (pagination)
   const fetchMorePosts = async () => {
     if (!lastDoc) return;
 
@@ -59,8 +64,8 @@ const PostFeed = () => {
       );
 
       const snapshot = await getDocs(nextQuery);
-      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPosts(prevPosts => [...prevPosts, ...postsData]);
+      const postsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setPosts((prevPosts) => [...prevPosts, ...postsData]);
 
       const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
       setLastDoc(newLastDoc);
@@ -73,11 +78,6 @@ const PostFeed = () => {
       setError('Failed to load more posts. Please try again later.');
     }
   };
-
-  useEffect(() => {
-    fetchInitialPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div>
@@ -101,7 +101,7 @@ const PostFeed = () => {
         {posts.length === 0 ? (
           <p>No posts available.</p>
         ) : (
-          posts.map(post => <Post key={post.id} post={post} />)
+          posts.map((post) => <Post key={post.id} post={post} />)
         )}
       </InfiniteScroll>
     </div>
