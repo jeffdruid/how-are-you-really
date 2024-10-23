@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { Form, Button, Spinner, Alert } from "react-bootstrap";
 import useModeration from "../hooks/useModeration";
+import ResourceModal from "./ResourceModal"; // Import the ResourceModal component
 
 const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" }) => {
   const { currentUser, username } = useAuth();
@@ -13,6 +14,10 @@ const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" })
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { checkModeration } = useModeration();
+
+  // State to manage the modal visibility
+  const [showResources, setShowResources] = useState(false);
+  const [flaggedType, setFlaggedType] = useState(null); // To store the type of sensitive content
 
   useEffect(() => {
     console.log("Post/Comment Owner ID:", postOwnerId);
@@ -33,8 +38,26 @@ const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" })
     // Use moderation to check for trigger words
     const isSafe = await checkModeration(content, currentUser.accessToken);
     if (!isSafe) {
-      setError(`Your ${parentType === "comment" ? "comment" : "reply"} contains sensitive words. Please modify it.`);
-      setLoading(false);
+      setFlaggedType("suicide"); // Customize based on the type of trigger words
+      setShowResources(true); // Show the modal for sensitive content
+      try {
+        await addDoc(collection(firestore, "ModerationQueue"), {
+          userId: currentUser.uid,
+          username: isAnonymous ? "Anonymous" : username,
+          content,
+          isAnonymous,
+          created_at: serverTimestamp(),
+          status: "pending",
+          parentType,
+          postId,
+          commentId: parentType === "reply" ? commentId : null,
+        });
+        console.log(`${parentType.charAt(0).toUpperCase() + parentType.slice(1)} flagged and saved for moderation`);
+      } catch (err) {
+        console.error(`Error saving ${parentType} to moderation queue:`, err);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -93,6 +116,14 @@ const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" })
   return (
     <div className="mt-3">
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Modal for flagged content */}
+      <ResourceModal
+        show={showResources}
+        handleClose={() => setShowResources(false)}
+        flaggedType={flaggedType}
+      />
+
       <Form onSubmit={handleAddContent}>
         <Form.Group controlId="content">
           <Form.Control
