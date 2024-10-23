@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  addDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
@@ -14,6 +15,7 @@ import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { Form, Button, Alert, Spinner, Collapse } from "react-bootstrap";
 import ImageUploader from "./ImageUploader";
 import useModeration from "../hooks/useModeration";
+import ResourceModal from "./ResourceModal"; // Import the ResourceModal
 
 const CreatePost = () => {
   const { currentUser } = useAuth();
@@ -33,6 +35,10 @@ const CreatePost = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const { checkModeration } = useModeration(); // Use the moderation hook
+
+  // State to manage the modal visibility
+  const [showResources, setShowResources] = useState(false);
+  const [flaggedType, setFlaggedType] = useState(null); // To store the type of sensitive content
 
   // Fetch username from Firestore when component mounts
   useEffect(() => {
@@ -62,28 +68,46 @@ const CreatePost = () => {
     setLoading(true);
     setError(""); // Clear previous errors
     setShowSuccess(false);
-  
+
     // Basic validation
     if (content.trim() === "") {
       setError("Post content cannot be empty.");
       setLoading(false);
       return;
     }
-  
+
     // Use moderation to check for trigger words
     const isSafe = await checkModeration(content, currentUser.accessToken);
     if (!isSafe) {
-      setError("Your post contains sensitive words. Please modify your content.");
-      setLoading(false);
+      // Show the modal instead of an error and flag the post
+      setFlaggedType("self-harm");
+      setShowResources(true); // Show the resources modal
+      try {
+        await addDoc(collection(firestore, "ModerationQueue"), {
+          userId: currentUser.uid,
+          username: isAnonymous ? "Anonymous" : username,
+          content,
+          content_lower: content.toLowerCase(),
+          mood,
+          isAnonymous,
+          created_at: serverTimestamp(),
+          status: "pending",
+        });
+        console.log("Post flagged and saved for moderation");
+      } catch (err) {
+        console.error("Error saving post to moderation queue:", err);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
-  
+
     try {
       // Step 1: Create a new post document to get a unique postId
       const newPostRef = doc(collection(firestore, "Posts")); // Generate a new post reference
       await setDoc(newPostRef, {
-        userId: currentUser.uid, // Always set userId to currentUser.uid
-        username: isAnonymous ? "Anonymous" : username, // Set username based on isAnonymous
+        userId: currentUser.uid,
+        username: isAnonymous ? "Anonymous" : username,
         content,
         content_lower: content.toLowerCase(), // For case-insensitive search
         mood,
@@ -94,12 +118,12 @@ const CreatePost = () => {
         imageUrl: null, // Initialize imageUrl as null
         thumbnailUrl: null, // Initialize thumbnailUrl as null
       });
-  
+
       const postId = newPostRef.id; // Get the generated postId
-  
+
       if (images) {
         setUploading(true);
-  
+
         // Upload original image
         const originalRef = ref(
           storage,
@@ -107,7 +131,7 @@ const CreatePost = () => {
         );
         await uploadBytes(originalRef, images.original);
         const originalURL = await getDownloadURL(originalRef);
-  
+
         // Upload thumbnail image
         const thumbnailRef = ref(
           storage,
@@ -115,26 +139,26 @@ const CreatePost = () => {
         );
         await uploadBytes(thumbnailRef, images.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
-  
+
         // Update the post document with image URLs
         await updateDoc(newPostRef, {
           imageUrl: originalURL,
           thumbnailUrl: thumbnailURL,
           updated_at: serverTimestamp(),
         });
-  
+
         setUploading(false);
       }
-  
+
       // Reset form fields
       setContent("");
       setMood("happy");
       setIsAnonymous(false);
       setImages(null);
-  
+
       // Collapse the form
       setOpen(false);
-  
+
       // Show success message
       setShowSuccess(true);
     } catch (err) {
@@ -165,6 +189,13 @@ const CreatePost = () => {
 
       {/* Error Message */}
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Modal for flagged content */}
+      <ResourceModal
+        show={showResources}
+        handleClose={() => setShowResources(false)}
+        flaggedType={flaggedType}
+      />
 
       {/* Toggle Button for Form */}
       <Button
