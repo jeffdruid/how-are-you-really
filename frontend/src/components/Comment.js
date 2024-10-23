@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp, collection, onSnapshot, query, orderBy, addDoc } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
-import Reply from './Reply';
-import LikeButton from './LikeButton'; // Import the LikeButton component
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+} from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import { Form, Button, Spinner, Alert, Image } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
+import Reply from "./Reply";
+import LikeButton from "./LikeButton";
+import CommentForm from "./CommentForm"; // Import reusable CommentForm
+import useModeration from "../hooks/useModeration"; // Import moderation hook
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -15,103 +26,116 @@ const Comment = ({ comment, postId }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState('');
-  const [replies, setReplies] = useState([]); // State for nested replies
-  const [replyContent, setReplyContent] = useState(''); // New reply content
+  const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [replies, setReplies] = useState([]);
+
+  const { checkModeration } = useModeration(); // Use moderation hook
 
   // Fetch the user's profile picture URL
   useEffect(() => {
     const fetchProfilePic = async () => {
-      const url = await fetchProfilePicUrl(comment.userId, comment.isAnonymous);
+      const url = await fetchProfilePicUrl(
+        comment.userId,
+        comment.isAnonymous
+      );
       setProfilePicUrl(url);
     };
-
     if (comment.userId) {
       fetchProfilePic();
     }
   }, [comment.userId, comment.isAnonymous]);
+
   // Fetch replies for this comment, ordered by creation time
   useEffect(() => {
-    const repliesRef = collection(firestore, 'Posts', postId, 'Comments', comment.id, 'Replies');
-    const q = query(repliesRef, orderBy('created_at', 'asc'));
-
+    const repliesRef = collection(
+      firestore,
+      "Posts",
+      postId,
+      "Comments",
+      comment.id,
+      "Replies"
+    );
+    const q = query(repliesRef, orderBy("created_at", "asc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const repliesData = [];
-      snapshot.forEach((doc) => {
-        repliesData.push({ id: doc.id, ...doc.data() });
-      });
+      const repliesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setReplies(repliesData);
-    }, (error) => {
-      console.error('Error fetching replies:', error);
     });
-
     return () => unsubscribe();
   }, [postId, comment.id]);
-
-  const handleReply = async (e) => {
-    e.preventDefault();
-    if (!replyContent.trim()) return;
-    setLoading(true);
-
-    const repliesRef = collection(firestore, 'Posts', postId, 'Comments', comment.id, 'Replies');
-    try {
-      await addDoc(repliesRef, {
-        userId: currentUser.uid,
-        username: currentUser.displayName || currentUser.email,
-        content: replyContent,
-        isAnonymous: false,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      });
-      setReplyContent('');
-    } catch (err) {
-      console.error('Error adding reply:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEdit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
-    if (editedContent.trim() === '') {
-      setError('Comment cannot be empty.');
+    if (editedContent.trim() === "") {
+      setError("Comment cannot be empty.");
+      setLoading(false);
+      return;
+    }
+
+    // Use moderation to check for trigger words
+    const isSafe = await checkModeration(
+      editedContent,
+      currentUser.accessToken
+    );
+    if (!isSafe) {
+      setError("Your comment contains sensitive words. Please modify it.");
       setLoading(false);
       return;
     }
 
     try {
-      const commentRef = doc(firestore, 'Posts', postId, 'Comments', comment.id);
+      const commentRef = doc(
+        firestore,
+        "Posts",
+        postId,
+        "Comments",
+        comment.id
+      );
       await updateDoc(commentRef, {
         content: editedContent,
         updated_at: serverTimestamp(),
       });
       setIsEditing(false);
     } catch (err) {
-      const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
+      setError(
+        firebaseErrorMessages(err.code) ||
+          "An unexpected error occurred. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this comment?');
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this comment?"
+    );
     if (!confirmDelete) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const commentRef = doc(firestore, 'Posts', postId, 'Comments', comment.id);
+      const commentRef = doc(
+        firestore,
+        "Posts",
+        postId,
+        "Comments",
+        comment.id
+      );
       await deleteDoc(commentRef);
     } catch (err) {
-      const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
+      setError(
+        firebaseErrorMessages(err.code) ||
+          "An unexpected error occurred. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -138,7 +162,7 @@ const Comment = ({ comment, postId }) => {
             className="mt-2 me-2"
             disabled={loading}
           >
-            {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+            {loading ? <Spinner animation="border" size="sm" /> : "Save"}
           </Button>
           <Button
             variant="secondary"
@@ -151,22 +175,25 @@ const Comment = ({ comment, postId }) => {
       ) : (
         <>
           <div className="d-flex align-items-center mb-2">
-            <Link to={`/users/${comment.userId}`} className="text-decoration-none">
-            {profilePicUrl && (
-              <Image
-                src={profilePicUrl}
-                loading="lazy"
-                roundedCircle
-                width={30}
-                height={30}
-                className="me-2"
-              />
-            )}
-            <strong>
-              {comment.isAnonymous ? 'Anonymous' : comment.username}
-            </strong> |{' '}
-            </Link>
-            <em>{comment.created_at?.toDate().toLocaleString()}</em>
+            <Link
+              to={`/users/${comment.userId}`}
+              className="text-decoration-none"
+            >
+              {profilePicUrl && (
+                <Image
+                  src={profilePicUrl}
+                  loading="lazy"
+                  roundedCircle
+                  width={30}
+                  height={30}
+                  className="me-2"
+                />
+              )}
+              <strong>
+                {comment.isAnonymous ? "Anonymous" : comment.username}
+              </strong>
+            </Link>{" "}
+            | <em>{comment.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{comment.content}</p>
 
@@ -175,34 +202,24 @@ const Comment = ({ comment, postId }) => {
 
           {/* Nested replies */}
           {replies.length > 0 && (
-            <div style={{ marginLeft: '20px' }}>
+            <div style={{ marginLeft: "20px" }}>
               {replies.map((reply) => (
-                <Reply key={reply.id} reply={reply} postId={postId} commentId={comment.id} />
+                <Reply
+                  key={reply.id}
+                  reply={reply}
+                  postId={postId}
+                  commentId={comment.id}
+                />
               ))}
             </div>
           )}
 
-          {/* Reply Form */}
-          <Form onSubmit={handleReply}>
-            <Form.Group controlId={`reply-${comment.id}`}>
-              <Form.Control
-                as="textarea"
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                rows={1}
-                placeholder="Add a reply..."
-                required
-              />
-            </Form.Group>
-            <Button
-              type="submit"
-              variant="primary"
-              className="mt-2"
-              disabled={loading}
-            >
-              {loading ? <Spinner animation="border" size="sm" /> : 'Reply'}
-            </Button>
-          </Form>
+          {/* Reply Form - Using CommentForm for replies */}
+          <CommentForm
+            postId={postId}
+            commentId={comment.id}
+            parentType="reply"
+          />
 
           {isOwnComment && (
             <div>
@@ -220,7 +237,7 @@ const Comment = ({ comment, postId }) => {
                 onClick={handleDelete}
                 disabled={loading}
               >
-                {loading ? <Spinner animation="border" size="sm" /> : 'Delete'}
+                {loading ? <Spinner animation="border" size="sm" /> : "Delete"}
               </Button>
             </div>
           )}
