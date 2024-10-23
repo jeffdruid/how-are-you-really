@@ -6,49 +6,50 @@ import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { Form, Button, Spinner, Alert } from "react-bootstrap";
 import useModeration from "../hooks/useModeration";
 
-const CommentForm = ({ postId, postOwnerId }) => {
+const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" }) => {
   const { currentUser, username } = useAuth();
-  const [commentContent, setCommentContent] = useState("");
+  const [content, setContent] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { checkModeration } = useModeration();
 
   useEffect(() => {
-    console.log("Post Owner ID:", postOwnerId);
+    console.log("Post/Comment Owner ID:", postOwnerId);
   }, [postOwnerId]);
 
-  const handleAddComment = async (e) => {
+  const handleAddContent = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     // Basic validation
-    if (commentContent.trim() === "") {
-      setError("Comment cannot be empty.");
+    if (content.trim() === "") {
+      setError(`${parentType === "comment" ? "Comment" : "Reply"} cannot be empty.`);
       setLoading(false);
       return;
     }
 
     // Use moderation to check for trigger words
-    const isSafe = await checkModeration(
-      commentContent,
-      currentUser.accessToken
-    );
+    const isSafe = await checkModeration(content, currentUser.accessToken);
     if (!isSafe) {
-      setError("Your comment contains sensitive words. Please modify it.");
+      setError(`Your ${parentType === "comment" ? "comment" : "reply"} contains sensitive words. Please modify it.`);
       setLoading(false);
       return;
     }
 
     try {
-      // Add the comment to Firestore
-      const commentRef = await addDoc(
-        collection(firestore, "Posts", postId, "Comments"),
+      // Add the comment or reply to Firestore
+      const collectionPath = parentType === "comment" 
+        ? `Posts/${postId}/Comments` 
+        : `Posts/${postId}/Comments/${commentId}/Replies`;
+
+      const contentRef = await addDoc(
+        collection(firestore, collectionPath),
         {
           userId: currentUser.uid,
           username: isAnonymous ? "Anonymous" : username,
-          content: commentContent,
+          content,
           isAnonymous,
           likeCount: 0,
           created_at: serverTimestamp(),
@@ -56,44 +57,34 @@ const CommentForm = ({ postId, postOwnerId }) => {
         }
       );
 
-      console.log("Comment added successfully:", commentRef.id);
+      console.log(`${parentType.charAt(0).toUpperCase() + parentType.slice(1)} added successfully:`, contentRef.id);
 
-      // Ensure postOwnerId is passed correctly and notification logic is correct
-      if (postOwnerId) {
+      // Notify the post owner (if applicable)
+      if (parentType === "comment" && postOwnerId) {
         if (currentUser.uid !== postOwnerId) {
           console.log("Sending notification to post owner:", postOwnerId);
-          const notificationsRef = collection(
-            firestore,
-            "Users",
-            postOwnerId,
-            "Notifications"
-          );
+          const notificationsRef = collection(firestore, "Users", postOwnerId, "Notifications");
           await addDoc(notificationsRef, {
-            type: "comment",
+            type: parentType,
             fromUserId: currentUser.uid,
             postId,
-            commentId: commentRef.id,
+            commentId: contentRef.id,
             created_at: serverTimestamp(),
             read: false,
           });
           console.log("Notification sent to post owner:", postOwnerId);
         } else {
-          console.log(
-            "The commenter is the post owner. No notification sent."
-          );
+          console.log("The commenter is the post owner. No notification sent.");
         }
-      } else {
-        console.log("postOwnerId is missing.");
       }
 
-      setCommentContent("");
+      // Reset form
+      setContent("");
       setIsAnonymous(false);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
-      );
-      console.error("Error adding comment or notification:", err);
+      setError(friendlyMessage || `An unexpected error occurred. Please try again.`);
+      console.error(`Error adding ${parentType}:`, err);
     } finally {
       setLoading(false);
     }
@@ -102,13 +93,13 @@ const CommentForm = ({ postId, postOwnerId }) => {
   return (
     <div className="mt-3">
       {error && <Alert variant="danger">{error}</Alert>}
-      <Form onSubmit={handleAddComment}>
-        <Form.Group controlId="commentContent">
+      <Form onSubmit={handleAddContent}>
+        <Form.Group controlId="content">
           <Form.Control
             as="textarea"
-            value={commentContent}
-            onChange={(e) => setCommentContent(e.target.value)}
-            placeholder="Add a comment..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={`Add a ${parentType}...`}
             rows={2}
             required
           />
@@ -127,7 +118,7 @@ const CommentForm = ({ postId, postOwnerId }) => {
           className="mt-3"
           disabled={loading}
         >
-          {loading ? <Spinner animation="border" size="sm" /> : "Post Comment"}
+          {loading ? <Spinner animation="border" size="sm" /> : `Post ${parentType.charAt(0).toUpperCase() + parentType.slice(1)}`}
         </Button>
       </Form>
     </div>
