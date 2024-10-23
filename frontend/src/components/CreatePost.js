@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { firestore, storage } from '../firebase';
-import { collection, setDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useAuth } from '../contexts/AuthContext';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Form, Button, Alert, Spinner, Collapse } from 'react-bootstrap';
-import ImageUploader from './ImageUploader';
+import React, { useState, useEffect } from "react";
+import { firestore, storage } from "../firebase";
+import {
+  collection,
+  setDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useAuth } from "../contexts/AuthContext";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import { Form, Button, Alert, Spinner, Collapse } from "react-bootstrap";
+import ImageUploader from "./ImageUploader";
+import useModeration from "../hooks/useModeration";
 
 const CreatePost = () => {
   const { currentUser } = useAuth();
-  const [username, setUsername] = useState('');
-  const [content, setContent] = useState('');
-  const [mood, setMood] = useState('happy');
+  const [username, setUsername] = useState("");
+  const [content, setContent] = useState("");
+  const [mood, setMood] = useState("happy");
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // New states for image upload
@@ -24,21 +32,23 @@ const CreatePost = () => {
   const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const { checkModeration } = useModeration(); // Use the moderation hook
+
   // Fetch username from Firestore when component mounts
   useEffect(() => {
     const fetchUsername = async () => {
       try {
-        const userDocRef = doc(firestore, 'Users', currentUser.uid);
+        const userDocRef = doc(firestore, "Users", currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const data = userDoc.data();
-          setUsername(data.username || 'Anonymous');
+          setUsername(data.username || "Anonymous");
         } else {
-          setUsername('Anonymous'); // Fallback if user document doesn't exist
+          setUsername("Anonymous"); // Fallback if user document doesn't exist
         }
       } catch (err) {
-        console.error('Error fetching username:', err);
-        setUsername('Anonymous'); // Fallback on error
+        console.error("Error fetching username:", err);
+        setUsername("Anonymous"); // Fallback on error
       }
     };
 
@@ -50,22 +60,30 @@ const CreatePost = () => {
   const handleCreatePost = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(""); // Clear previous errors
     setShowSuccess(false);
-
+  
     // Basic validation
-    if (content.trim() === '') {
-      setError('Post content cannot be empty.');
+    if (content.trim() === "") {
+      setError("Post content cannot be empty.");
       setLoading(false);
       return;
     }
-
+  
+    // Use moderation to check for trigger words
+    const isSafe = await checkModeration(content, currentUser.accessToken);
+    if (!isSafe) {
+      setError("Your post contains sensitive words. Please modify your content.");
+      setLoading(false);
+      return;
+    }
+  
     try {
       // Step 1: Create a new post document to get a unique postId
-      const newPostRef = doc(collection(firestore, 'Posts')); // Generate a new post reference
+      const newPostRef = doc(collection(firestore, "Posts")); // Generate a new post reference
       await setDoc(newPostRef, {
         userId: currentUser.uid, // Always set userId to currentUser.uid
-        username: isAnonymous ? 'Anonymous' : username, // Set username based on isAnonymous
+        username: isAnonymous ? "Anonymous" : username, // Set username based on isAnonymous
         content,
         content_lower: content.toLowerCase(), // For case-insensitive search
         mood,
@@ -76,47 +94,55 @@ const CreatePost = () => {
         imageUrl: null, // Initialize imageUrl as null
         thumbnailUrl: null, // Initialize thumbnailUrl as null
       });
-
+  
       const postId = newPostRef.id; // Get the generated postId
-
+  
       if (images) {
         setUploading(true);
-
+  
         // Upload original image
-        const originalRef = ref(storage, `post_images/${postId}/original_${images.original.name}`);
+        const originalRef = ref(
+          storage,
+          `post_images/${postId}/original_${images.original.name}`
+        );
         await uploadBytes(originalRef, images.original);
         const originalURL = await getDownloadURL(originalRef);
-
+  
         // Upload thumbnail image
-        const thumbnailRef = ref(storage, `post_images/${postId}/thumbnail_${images.thumbnail.name}`);
+        const thumbnailRef = ref(
+          storage,
+          `post_images/${postId}/thumbnail_${images.thumbnail.name}`
+        );
         await uploadBytes(thumbnailRef, images.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
-
+  
         // Update the post document with image URLs
         await updateDoc(newPostRef, {
           imageUrl: originalURL,
           thumbnailUrl: thumbnailURL,
           updated_at: serverTimestamp(),
         });
-
+  
         setUploading(false);
       }
-
+  
       // Reset form fields
-      setContent('');
-      setMood('happy');
+      setContent("");
+      setMood("happy");
       setIsAnonymous(false);
       setImages(null);
-
+  
       // Collapse the form
       setOpen(false);
-
+  
       // Show success message
       setShowSuccess(true);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
-      console.error('Error creating post:', err);
+      setError(
+        friendlyMessage || "An unexpected error occurred. Please try again."
+      );
+      console.error("Error creating post:", err);
     } finally {
       setLoading(false);
     }
@@ -128,7 +154,11 @@ const CreatePost = () => {
 
       {/* Success Message */}
       {showSuccess && (
-        <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible>
+        <Alert
+          variant="success"
+          onClose={() => setShowSuccess(false)}
+          dismissible
+        >
           Post created successfully!
         </Alert>
       )}
@@ -144,7 +174,7 @@ const CreatePost = () => {
         variant="secondary"
         className="mb-3"
       >
-        {open ? 'Hide Post Form' : 'Show Post Form'}
+        {open ? "Hide Post Form" : "Show Post Form"}
       </Button>
 
       {/* Collapsible Form */}
@@ -197,8 +227,12 @@ const CreatePost = () => {
                 onChange={(e) => setIsAnonymous(e.target.checked)}
               />
             </Form.Group>
-            <Button type="submit" variant="primary" disabled={loading || uploading}>
-              {loading ? 'Posting...' : 'Post'}
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading || uploading}
+            >
+              {loading ? "Posting..." : "Post"}
             </Button>
           </Form>
         </div>
