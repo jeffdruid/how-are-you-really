@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
 import {
   doc,
   updateDoc,
@@ -9,37 +9,46 @@ import {
   onSnapshot,
   query,
   orderBy,
-} from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import LikeButton from './LikeButton';
-import Comment from './Comment';
-import CommentForm from './CommentForm';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Card, Button, Form, Alert, Spinner, Image, Collapse } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
-import ImageModal from './ImageModal'; // Import ImageModal component
+} from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import LikeButton from "./LikeButton";
+import Comment from "./Comment";
+import CommentForm from "./CommentForm";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import {
+  Card,
+  Button,
+  Form,
+  Alert,
+  Spinner,
+  Image,
+  Collapse,
+} from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
+import ImageModal from "./ImageModal"; // Import ImageModal component
+import useModeration from "../hooks/useModeration"; // Import moderation hook
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
-  const isOwnPost = currentUser && post.userId && currentUser.uid === post.userId;
+  const isOwnPost =
+    currentUser && post.userId && currentUser.uid === post.userId;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState('');
-
+  const [profilePicUrl, setProfilePicUrl] = useState("");
   const [comments, setComments] = useState([]);
 
-  // Modal state
   const [modalShow, setModalShow] = useState(false);
-  const [modalImageUrl, setModalImageUrl] = useState('');
+  const [modalImageUrl, setModalImageUrl] = useState("");
 
-  // Collapsible comments state
   const [showComments, setShowComments] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState('');
+  const [commentsError, setCommentsError] = useState("");
+
+  const { checkModeration } = useModeration(); // Use moderation hook
 
   useEffect(() => {
     const fetchProfilePic = async () => {
@@ -58,22 +67,24 @@ const Post = ({ post }) => {
 
     const fetchComments = () => {
       setCommentsLoading(true);
-      setCommentsError('');
+      setCommentsError("");
 
-      const commentsRef = collection(firestore, 'Posts', post.id, 'Comments');
-      const commentsQuery = query(commentsRef, orderBy('created_at', 'asc'));
+      const commentsRef = collection(firestore, "Posts", post.id, "Comments");
+      const commentsQuery = query(commentsRef, orderBy("created_at", "asc"));
 
       unsubscribe = onSnapshot(
         commentsQuery,
         (snapshot) => {
           const commentsData = [];
-          snapshot.forEach((doc) => commentsData.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach((doc) =>
+            commentsData.push({ id: doc.id, ...doc.data() })
+          );
           setComments(commentsData);
           setCommentsLoading(false);
         },
         (error) => {
-          console.error('Error fetching comments:', error);
-          setCommentsError('Failed to load comments.');
+          console.error("Error fetching comments:", error);
+          setCommentsError("Failed to load comments.");
           setCommentsLoading(false);
         }
       );
@@ -91,47 +102,64 @@ const Post = ({ post }) => {
   const handleEdit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
-    if (editedContent.trim() === '') {
-      setError('Post content cannot be empty.');
+    if (editedContent.trim() === "") {
+      setError("Post content cannot be empty.");
+      setLoading(false);
+      return;
+    }
+
+    // Use moderation to check for trigger words
+    const isSafe = await checkModeration(
+      editedContent,
+      currentUser.accessToken
+    );
+    if (!isSafe) {
+      setError("Your post contains sensitive words. Please modify it.");
       setLoading(false);
       return;
     }
 
     try {
-      const postRef = doc(firestore, 'Posts', post.id);
+      const postRef = doc(firestore, "Posts", post.id);
       await updateDoc(postRef, {
         content: editedContent,
         content_lower: editedContent.toLowerCase(), // Update the lowercase content
         updated_at: serverTimestamp(),
       });
       setIsEditing(false);
-      console.log('Post updated successfully:', post.id);
+      console.log("Post updated successfully:", post.id);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
-      console.error('Error updating post:', err);
+      setError(
+        friendlyMessage || "An unexpected error occurred. Please try again."
+      );
+      console.error("Error updating post:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this post? This action cannot be undone."
+    );
     if (!confirmDelete) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const postRef = doc(firestore, 'Posts', post.id);
+      const postRef = doc(firestore, "Posts", post.id);
       await deleteDoc(postRef);
-      console.log('Post deleted successfully:', post.id);
+      console.log("Post deleted successfully:", post.id);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
-      console.error('Error deleting post:', err);
+      setError(
+        friendlyMessage || "An unexpected error occurred. Please try again."
+      );
+      console.error("Error deleting post:", err);
     } finally {
       setLoading(false);
     }
@@ -163,10 +191,19 @@ const Post = ({ post }) => {
                   required
                 />
               </Form.Group>
-              <Button type="submit" variant="success" disabled={loading} className="mt-2">
-                {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+              <Button
+                type="submit"
+                variant="success"
+                disabled={loading}
+                className="mt-2"
+              >
+                {loading ? <Spinner animation="border" size="sm" /> : "Save"}
               </Button>
-              <Button variant="secondary" className="mt-2 ms-2" onClick={() => setIsEditing(false)}>
+              <Button
+                variant="secondary"
+                className="mt-2 ms-2"
+                onClick={() => setIsEditing(false)}
+              >
                 Cancel
               </Button>
             </Form>
@@ -183,12 +220,18 @@ const Post = ({ post }) => {
                 />
                 <Card.Subtitle className="text-muted">
                   <strong>
-                    {post.isAnonymous ? 'Anonymous' : (
-                      <Link to={`/users/${post.userId}`} className="text-decoration-none">
+                    {post.isAnonymous ? (
+                      "Anonymous"
+                    ) : (
+                      <Link
+                        to={`/users/${post.userId}`}
+                        className="text-decoration-none"
+                      >
                         {post.username}
                       </Link>
                     )}
-                  </strong> | <em>{post.created_at?.toDate().toLocaleString()}</em>
+                  </strong>{" "}
+                  | <em>{post.created_at?.toDate().toLocaleString()}</em>
                 </Card.Subtitle>
               </div>
               <Card.Text>{post.content}</Card.Text>
@@ -203,7 +246,7 @@ const Post = ({ post }) => {
                     rounded
                     loading="lazy"
                     onClick={() => handleImageClick(post.imageUrl)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                   />
                 </div>
               )}
@@ -212,15 +255,13 @@ const Post = ({ post }) => {
                 <strong>Mood:</strong> {post.mood}
               </Card.Text>
 
-              {/* // Correctly pass postOwnerId to LikeButton */}
               <LikeButton
                 postId={post.id}
                 postOwnerId={post.userId}
-                commentId={null}    // Ensure these are null when not needed
+                commentId={null}
                 replyId={null}
               />
 
-              {/* Toggle Comments Button */}
               <Button
                 variant="link"
                 onClick={toggleComments}
@@ -228,15 +269,16 @@ const Post = ({ post }) => {
                 aria-expanded={showComments}
                 className="mt-3 p-0"
               >
-                {showComments ? 'Hide Comments' : 'Show Comments'}
+                {showComments ? "Hide Comments" : "Show Comments"}
               </Button>
 
-              {/* Collapsible Comments Section */}
               <Collapse in={showComments}>
                 <div id={`comments-${post.id}`}>
                   <hr />
                   <h5>Comments</h5>
-                  {commentsError && <Alert variant="danger">{commentsError}</Alert>}
+                  {commentsError && (
+                    <Alert variant="danger">{commentsError}</Alert>
+                  )}
                   {commentsLoading ? (
                     <Spinner animation="border" />
                   ) : (
@@ -245,24 +287,43 @@ const Post = ({ post }) => {
                         <p>No comments yet.</p>
                       ) : (
                         comments.map((comment) => (
-                          <Comment key={comment.id} comment={comment} postId={post.id} />
+                          <Comment
+                            key={comment.id}
+                            comment={comment}
+                            postId={post.id}
+                          />
                         ))
                       )}
-                      {/* Correctly pass postOwnerId to CommentForm */}
-                      {currentUser && <CommentForm postId={post.id} postOwnerId={post.userId} />}
+                      {currentUser && (
+                        <CommentForm
+                          postId={post.id}
+                          postOwnerId={post.userId}
+                        />
+                      )}
                     </>
                   )}
                 </div>
               </Collapse>
 
-              {/* Edit and Delete Buttons */}
               {isOwnPost && (
                 <div className="mt-3">
-                  <Button variant="warning" onClick={() => setIsEditing(true)} className="me-2">
+                  <Button
+                    variant="warning"
+                    onClick={() => setIsEditing(true)}
+                    className="me-2"
+                  >
                     Edit
                   </Button>
-                  <Button variant="danger" onClick={handleDelete} disabled={loading}>
-                    {loading ? <Spinner animation="border" size="sm" /> : 'Delete'}
+                  <Button
+                    variant="danger"
+                    onClick={handleDelete}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Spinner animation="border" size="sm" />
+                    ) : (
+                      "Delete"
+                    )}
                   </Button>
                 </div>
               )}
