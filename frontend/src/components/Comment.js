@@ -17,8 +17,9 @@ import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
 import Reply from "./Reply";
 import LikeButton from "./LikeButton";
-import CommentForm from "./CommentForm"; // Import reusable CommentForm
+import CommentForm from "./CommentForm";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
+import ResourceModal from "./ResourceModal"; // Import ResourceModal for sensitive content
 
 const Comment = ({ comment, postId }) => {
   const { currentUser } = useAuth();
@@ -32,6 +33,8 @@ const Comment = ({ comment, postId }) => {
   const [replies, setReplies] = useState([]);
 
   const { checkModeration } = useModeration(); // Use moderation hook
+  const [showResources, setShowResources] = useState(false); // State for modal visibility
+  const [flaggedType, setFlaggedType] = useState(null); // Store flagged content type
 
   // Fetch the user's profile picture URL
   useEffect(() => {
@@ -85,8 +88,25 @@ const Comment = ({ comment, postId }) => {
       currentUser.accessToken
     );
     if (!isSafe) {
-      setError("Your comment contains sensitive words. Please modify it.");
-      setLoading(false);
+      setFlaggedType("suicide"); // Update this based on the type of trigger word
+      setShowResources(true); // Show modal for sensitive content
+      try {
+        await updateDoc(doc(firestore, "ModerationQueue", comment.id), {
+          userId: currentUser.uid,
+          username: comment.isAnonymous
+            ? "Anonymous"
+            : currentUser.displayName,
+          content: editedContent,
+          isAnonymous: comment.isAnonymous,
+          created_at: comment.created_at,
+          updated_at: serverTimestamp(),
+          status: "pending",
+        });
+      } catch (err) {
+        console.error("Error adding comment to moderation queue:", err);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -144,6 +164,13 @@ const Comment = ({ comment, postId }) => {
   return (
     <div className="mt-3">
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Modal for sensitive content */}
+      <ResourceModal
+        show={showResources}
+        handleClose={() => setShowResources(false)}
+        flaggedType={flaggedType}
+      />
 
       {isEditing ? (
         <Form onSubmit={handleEdit}>
