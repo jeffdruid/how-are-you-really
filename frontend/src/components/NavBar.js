@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Navbar, Nav, Container, Button, Badge } from 'react-bootstrap';
-import { useAuth } from '../contexts/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth, firestore } from '../firebase';
-import { Link, useNavigate } from 'react-router-dom';
-import { onSnapshot, collection, query, where } from 'firebase/firestore';
-import { FaBell } from 'react-icons/fa';
-import GoBackButton from './GoBackButton';
+import React, { useState, useEffect, useRef } from "react";
+import { Navbar, Nav, Container, Button, Badge } from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
+import { signOut } from "firebase/auth";
+import { auth, firestore } from "../firebase";
+import { Link, useNavigate } from "react-router-dom";
+import { onSnapshot, collection, query, where } from "firebase/firestore";
+import { FaBell } from "react-icons/fa";
+import GoBackButton from "./GoBackButton";
+import TestApiButton from "./TestApiButton";
 
 const NavigationBar = () => {
   const { currentUser } = useAuth();
@@ -18,17 +19,22 @@ const NavigationBar = () => {
 
   // Load dark mode preference from localStorage on initial load
   useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode') === 'true';
+    const savedMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedMode);
-    document.body.classList.toggle('dark-mode', savedMode);
+    document.body.classList.toggle("dark-mode", savedMode);
   }, []);
 
   // Fetch unread notifications count
   useEffect(() => {
     if (!currentUser) return;
 
-    const notificationsRef = collection(firestore, 'Users', currentUser.uid, 'Notifications');
-    const unreadQuery = query(notificationsRef, where('read', '==', false));
+    const notificationsRef = collection(
+      firestore,
+      "Users",
+      currentUser.uid,
+      "Notifications"
+    );
+    const unreadQuery = query(notificationsRef, where("read", "==", false));
 
     const unsubscribe = onSnapshot(unreadQuery, (snapshot) => {
       setUnreadCount(snapshot.size);
@@ -41,9 +47,9 @@ const NavigationBar = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate('/login');
+      navigate("/login");
     } catch (err) {
-      console.error('Failed to log out:', err);
+      console.error("Failed to log out:", err);
     }
   };
 
@@ -51,8 +57,8 @@ const NavigationBar = () => {
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
-    document.body.classList.toggle('dark-mode', newMode);
-    localStorage.setItem('darkMode', newMode);
+    document.body.classList.toggle("dark-mode", newMode);
+    localStorage.setItem("darkMode", newMode);
   };
 
   // Handle navbar collapse
@@ -73,16 +79,23 @@ const NavigationBar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <Navbar ref={navbarRef} expanded={!isNavbarCollapsed} expand="lg" sticky="top">
+    <Navbar
+      ref={navbarRef}
+      expanded={!isNavbarCollapsed}
+      expand="lg"
+      sticky="top"
+    >
       <Container className="d-flex justify-content-between align-items-center">
         {/* Brand on the left */}
-        <Navbar.Brand as={Link} to="/" onClick={handleLinkClick}>How Are You Really</Navbar.Brand>
+        <Navbar.Brand as={Link} to="/" onClick={handleLinkClick}>
+          How Are You Really
+        </Navbar.Brand>
 
         {/* Notification Bell in the center */}
         {currentUser && (
@@ -105,7 +118,7 @@ const NavigationBar = () => {
           </Nav.Link>
         )}
 
-        <GoBackButton /> 
+        <GoBackButton />
         {/* Toggle button on the right */}
         <Navbar.Toggle
           aria-controls="basic-navbar-nav"
@@ -115,26 +128,72 @@ const NavigationBar = () => {
 
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/">Home</Nav.Link>
-            {currentUser && <Nav.Link as={Link} onClick={handleLinkClick} to="/profile">Profile</Nav.Link>}
-            {currentUser && <Nav.Link as={Link} onClick={handleLinkClick} to="/notifications">Notifications</Nav.Link>}
-            {currentUser && <Nav.Link as={Link} onClick={handleLinkClick} to="/mood-analytics">Mood Analytics</Nav.Link>}
-            {currentUser && <Nav.Link as={Link} onClick={handleLinkClick} to="/post-performance">Post Performance</Nav.Link>}
+            <Nav.Link as={Link} to="/">
+              Home
+            </Nav.Link>
+            {currentUser && (
+              <Nav.Link as={Link} onClick={handleLinkClick} to="/profile">
+                Profile
+              </Nav.Link>
+            )}
+            {currentUser && (
+              <Nav.Link
+                as={Link}
+                onClick={handleLinkClick}
+                to="/notifications"
+              >
+                Notifications
+              </Nav.Link>
+            )}
+            {currentUser && (
+              <Nav.Link
+                as={Link}
+                onClick={handleLinkClick}
+                to="/mood-analytics"
+              >
+                Mood Analytics
+              </Nav.Link>
+            )}
+            {currentUser && (
+              <Nav.Link
+                as={Link}
+                onClick={handleLinkClick}
+                to="/post-performance"
+              >
+                Post Performance
+              </Nav.Link>
+            )}
           </Nav>
           <Nav className="align-items-center">
             {/* Dark Mode Toggle Button */}
-            <Button onClick={toggleDarkMode} variant={darkMode ? 'light' : 'dark'} className="me-2">
-              {darkMode ? 'Light Mode' : 'Dark Mode'}
+            <Button
+              onClick={toggleDarkMode}
+              variant={darkMode ? "light" : "dark"}
+              className="me-2"
+            >
+              {darkMode ? "Light Mode" : "Dark Mode"}
             </Button>
 
             {!currentUser ? (
               <>
-                <Nav.Link as={Link} to="/login" onClick={handleLinkClick}>Login</Nav.Link>
-                <Button as={Link} to="/signup" variant="primary" className="ms-2">Sign Up</Button>
+                <Nav.Link as={Link} to="/login" onClick={handleLinkClick}>
+                  Login
+                </Nav.Link>
+                <Button
+                  as={Link}
+                  to="/signup"
+                  variant="primary"
+                  className="ms-2"
+                >
+                  Sign Up
+                </Button>
               </>
             ) : (
-              <Button onClick={handleLogout} variant="danger">Logout</Button>
+              <Button onClick={handleLogout} variant="danger">
+                Logout
+              </Button>
             )}
+            <TestApiButton />
           </Nav>
         </Navbar.Collapse>
       </Container>
