@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { Form, Button, Spinner, Alert, Image } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { fetchProfilePicUrl } from '../utils/fetchProfilePic';
-import { useAuth } from '../contexts/AuthContext';
-import LikeButton from './LikeButton';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { Form, Button, Spinner, Alert, Image } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
+import { useAuth } from "../contexts/AuthContext";
+import LikeButton from "./LikeButton";
+import useModeration from "../hooks/useModeration"; // Import moderation hook
 
 const Reply = ({ reply, postId, commentId }) => {
   const { currentUser } = useAuth();
@@ -13,9 +19,11 @@ const Reply = ({ reply, postId, commentId }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(reply.content);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState('');
+  const [profilePicUrl, setProfilePicUrl] = useState("");
+
+  const { checkModeration } = useModeration(); // Use moderation hook
 
   // Fetch the user's profile picture URL
   useEffect(() => {
@@ -32,9 +40,36 @@ const Reply = ({ reply, postId, commentId }) => {
   const handleEditReply = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
-    const replyRef = doc(firestore, 'Posts', postId, 'Comments', commentId, 'Replies', reply.id);
-    
+    // Basic validation
+    if (editedContent.trim() === "") {
+      setError("Reply content cannot be empty.");
+      setLoading(false);
+      return;
+    }
+
+    // Use moderation to check for trigger words
+    const isSafe = await checkModeration(
+      editedContent,
+      currentUser.accessToken
+    );
+    if (!isSafe) {
+      setError("Your reply contains sensitive words. Please modify it.");
+      setLoading(false);
+      return;
+    }
+
+    const replyRef = doc(
+      firestore,
+      "Posts",
+      postId,
+      "Comments",
+      commentId,
+      "Replies",
+      reply.id
+    );
+
     try {
       await updateDoc(replyRef, {
         content: editedContent,
@@ -42,26 +77,36 @@ const Reply = ({ reply, postId, commentId }) => {
       });
       setIsEditing(false);
     } catch (err) {
-      console.error('Error updating reply:', err);
-      setError('Failed to update reply.');
+      console.error("Error updating reply:", err);
+      setError("Failed to update reply.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteReply = async () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this reply?');
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this reply?"
+    );
     if (!confirmDelete) return;
 
     setLoading(true);
-    const replyRef = doc(firestore, 'Posts', postId, 'Comments', commentId, 'Replies', reply.id);
+    const replyRef = doc(
+      firestore,
+      "Posts",
+      postId,
+      "Comments",
+      commentId,
+      "Replies",
+      reply.id
+    );
 
     try {
       await deleteDoc(replyRef);
-      console.log('Reply deleted:', reply.id);
+      console.log("Reply deleted:", reply.id);
     } catch (err) {
-      console.error('Error deleting reply:', err);
-      setError('Failed to delete reply.');
+      console.error("Error deleting reply:", err);
+      setError("Failed to delete reply.");
     } finally {
       setLoading(false);
     }
@@ -82,43 +127,65 @@ const Reply = ({ reply, postId, commentId }) => {
               required
             />
           </Form.Group>
-          <Button type="submit" variant="primary" className="mt-2 me-2" disabled={loading}>
-            {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+          <Button
+            type="submit"
+            variant="primary"
+            className="mt-2 me-2"
+            disabled={loading}
+          >
+            {loading ? <Spinner animation="border" size="sm" /> : "Save"}
           </Button>
-          <Button variant="secondary" className="mt-2" onClick={() => setIsEditing(false)}>
+          <Button
+            variant="secondary"
+            className="mt-2"
+            onClick={() => setIsEditing(false)}
+          >
             Cancel
           </Button>
         </Form>
       ) : (
         <>
           <div className="d-flex align-items-center">
-            <Link to={`/users/${reply.userId}`} className="text-decoration-none">
-            <Image
-              src={profilePicUrl}
-              roundedCircle
-              width={20}
-              height={20}
-              className="me-2"
-              loading="lazy"
-            />
-            <strong>
-              {reply.username && (
-                  reply.username
-              )}
-            </strong> |{' '}
+            <Link
+              to={`/users/${reply.userId}`}
+              className="text-decoration-none"
+            >
+              <Image
+                src={profilePicUrl}
+                roundedCircle
+                width={20}
+                height={20}
+                className="me-2"
+                loading="lazy"
+              />
+              <strong>{reply.username}</strong> |{" "}
             </Link>
             <em>{reply.created_at?.toDate().toLocaleString()}</em>
           </div>
           <p>{reply.content}</p>
           {/* Like Button for Reply */}
-          <LikeButton postId={postId} commentId={commentId} replyId={reply.id} />
+          <LikeButton
+            postId={postId}
+            commentId={commentId}
+            replyId={reply.id}
+          />
           {isOwnReply && (
             <>
-              <Button variant="warning" className="me-2" size="sm" onClick={() => setIsEditing(true)}>
+              <Button
+                variant="warning"
+                className="me-2"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
                 Edit
               </Button>
-              <Button variant="danger" size="sm" onClick={handleDeleteReply} disabled={loading}>
-                {loading ? <Spinner animation="border" size="sm" /> : 'Delete'}
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDeleteReply}
+                disabled={loading}
+              >
+                {loading ? <Spinner animation="border" size="sm" /> : "Delete"}
               </Button>
             </>
           )}
