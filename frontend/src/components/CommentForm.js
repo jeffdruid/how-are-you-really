@@ -1,75 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Form, Button, Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import { Form, Button, Spinner, Alert } from "react-bootstrap";
+import useModeration from "../hooks/useModeration";
 
 const CommentForm = ({ postId, postOwnerId }) => {
   const { currentUser, username } = useAuth();
-  const [commentContent, setCommentContent] = useState('');
+  const [commentContent, setCommentContent] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { checkModeration } = useModeration();
 
   useEffect(() => {
-    console.log('Post Owner ID:', postOwnerId);
+    console.log("Post Owner ID:", postOwnerId);
   }, [postOwnerId]);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     // Basic validation
-    if (commentContent.trim() === '') {
-      setError('Comment cannot be empty.');
+    if (commentContent.trim() === "") {
+      setError("Comment cannot be empty.");
+      setLoading(false);
+      return;
+    }
+
+    // Use moderation to check for trigger words
+    const isSafe = await checkModeration(
+      commentContent,
+      currentUser.accessToken
+    );
+    if (!isSafe) {
+      setError("Your comment contains sensitive words. Please modify it.");
       setLoading(false);
       return;
     }
 
     try {
       // Add the comment to Firestore
-      const commentRef = await addDoc(collection(firestore, 'Posts', postId, 'Comments'), {
-        userId: currentUser.uid,
-        username: isAnonymous ? 'Anonymous' : username,
-        content: commentContent,
-        isAnonymous,
-        likeCount: 0,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      });
-  
-      console.log('Comment added successfully:', commentRef.id);
-  
+      const commentRef = await addDoc(
+        collection(firestore, "Posts", postId, "Comments"),
+        {
+          userId: currentUser.uid,
+          username: isAnonymous ? "Anonymous" : username,
+          content: commentContent,
+          isAnonymous,
+          likeCount: 0,
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        }
+      );
+
+      console.log("Comment added successfully:", commentRef.id);
+
       // Ensure postOwnerId is passed correctly and notification logic is correct
       if (postOwnerId) {
         if (currentUser.uid !== postOwnerId) {
-          console.log('Sending notification to post owner:', postOwnerId);
-          const notificationsRef = collection(firestore, 'Users', postOwnerId, 'Notifications');
+          console.log("Sending notification to post owner:", postOwnerId);
+          const notificationsRef = collection(
+            firestore,
+            "Users",
+            postOwnerId,
+            "Notifications"
+          );
           await addDoc(notificationsRef, {
-            type: 'comment',
+            type: "comment",
             fromUserId: currentUser.uid,
             postId,
             commentId: commentRef.id,
             created_at: serverTimestamp(),
             read: false,
           });
-          console.log('Notification sent to post owner:', postOwnerId);
+          console.log("Notification sent to post owner:", postOwnerId);
         } else {
-          console.log('The commenter is the post owner. No notification sent.');
+          console.log(
+            "The commenter is the post owner. No notification sent."
+          );
         }
       } else {
-        console.log('postOwnerId is missing.');
+        console.log("postOwnerId is missing.");
       }
-      
-  
-      setCommentContent('');
+
+      setCommentContent("");
       setIsAnonymous(false);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage || 'An unexpected error occurred. Please try again.');
-      console.error('Error adding comment or notification:', err);
+      setError(
+        friendlyMessage || "An unexpected error occurred. Please try again."
+      );
+      console.error("Error adding comment or notification:", err);
     } finally {
       setLoading(false);
     }
@@ -97,8 +121,13 @@ const CommentForm = ({ postId, postOwnerId }) => {
             onChange={(e) => setIsAnonymous(e.target.checked)}
           />
         </Form.Group>
-        <Button type="submit" variant="success" className="mt-3" disabled={loading}>
-          {loading ? <Spinner animation="border" size="sm" /> : 'Post Comment'}
+        <Button
+          type="submit"
+          variant="success"
+          className="mt-3"
+          disabled={loading}
+        >
+          {loading ? <Spinner animation="border" size="sm" /> : "Post Comment"}
         </Button>
       </Form>
     </div>
