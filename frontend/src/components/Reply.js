@@ -12,6 +12,7 @@ import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
 import { useAuth } from "../contexts/AuthContext";
 import LikeButton from "./LikeButton";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
+import ResourceModal from "./ResourceModal"; // Import ResourceModal component
 
 const Reply = ({ reply, postId, commentId }) => {
   const { currentUser } = useAuth();
@@ -24,6 +25,8 @@ const Reply = ({ reply, postId, commentId }) => {
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
   const { checkModeration } = useModeration(); // Use moderation hook
+  const [showResources, setShowResources] = useState(false); // State for modal visibility
+  const [flaggedType, setFlaggedType] = useState(null); // Store flagged content type
 
   // Fetch the user's profile picture URL
   useEffect(() => {
@@ -55,8 +58,23 @@ const Reply = ({ reply, postId, commentId }) => {
       currentUser.accessToken
     );
     if (!isSafe) {
-      setError("Your reply contains sensitive words. Please modify it.");
-      setLoading(false);
+      setFlaggedType("self-harm"); // Update this based on the type of trigger word
+      setShowResources(true); // Show modal for sensitive content
+      try {
+        await updateDoc(doc(firestore, "ModerationQueue", reply.id), {
+          userId: currentUser.uid,
+          username: reply.username || "Anonymous",
+          content: editedContent,
+          isAnonymous: false,
+          created_at: reply.created_at,
+          updated_at: serverTimestamp(),
+          status: "pending",
+        });
+      } catch (err) {
+        console.error("Error adding reply to moderation queue:", err);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -115,6 +133,13 @@ const Reply = ({ reply, postId, commentId }) => {
   return (
     <div className="mt-2 mb-2">
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Modal for sensitive content */}
+      <ResourceModal
+        show={showResources}
+        handleClose={() => setShowResources(false)}
+        flaggedType={flaggedType}
+      />
 
       {isEditing ? (
         <Form onSubmit={handleEditReply}>
