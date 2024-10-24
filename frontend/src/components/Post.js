@@ -4,7 +4,6 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  addDoc,
   serverTimestamp,
   collection,
   onSnapshot,
@@ -16,25 +15,17 @@ import LikeButton from "./LikeButton";
 import Comment from "./Comment";
 import CommentForm from "./CommentForm";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import {
-  Card,
-  Button,
-  Form,
-  Alert,
-  Spinner,
-  Image,
-  Collapse,
-} from "react-bootstrap";
+import { Card, Button, Form, Alert, Spinner, Image, Collapse } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
 import ImageModal from "./ImageModal";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
 import ResourceModal from "./ResourceModal"; // Import ResourceModal component
+import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 
 const Post = ({ post }) => {
   const { currentUser } = useAuth();
-  const isOwnPost =
-    currentUser && post.userId && currentUser.uid === post.userId;
+  const isOwnPost = currentUser && post.userId && currentUser.uid === post.userId;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
@@ -80,9 +71,7 @@ const Post = ({ post }) => {
         commentsQuery,
         (snapshot) => {
           const commentsData = [];
-          snapshot.forEach((doc) =>
-            commentsData.push({ id: doc.id, ...doc.data() })
-          );
+          snapshot.forEach((doc) => commentsData.push({ id: doc.id, ...doc.data() }));
           setComments(commentsData);
           setCommentsLoading(false);
         },
@@ -107,44 +96,50 @@ const Post = ({ post }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+  
     if (editedContent.trim() === "") {
       setError("Post content cannot be empty.");
       setLoading(false);
       return;
     }
-
+  
     // Use moderation to check for trigger words
-    const isSafe = await checkModeration(
-      editedContent,
-      currentUser.accessToken
-    );
-
+    const isSafe = await checkModeration(editedContent, currentUser.accessToken);
+  
     if (!isSafe) {
-      // Instead of showing an error, we set the flaggedType and show the modal
-      setFlaggedType("suicide");
-      setShowResources(true); // Show the resources modal
-      setLoading(false); // Stop loading
-      // Save the post to a moderation queue instead of updating it directly in the Posts collection
+      console.log('Current user access token:', currentUser.accessToken);
+
+      console.log("Content flagged, setting flagged type");
+      setFlaggedType('selfHarm');  // or another type based on content
+      setShowResources(true);  // Display the modal
+      console.log("Show resources modal: ", showResources);
+    
+      // Send flagged content to DRF
       try {
-        await addDoc(collection(firestore, "ModerationQueue"), {
-          userId: currentUser.uid,
-          content: editedContent,
-          created_at: serverTimestamp(),
-          status: "pending",
-        });
-        console.log("Post flagged and saved for moderation");
+        await sendFlaggedContentToDRF(
+          {
+            user: currentUser.uid,
+            post_id: post.id,
+            reason: 'Trigger words detected',
+            content: editedContent,
+          },
+          currentUser.accessToken  // Ensure token is passed correctly
+        );
       } catch (err) {
-        console.error("Error saving post to moderation queue", err);
+        console.error('Error sending flagged content:', err);
       }
+    
+      setLoading(false);
       return;
     }
-
+    
+  
+    // If content is safe, proceed with updating the post
     try {
       const postRef = doc(firestore, "Posts", post.id);
       await updateDoc(postRef, {
         content: editedContent,
-        content_lower: editedContent.toLowerCase(), // Update the lowercase content
+        content_lower: editedContent.toLowerCase(),  // Update the lowercase content
         updated_at: serverTimestamp(),
       });
       setIsEditing(false);
@@ -159,6 +154,7 @@ const Post = ({ post }) => {
       setLoading(false);
     }
   };
+  
 
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
@@ -201,7 +197,7 @@ const Post = ({ post }) => {
           <ResourceModal
             show={showResources}
             handleClose={() => setShowResources(false)}
-            flaggedType={flaggedType}
+            flaggedType={flaggedType}  // Pass the flaggedType to the modal
           />
 
           {isEditing ? (
