@@ -5,9 +5,8 @@ import {
   setDoc,
   serverTimestamp,
   doc,
-  getDoc,
   updateDoc,
-  addDoc,
+  getDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
@@ -15,9 +14,10 @@ import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { Form, Button, Alert, Spinner, Collapse } from "react-bootstrap";
 import ImageUploader from "./ImageUploader";
 import useModeration from "../hooks/useModeration";
-import ResourceModal from "./ResourceModal"; // Import the ResourceModal
+import ResourceModal from "./ResourceModal"; // ResourceModal imported for flagging
+import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 
-const CreatePost = () => {
+const CreatePost = ({ onFlaggedContent }) => {
   const { currentUser } = useAuth();
   const [username, setUsername] = useState("");
   const [content, setContent] = useState("");
@@ -26,38 +26,36 @@ const CreatePost = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // New states for image upload
+  // Image upload states
   const [images, setImages] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // State to control form visibility
+  // Form visibility control
   const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const { checkModeration } = useModeration(); // Use the moderation hook
+  const { checkModeration } = useModeration(); // Moderation hook
 
-  // State to manage the modal visibility
+  // Modal state for flagged content
   const [showResources, setShowResources] = useState(false);
-  const [flaggedType, setFlaggedType] = useState(null); // To store the type of sensitive content
+  const [flaggedType, setFlaggedType] = useState(null);
 
-  // Fetch username from Firestore when component mounts
+  // Fetch username from Firestore
   useEffect(() => {
     const fetchUsername = async () => {
       try {
         const userDocRef = doc(firestore, "Users", currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUsername(data.username || "Anonymous");
+          setUsername(userDoc.data().username || "Anonymous");
         } else {
-          setUsername("Anonymous"); // Fallback if user document doesn't exist
+          setUsername("Anonymous");
         }
       } catch (err) {
         console.error("Error fetching username:", err);
-        setUsername("Anonymous"); // Fallback on error
+        setUsername("Anonymous");
       }
     };
-
     if (currentUser) {
       fetchUsername();
     }
@@ -69,58 +67,35 @@ const CreatePost = () => {
     setError(""); // Clear previous errors
     setShowSuccess(false);
 
-    // Basic validation
     if (content.trim() === "") {
       setError("Post content cannot be empty.");
       setLoading(false);
       return;
     }
 
-    // Use moderation to check for trigger words
-    const isSafe = await checkModeration(content, currentUser.accessToken);
-    if (!isSafe) {
-      // Show the modal instead of an error and flag the post
-      setFlaggedType("self-harm");
-      setShowResources(true); // Show the resources modal
-      try {
-        await addDoc(collection(firestore, "ModerationQueue"), {
-          userId: currentUser.uid,
-          username: isAnonymous ? "Anonymous" : username,
-          content,
-          content_lower: content.toLowerCase(),
-          mood,
-          isAnonymous,
-          created_at: serverTimestamp(),
-          status: "pending",
-        });
-        console.log("Post flagged and saved for moderation");
-      } catch (err) {
-        console.error("Error saving post to moderation queue:", err);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
+    let isVisible = true;
+    const newPostRef = doc(collection(firestore, "Posts")); // Generate a new post reference
 
     try {
-      // Step 1: Create a new post document to get a unique postId
-      const newPostRef = doc(collection(firestore, "Posts")); // Generate a new post reference
+      // Set initial post data
       await setDoc(newPostRef, {
         userId: currentUser.uid,
         username: isAnonymous ? "Anonymous" : username,
         content,
-        content_lower: content.toLowerCase(), // For case-insensitive search
+        content_lower: content.toLowerCase(),
         mood,
         isAnonymous,
-        likeCount: 0, // Initialize likeCount
+        likeCount: 0,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
-        imageUrl: null, // Initialize imageUrl as null
-        thumbnailUrl: null, // Initialize thumbnailUrl as null
+        imageUrl: null,
+        thumbnailUrl: null,
+        is_visible: isVisible, // Initially set to visible
       });
 
-      const postId = newPostRef.id; // Get the generated postId
+      const postId = newPostRef.id; // Retrieve post ID after document creation
 
+      // Image upload (if any)
       if (images) {
         setUploading(true);
 
@@ -140,7 +115,7 @@ const CreatePost = () => {
         await uploadBytes(thumbnailRef, images.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
 
-        // Update the post document with image URLs
+        // Update post document with image URLs
         await updateDoc(newPostRef, {
           imageUrl: originalURL,
           thumbnailUrl: thumbnailURL,
@@ -150,16 +125,34 @@ const CreatePost = () => {
         setUploading(false);
       }
 
+      // Moderation check
+      const isSafe = await checkModeration(content, currentUser.accessToken);
+      if (!isSafe) {
+        // If flagged, update Firestore visibility and show resources modal
+        isVisible = false;
+        await updateDoc(newPostRef, { is_visible: isVisible });
+
+        setFlaggedType("selfHarm");
+        setShowResources(true);
+
+        // Send flagged content to DRF backend
+        await sendFlaggedContentToDRF(
+          {
+            user: currentUser.uid,
+            post_id: postId,
+            reason: "Trigger words detected",
+            content,
+          },
+          currentUser.accessToken
+        );
+      }
+
       // Reset form fields
       setContent("");
       setMood("happy");
       setIsAnonymous(false);
       setImages(null);
-
-      // Collapse the form
       setOpen(false);
-
-      // Show success message
       setShowSuccess(true);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
@@ -176,7 +169,6 @@ const CreatePost = () => {
     <div>
       <h3>Create a New Post</h3>
 
-      {/* Success Message */}
       {showSuccess && (
         <Alert
           variant="success"
@@ -187,7 +179,6 @@ const CreatePost = () => {
         </Alert>
       )}
 
-      {/* Error Message */}
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Modal for flagged content */}
@@ -208,7 +199,6 @@ const CreatePost = () => {
         {open ? "Hide Post Form" : "Show Post Form"}
       </Button>
 
-      {/* Collapsible Form */}
       <Collapse in={open}>
         <div id="create-post-form">
           <Form onSubmit={handleCreatePost}>
@@ -226,11 +216,10 @@ const CreatePost = () => {
             {/* Image Upload Component */}
             <ImageUploader
               onImageSelected={(files) => setImages(files)}
-              maxSize={5 * 1024 * 1024} // 5MB
+              maxSize={5 * 1024 * 1024}
               accept="image/*"
             />
 
-            {/* Display upload progress */}
             {uploading && (
               <div className="mt-3">
                 <Spinner animation="border" size="sm" /> Uploading image...
@@ -247,7 +236,6 @@ const CreatePost = () => {
                 <option value="happy">😊 Happy</option>
                 <option value="sad">😢 Sad</option>
                 <option value="anxious">😟 Anxious</option>
-                {/* Add more moods as needed */}
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3" controlId="postAnonymously">
