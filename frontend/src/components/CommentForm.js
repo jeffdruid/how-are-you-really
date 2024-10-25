@@ -20,7 +20,7 @@ const CommentForm = ({ postId, commentId, postOwnerId, parentType = "comment" })
   const [flaggedType, setFlaggedType] = useState(null); // To store the type of sensitive content
 
   useEffect(() => {
-    console.log("Post/Comment Owner ID:", postOwnerId);
+    // console.log("Post/Comment Owner ID:", postOwnerId);
   }, [postOwnerId]);
 
   const handleAddContent = async (e) => {

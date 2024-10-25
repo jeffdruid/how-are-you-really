@@ -114,67 +114,55 @@ const Post = ({ post }) => {
       return;
     }
 
-    // Use moderation to check for trigger words
+    // Check content with moderation API
     const isSafe = await checkModeration(
       editedContent,
       currentUser.accessToken,
-      post.id, // Pass post_id
-      currentUser.uid // Pass user
+      post.id,
+      currentUser.uid
     );
 
-    if (!isSafe) {
-      console.log("Current user access token:", currentUser.accessToken);
+    let isVisible = true;
 
-      console.log("Content flagged, setting flagged type");
-      setFlaggedType("selfHarm"); // or another type based on content
-      setShowResources(true); // Display the modal
-      console.log("Show resources modal: ", showResources);
+    if (!isSafe) {
+      console.log("Content flagged, setting flagged type and visibility");
+      setFlaggedType("selfHarm"); 
+      setShowResources(true); 
 
       // Send flagged content to DRF
       try {
-        const flaggedContent = {
-          user: currentUser.uid,
-          post_id: post.id,
-          reason: "Trigger words detected",
-          content: editedContent,
-        };
-        console.log("Sending flagged content:", flaggedContent);
-
-        await sendFlaggedContentToDRF(flaggedContent, currentUser.accessToken);
-
         await sendFlaggedContentToDRF(
           {
-            user: currentUser.uid, // Ensure this is 'user' not 'user_id'
+            user: currentUser.uid,
             post_id: post.id,
             reason: "Trigger words detected",
             content: editedContent,
           },
           currentUser.accessToken
         );
-        console.log("Sending post_id:", post.id);
       } catch (err) {
         console.error("Error sending flagged content:", err);
       }
 
+      isVisible = false;
       setLoading(false);
       return;
     }
 
-    // If content is safe, proceed with updating the post
+    // Update the post's visibility if it passes moderation
     try {
       const postRef = doc(firestore, "Posts", post.id);
       await updateDoc(postRef, {
         content: editedContent,
-        content_lower: editedContent.toLowerCase(), // Update the lowercase content
+        content_lower: editedContent.toLowerCase(),
         updated_at: serverTimestamp(),
+        is_visible: isVisible, // Set visibility based on moderation check
       });
       setIsEditing(false);
       console.log("Post updated successfully:", post.id);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
-      );
+      setError(friendlyMessage || "An unexpected error occurred. Please try again.");
       console.error("Error updating post:", err);
     } finally {
       setLoading(false);

@@ -3,6 +3,7 @@ import { firestore } from '../firebase';
 import {
   collection,
   query,
+  where,
   orderBy,
   limit,
   startAfter,
@@ -25,6 +26,7 @@ const PostFeed = () => {
   useEffect(() => {
     const initialQuery = query(
       collection(firestore, 'Posts'),
+      where("is_visible", "==", true), // Fetch only visible posts
       orderBy('created_at', 'desc'),
       limit(POSTS_PER_PAGE)
     );
@@ -58,6 +60,7 @@ const PostFeed = () => {
     try {
       const nextQuery = query(
         collection(firestore, 'Posts'),
+        where("is_visible", "==", true), // Fetch only visible posts
         orderBy('created_at', 'desc'),
         startAfter(lastDoc),
         limit(POSTS_PER_PAGE)
