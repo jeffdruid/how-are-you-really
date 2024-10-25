@@ -107,30 +107,46 @@ const Post = ({ post }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+  
     if (editedContent.trim() === "") {
       setError("Post content cannot be empty.");
       setLoading(false);
       return;
     }
-
-    // Check content with moderation API
-    const isSafe = await checkModeration(
-      editedContent,
-      currentUser.accessToken,
-      post.id,
-      currentUser.uid
-    );
-
+  
+    // Update the post immediately and set visibility to true initially
     let isVisible = true;
-
-    if (!isSafe) {
-      console.log("Content flagged, setting flagged type and visibility");
-      setFlaggedType("selfHarm"); 
-      setShowResources(true); 
-
-      // Send flagged content to DRF
-      try {
+    const postRef = doc(firestore, "Posts", post.id);
+  
+    try {
+      // Save content to Firestore
+      await updateDoc(postRef, {
+        content: editedContent,
+        content_lower: editedContent.toLowerCase(),
+        updated_at: serverTimestamp(),
+        is_visible: isVisible,
+      });
+      setIsEditing(false);
+      console.log("Post updated successfully:", post.id);
+  
+      // Run moderation check after posting
+      const isSafe = await checkModeration(
+        editedContent,
+        currentUser.accessToken,
+        post.id,
+        currentUser.uid
+      );
+  
+      if (!isSafe) {
+        // If flagged, show the resources modal and update Firestore visibility to false
+        setFlaggedType("selfHarm"); // or another appropriate type
+        setShowResources(true); // Display the modal
+        isVisible = false;
+  
+        // Update Firestore to hide flagged content
+        await updateDoc(postRef, { is_visible: isVisible });
+  
+        // Send flagged content to DRF backend
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
@@ -140,26 +156,7 @@ const Post = ({ post }) => {
           },
           currentUser.accessToken
         );
-      } catch (err) {
-        console.error("Error sending flagged content:", err);
       }
-
-      isVisible = false;
-      setLoading(false);
-      return;
-    }
-
-    // Update the post's visibility if it passes moderation
-    try {
-      const postRef = doc(firestore, "Posts", post.id);
-      await updateDoc(postRef, {
-        content: editedContent,
-        content_lower: editedContent.toLowerCase(),
-        updated_at: serverTimestamp(),
-        is_visible: isVisible, // Set visibility based on moderation check
-      });
-      setIsEditing(false);
-      console.log("Post updated successfully:", post.id);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage || "An unexpected error occurred. Please try again.");
@@ -168,6 +165,7 @@ const Post = ({ post }) => {
       setLoading(false);
     }
   };
+  
 
   const handleDelete = async () => {
     const confirmDelete = window.confirm(
