@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
 import {
   collection,
   query,
@@ -9,32 +9,36 @@ import {
   startAfter,
   onSnapshot,
   getDocs,
-} from 'firebase/firestore';
-import Post from './Post';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner, Alert } from 'react-bootstrap';
+} from "firebase/firestore";
+import Post from "./Post";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Spinner, Alert } from "react-bootstrap";
+import ResourceModal from "./ResourceModal"; // Import ResourceModal component
 
 const PostFeed = () => {
   const [posts, setPosts] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [flaggedContent, setFlaggedContent] = useState(null); // For flagged content modal
 
   const POSTS_PER_PAGE = 2;
 
-  // Real-time listener for initial posts
   useEffect(() => {
     const initialQuery = query(
-      collection(firestore, 'Posts'),
+      collection(firestore, "Posts"),
       where("is_visible", "==", true), // Fetch only visible posts
-      orderBy('created_at', 'desc'),
+      orderBy("created_at", "desc"),
       limit(POSTS_PER_PAGE)
     );
 
     const unsubscribe = onSnapshot(
       initialQuery,
       (snapshot) => {
-        const postsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const postsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setPosts(postsData);
 
         const lastVisible = snapshot.docs[snapshot.docs.length - 1];
@@ -45,29 +49,31 @@ const PostFeed = () => {
         }
       },
       (err) => {
-        console.error('Error fetching initial posts:', err);
-        setError('Failed to load posts. Please try again later.');
+        console.error("Error fetching initial posts:", err);
+        setError("Failed to load posts. Please try again later.");
       }
     );
 
-    return () => unsubscribe(); // Clean up the listener when the component unmounts
+    return () => unsubscribe();
   }, []);
 
-  // Fetch more posts (pagination)
   const fetchMorePosts = async () => {
     if (!lastDoc) return;
 
     try {
       const nextQuery = query(
-        collection(firestore, 'Posts'),
-        where("is_visible", "==", true), // Fetch only visible posts
-        orderBy('created_at', 'desc'),
+        collection(firestore, "Posts"),
+        where("is_visible", "==", true),
+        orderBy("created_at", "desc"),
         startAfter(lastDoc),
         limit(POSTS_PER_PAGE)
       );
 
       const snapshot = await getDocs(nextQuery);
-      const postsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const postsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setPosts((prevPosts) => [...prevPosts, ...postsData]);
 
       const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -77,10 +83,12 @@ const PostFeed = () => {
         setHasMore(false);
       }
     } catch (err) {
-      console.error('Error fetching more posts:', err);
-      setError('Failed to load more posts. Please try again later.');
+      console.error("Error fetching more posts:", err);
+      setError("Failed to load more posts. Please try again later.");
     }
   };
+
+  const closeModal = () => setFlaggedContent(null);
 
   return (
     <div>
@@ -96,7 +104,7 @@ const PostFeed = () => {
           </div>
         }
         endMessage={
-          <p style={{ textAlign: 'center' }}>
+          <p style={{ textAlign: "center" }}>
             <b>No more posts to display.</b>
           </p>
         }
@@ -104,9 +112,24 @@ const PostFeed = () => {
         {posts.length === 0 ? (
           <p>No posts available.</p>
         ) : (
-          posts.map((post) => <Post key={post.id} post={post} />)
+          posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              onFlaggedContent={setFlaggedContent}
+            />
+          ))
         )}
       </InfiniteScroll>
+
+      {flaggedContent && (
+        <ResourceModal
+          show={!!flaggedContent}
+          handleClose={closeModal}
+          flaggedType={flaggedContent.flaggedType}
+          message="This content has been flagged for moderation."
+        />
+      )}
     </div>
   );
 };
