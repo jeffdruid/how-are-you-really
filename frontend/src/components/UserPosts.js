@@ -28,6 +28,7 @@ const UserPosts = ({ userId }) => {
       const initialQuery = query(
         collection(firestore, 'Posts'),
         where('userId', '==', userId),
+        where("is_visible", "==", true), // Fetch only visible posts
         where('isAnonymous', '==', false),
         orderBy('created_at', 'desc'),
         limit(POSTS_PER_PAGE)
@@ -57,6 +58,7 @@ const UserPosts = ({ userId }) => {
       const nextQuery = query(
         collection(firestore, 'Posts'),
         where('userId', '==', userId),
+        where("is_visible", "==", true), // Fetch only visible posts
         where('isAnonymous', '==', false),
         orderBy('created_at', 'desc'),
         startAfter(lastDoc),
