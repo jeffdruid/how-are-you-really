@@ -9,6 +9,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
@@ -20,8 +21,9 @@ import LikeButton from "./LikeButton";
 import CommentForm from "./CommentForm";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
 import ResourceModal from "./ResourceModal"; // Import ResourceModal for sensitive content
+import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 
-const Comment = ({ comment, postId }) => {
+const Comment = ({ comment, postId, onFlaggedContent }) => {
   const { currentUser } = useAuth();
   const isOwnComment = currentUser && comment.userId === currentUser.uid;
 
@@ -60,7 +62,11 @@ const Comment = ({ comment, postId }) => {
       comment.id,
       "Replies"
     );
-    const q = query(repliesRef, orderBy("created_at", "asc"));
+    const q = query(
+      repliesRef,
+      where("is_visible", "==", true), // Only fetch visible replies
+      orderBy("created_at", "asc")
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const repliesData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -82,52 +88,54 @@ const Comment = ({ comment, postId }) => {
       return;
     }
 
-    // Use moderation to check for trigger words
-    const isSafe = await checkModeration(
-      editedContent,
-      currentUser.accessToken
-    );
-    if (!isSafe) {
-      setFlaggedType("suicide"); // Update this based on the type of trigger word
-      setShowResources(true); // Show modal for sensitive content
-      try {
-        await updateDoc(doc(firestore, "ModerationQueue", comment.id), {
-          userId: currentUser.uid,
-          username: comment.isAnonymous
-            ? "Anonymous"
-            : currentUser.displayName,
-          content: editedContent,
-          isAnonymous: comment.isAnonymous,
-          created_at: comment.created_at,
-          updated_at: serverTimestamp(),
-          status: "pending",
-        });
-      } catch (err) {
-        console.error("Error adding comment to moderation queue:", err);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
+    let isVisible = true; // Initialize visibility as true
+    const commentRef = doc(firestore, "Posts", postId, "Comments", comment.id);
 
     try {
-      const commentRef = doc(
-        firestore,
-        "Posts",
-        postId,
-        "Comments",
-        comment.id
-      );
+      // Update the comment immediately
       await updateDoc(commentRef, {
         content: editedContent,
+        content_lower: editedContent.toLowerCase(),
         updated_at: serverTimestamp(),
+        is_visible: isVisible,
       });
-      setIsEditing(false);
+
+      // Run moderation check on the edited content
+      const isSafe = await checkModeration(
+        editedContent,
+        currentUser.accessToken
+      );
+
+      if (!isSafe) {
+        // Flag the content and set visibility to false
+        isVisible = false;
+        await updateDoc(commentRef, { is_visible: isVisible });
+
+        setFlaggedType("self-harm"); // Set an appropriate flagged type
+        setShowResources(true); // Show the ResourceModal for sensitive content
+        onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
+
+        // Send flagged content to DRF backend for moderation
+        await sendFlaggedContentToDRF(
+          {
+            user: currentUser.uid,
+            post_id: postId,
+            comment_id: comment.id,
+            reason: "Trigger words detected",
+            content: editedContent,
+          },
+          currentUser.accessToken
+        );
+      } else {
+        // Close editing if content is safe
+        setIsEditing(false);
+      }
     } catch (err) {
       setError(
         firebaseErrorMessages(err.code) ||
           "An unexpected error occurred. Please try again."
       );
+      console.error("Error updating comment:", err);
     } finally {
       setLoading(false);
     }
@@ -236,6 +244,7 @@ const Comment = ({ comment, postId }) => {
                   reply={reply}
                   postId={postId}
                   commentId={comment.id}
+                  onFlaggedContent={onFlaggedContent}
                 />
               ))}
             </div>

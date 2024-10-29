@@ -9,12 +9,14 @@ import {
 import { Form, Button, Spinner, Alert, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
+import { firebaseErrorMessages } from "../utils/firebaseErrors"; // Import firebaseErrorMessages
 import { useAuth } from "../contexts/AuthContext";
 import LikeButton from "./LikeButton";
 import useModeration from "../hooks/useModeration"; // Import moderation hook
 import ResourceModal from "./ResourceModal"; // Import ResourceModal component
+import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 
-const Reply = ({ reply, postId, commentId }) => {
+const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
   const { currentUser } = useAuth();
   const isOwnReply = currentUser && reply.userId === currentUser.uid;
 
@@ -52,32 +54,7 @@ const Reply = ({ reply, postId, commentId }) => {
       return;
     }
 
-    // Use moderation to check for trigger words
-    const isSafe = await checkModeration(
-      editedContent,
-      currentUser.accessToken
-    );
-    if (!isSafe) {
-      setFlaggedType("self-harm"); // Update this based on the type of trigger word
-      setShowResources(true); // Show modal for sensitive content
-      try {
-        await updateDoc(doc(firestore, "ModerationQueue", reply.id), {
-          userId: currentUser.uid,
-          username: reply.username || "Anonymous",
-          content: editedContent,
-          isAnonymous: false,
-          created_at: reply.created_at,
-          updated_at: serverTimestamp(),
-          status: "pending",
-        });
-      } catch (err) {
-        console.error("Error adding reply to moderation queue:", err);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
+    let isVisible = true; // Initially set visibility to true
     const replyRef = doc(
       firestore,
       "Posts",
@@ -89,12 +66,48 @@ const Reply = ({ reply, postId, commentId }) => {
     );
 
     try {
+      // Update the reply content immediately
       await updateDoc(replyRef, {
         content: editedContent,
+        content_lower: editedContent.toLowerCase(),
         updated_at: serverTimestamp(),
+        is_visible: isVisible,
       });
-      setIsEditing(false);
+
+      // Run moderation check on the updated reply content
+      const isSafe = await checkModeration(
+        editedContent,
+        currentUser.accessToken
+      );
+      if (!isSafe) {
+        // Flag content if moderation fails and set `is_visible` to false
+        isVisible = false;
+        await updateDoc(replyRef, { is_visible: isVisible });
+
+        setFlaggedType("self-harm"); // or any other relevant type based on moderation
+        setShowResources(true); // Display the resource modal for flagged content
+        onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
+
+        // Send flagged content to DRF for further moderation
+        await sendFlaggedContentToDRF(
+          {
+            user: currentUser.uid,
+            post_id: postId,
+            comment_id: commentId,
+            reply_id: reply.id,
+            reason: "Trigger words detected",
+            content: editedContent,
+          },
+          currentUser.accessToken
+        );
+      } else {
+        setIsEditing(false); // Close editing mode if content is safe
+      }
     } catch (err) {
+      const friendlyMessage = firebaseErrorMessages(err.code);
+      setError(
+        friendlyMessage || "An unexpected error occurred. Please try again."
+      );
       console.error("Error updating reply:", err);
       setError("Failed to update reply.");
     } finally {
