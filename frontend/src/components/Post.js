@@ -9,6 +9,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import LikeButton from "./LikeButton";
@@ -64,7 +65,11 @@ const Post = ({ post, onFlaggedContent }) => {
       setCommentsLoading(true);
       setCommentsError("");
       const commentsRef = collection(firestore, "Posts", post.id, "Comments");
-      const commentsQuery = query(commentsRef, orderBy("created_at", "asc"));
+      const commentsQuery = query(
+        commentsRef,
+        where("is_visible", "==", true), // Only fetch visible comments
+        orderBy("created_at", "asc")
+      );
       unsubscribe = onSnapshot(
         commentsQuery,
         (snapshot) => {
@@ -288,6 +293,7 @@ const Post = ({ post, onFlaggedContent }) => {
                           key={comment.id}
                           comment={comment}
                           postId={post.id}
+                          onFlaggedContent={onFlaggedContent}
                         />
                       ))
                     )}
