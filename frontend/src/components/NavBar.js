@@ -1,28 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Navbar, Nav, Container, Button, Badge } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Navbar, Nav, Container, Badge, NavDropdown } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth, firestore } from "../firebase";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { onSnapshot, collection, query, where } from "firebase/firestore";
 import { FaBell } from "react-icons/fa";
-import GoBackButton from "./GoBackButton";
-import TestApiButton from "./TestApiButton";
+import styles from "../styles/NavigationBar.module.css";
 
 const NavigationBar = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
+  const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(true);
-  const navbarRef = useRef(null);
-
-  // Load dark mode preference from localStorage on initial load
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode") === "true";
-    setDarkMode(savedMode);
-    document.body.classList.toggle("dark-mode", savedMode);
-  }, []);
 
   // Fetch unread notifications count
   useEffect(() => {
@@ -53,147 +43,122 @@ const NavigationBar = () => {
     }
   };
 
-  // Toggle dark mode and save preference to localStorage
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    document.body.classList.toggle("dark-mode", newMode);
-    localStorage.setItem("darkMode", newMode);
-  };
-
-  // Handle navbar collapse
-  const handleToggle = () => {
-    setIsNavbarCollapsed(!isNavbarCollapsed);
-  };
-
-  // Close navbar on link click
-  const handleLinkClick = () => {
-    setIsNavbarCollapsed(true);
-  };
-
-  // Close navbar when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (navbarRef.current && !navbarRef.current.contains(event.target)) {
-        setIsNavbarCollapsed(true);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <Navbar
-      ref={navbarRef}
-      expanded={!isNavbarCollapsed}
       expand="lg"
+      bg="light"
+      variant="light"
       sticky="top"
+      className={`shadow-sm ${styles.navbarContainer}`}
     >
-      <Container className="d-flex justify-content-between align-items-center">
-        {/* Brand on the left */}
-        <Navbar.Brand as={Link} to="/" onClick={handleLinkClick}>
+      <Container fluid className="justify-content-between">
+        {/* Brand */}
+        <Navbar.Brand as={NavLink} to="/" className={styles.brand}>
           How Are You Really
         </Navbar.Brand>
 
-        {/* Notification Bell in the center */}
+        {/* Notification Icon */}
         {currentUser && (
           <Nav.Link
-            as={Link}
+            as={NavLink}
             to="/notifications"
-            className="position-relative mx-auto"
-            onClick={handleLinkClick}
+            className={styles.notificationIcon}
           >
             <FaBell size={20} />
             {unreadCount > 0 && (
-              <Badge
-                pill
-                bg="danger"
-                className="position-absolute top-0 start-100 translate-middle"
-              >
+              <Badge pill bg="danger" className={styles.notificationBadge}>
                 {unreadCount}
               </Badge>
             )}
           </Nav.Link>
         )}
 
-        <GoBackButton />
-        {/* Toggle button on the right */}
-        <Navbar.Toggle
-          aria-controls="basic-navbar-nav"
-          onClick={handleToggle}
-          className="ms-auto"
-        />
+        {/* Navbar Toggle */}
+        <Navbar.Toggle aria-controls="navbar-nav" />
 
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
-            <Nav.Link as={Link} to="/">
+        {/* Collapsible Navbar */}
+        <Navbar.Collapse id="navbar-nav" className={styles.navbarCollapse}>
+          <Nav className="ms-auto">
+            {/* Home Link */}
+            <Nav.Link
+              as={NavLink}
+              to="/"
+              className={styles.navLink}
+              activeClassName={styles.activeNavLink}
+              end
+            >
               Home
             </Nav.Link>
-            {currentUser && (
-              <Nav.Link as={Link} onClick={handleLinkClick} to="/profile">
-                Profile
-              </Nav.Link>
-            )}
-            {currentUser && (
-              <Nav.Link
-                as={Link}
-                onClick={handleLinkClick}
-                to="/notifications"
-              >
-                Notifications
-              </Nav.Link>
-            )}
-            {currentUser && (
-              <Nav.Link
-                as={Link}
-                onClick={handleLinkClick}
-                to="/mood-analytics"
-              >
-                Mood Analytics
-              </Nav.Link>
-            )}
-            {currentUser && (
-              <Nav.Link
-                as={Link}
-                onClick={handleLinkClick}
-                to="/post-performance"
-              >
-                Post Performance
-              </Nav.Link>
-            )}
-          </Nav>
-          <Nav className="align-items-center">
-            {/* Dark Mode Toggle Button */}
-            <Button
-              onClick={toggleDarkMode}
-              variant={darkMode ? "light" : "dark"}
-              className="me-2"
-            >
-              {darkMode ? "Light Mode" : "Dark Mode"}
-            </Button>
 
+            {currentUser && (
+              <>
+                {/* Profile Link */}
+                <Nav.Link
+                  as={NavLink}
+                  to="/profile"
+                  className={styles.navLink}
+                  activeClassName={styles.activeNavLink}
+                >
+                  Profile
+                </Nav.Link>
+
+                {/* Analytics Dropdown */}
+                <NavDropdown
+                  title="Analytics"
+                  id="analytics-dropdown"
+                  className={styles.navLink}
+                >
+                  <NavDropdown.Item
+                    as={NavLink}
+                    to="/mood-analytics"
+                    className={`${styles.navLink} ${
+                      location.pathname === "/mood-analytics"
+                        ? styles.activeNavLink
+                        : ""
+                    }`}
+                  >
+                    Mood Analytics
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={NavLink}
+                    to="/post-performance"
+                    className={`${styles.navLink} ${
+                      location.pathname === "/post-performance"
+                        ? styles.activeNavLink
+                        : ""
+                    }`}
+                  >
+                    Post Performance
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
+            )}
+
+            {/* Authentication Links */}
             {!currentUser ? (
               <>
-                <Nav.Link as={Link} to="/login" onClick={handleLinkClick}>
+                <Nav.Link
+                  as={NavLink}
+                  to="/login"
+                  className={styles.navLink}
+                  activeClassName={styles.activeNavLink}
+                >
                   Login
                 </Nav.Link>
-                <Button
-                  as={Link}
+                <Nav.Link
+                  as={NavLink}
                   to="/signup"
-                  variant="primary"
-                  className="ms-2"
+                  className={styles.navLink}
+                  activeClassName={styles.activeNavLink}
                 >
                   Sign Up
-                </Button>
+                </Nav.Link>
               </>
             ) : (
-              <Button onClick={handleLogout} variant="danger">
+              <Nav.Link onClick={handleLogout} className={styles.navLink}>
                 Logout
-              </Button>
+              </Nav.Link>
             )}
-            <TestApiButton />
           </Nav>
         </Navbar.Collapse>
       </Container>
