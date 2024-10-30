@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { firestore } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { Button, Form, Spinner, Alert } from "react-bootstrap";
+import {
+  Button,
+  Form,
+  Spinner,
+  Alert,
+  Modal,
+  ListGroup,
+} from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { FaSearch } from "react-icons/fa"; // Import search icon from react-icons
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,16 +18,17 @@ const SearchBar = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [searchSubmitted, setSearchSubmitted] = useState(false); // Track if search button was clicked
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
+  // Handle search functionality
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSearchSubmitted(true); // Mark the search as submitted
+    setShowResultsModal(true);
 
     try {
-      // Search for users
+      // Search for users by username
       const usersRef = collection(firestore, "Users");
       const userQuery = query(
         usersRef,
@@ -33,7 +42,7 @@ const SearchBar = () => {
       }));
       setUsers(foundUsers);
 
-      // Search for posts excluding flagged content
+      // Search for posts by content and visibility
       const postsRef = collection(firestore, "Posts");
       const postQuery = query(
         postsRef,
@@ -55,16 +64,19 @@ const SearchBar = () => {
     }
   };
 
-  const handleCloseResults = () => {
-    setSearchSubmitted(false);
+  // Close the modal and reset results
+  const handleCloseModal = () => {
+    setShowResultsModal(false);
     setUsers([]);
     setPosts([]);
+    setSearchTerm("");
   };
 
   return (
-    <div>
-      <Form onSubmit={handleSearch}>
-        <Form.Group controlId="searchTerm">
+    <>
+      {/* Search Form */}
+      <Form onSubmit={handleSearch} className="d-flex mb-3">
+        <Form.Group controlId="searchTerm" className="flex-grow-1 me-2">
           <Form.Control
             type="text"
             placeholder="Search for users or posts"
@@ -77,54 +89,74 @@ const SearchBar = () => {
           variant="primary"
           disabled={loading || searchTerm.trim() === ""}
         >
-          {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+          {loading ? <Spinner animation="border" size="sm" /> : <FaSearch />}{" "}
+          {/* Replaced text with icon */}
         </Button>
       </Form>
 
+      {/* Error Alert */}
       {error && (
         <Alert variant="danger" className="mt-3">
           {error}
         </Alert>
       )}
 
-      {searchSubmitted && !loading && (
-        <div className="mt-4">
-          <Button variant="secondary" onClick={handleCloseResults}>
-            Close Results
+      {/* Results Modal with fade animation */}
+      <Modal
+        show={showResultsModal}
+        onHide={handleCloseModal}
+        centered
+        animation={true}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Search Results</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {/* Users Section */}
+          <h5>Users</h5>
+          {users.length === 0 ? (
+            <p>No users found</p>
+          ) : (
+            <ListGroup variant="flush" className="mb-3">
+              {users.map((user) => (
+                <ListGroup.Item key={user.id}>
+                  <Link
+                    to={`/users/${user.id}`}
+                    className="text-decoration-none"
+                  >
+                    {user.username}
+                  </Link>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+
+          {/* Posts Section */}
+          <h5>Posts</h5>
+          {posts.length === 0 ? (
+            <p>No posts found</p>
+          ) : (
+            <ListGroup variant="flush">
+              {posts.map((post) => (
+                <ListGroup.Item key={post.id}>
+                  <Link
+                    to={`/posts/${post.id}`}
+                    className="text-decoration-none"
+                  >
+                    {post.content}
+                  </Link>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
           </Button>
-
-          <div className="mt-4">
-            <h4>Users</h4>
-            {users.length === 0 ? (
-              <p>No users found</p>
-            ) : (
-              <ul>
-                {users.map((user) => (
-                  <li key={user.id}>
-                    <Link to={`/users/${user.id}`}>{user.username}</Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="mt-4">
-            <h4>Posts</h4>
-            {posts.length === 0 ? (
-              <p>No posts found</p>
-            ) : (
-              <ul>
-                {posts.map((post) => (
-                  <li key={post.id}>
-                    <Link to={`/posts/${post.id}`}>{post.content}</Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 };
 
