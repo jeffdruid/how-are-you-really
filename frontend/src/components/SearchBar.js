@@ -1,40 +1,55 @@
-import React, { useState } from 'react';
-import { firestore } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Button, Form, Spinner, Alert } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { firestore } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { Button, Form, Spinner, Alert } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 const SearchBar = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState(false); // Track if search button was clicked
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
     setSearchSubmitted(true); // Mark the search as submitted
 
     try {
       // Search for users
-      const usersRef = collection(firestore, 'Users');
-      const userQuery = query(usersRef, where('username', '>=', searchTerm), where('username', '<=', searchTerm + '\uf8ff'));
+      const usersRef = collection(firestore, "Users");
+      const userQuery = query(
+        usersRef,
+        where("username", ">=", searchTerm),
+        where("username", "<=", searchTerm + "\uf8ff")
+      );
       const userSnapshot = await getDocs(userQuery);
-      const foundUsers = userSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const foundUsers = userSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setUsers(foundUsers);
 
-      // Search for posts
-      const postsRef = collection(firestore, 'Posts');
-      const postQuery = query(postsRef, where('content', '>=', searchTerm), where('content', '<=', searchTerm + '\uf8ff'));
+      // Search for posts excluding flagged content
+      const postsRef = collection(firestore, "Posts");
+      const postQuery = query(
+        postsRef,
+        where("content", ">=", searchTerm),
+        where("content", "<=", searchTerm + "\uf8ff"),
+        where("is_visible", "==", true) // Only fetch visible posts
+      );
       const postSnapshot = await getDocs(postQuery);
-      const foundPosts = postSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const foundPosts = postSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setPosts(foundPosts);
     } catch (err) {
-      console.error('Error fetching search results:', err);
-      setError('Failed to search. Please try again.');
+      console.error("Error fetching search results:", err);
+      setError("Failed to search. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -57,12 +72,20 @@ const SearchBar = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </Form.Group>
-        <Button type="submit" variant="primary" disabled={loading || searchTerm.trim() === ''}>
-          {loading ? <Spinner animation="border" size="sm" /> : 'Search'}
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={loading || searchTerm.trim() === ""}
+        >
+          {loading ? <Spinner animation="border" size="sm" /> : "Search"}
         </Button>
       </Form>
 
-      {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+      {error && (
+        <Alert variant="danger" className="mt-3">
+          {error}
+        </Alert>
+      )}
 
       {searchSubmitted && !loading && (
         <div className="mt-4">
@@ -72,7 +95,9 @@ const SearchBar = () => {
 
           <div className="mt-4">
             <h4>Users</h4>
-            {users.length === 0 ? <p>No users found</p> : (
+            {users.length === 0 ? (
+              <p>No users found</p>
+            ) : (
               <ul>
                 {users.map((user) => (
                   <li key={user.id}>
@@ -85,7 +110,9 @@ const SearchBar = () => {
 
           <div className="mt-4">
             <h4>Posts</h4>
-            {posts.length === 0 ? <p>No posts found</p> : (
+            {posts.length === 0 ? (
+              <p>No posts found</p>
+            ) : (
               <ul>
                 {posts.map((post) => (
                   <li key={post.id}>
