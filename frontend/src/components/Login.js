@@ -49,7 +49,7 @@ const Login = React.memo(() => {
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleLogin}>
             <Form.Group controlId="formEmail" className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label className="d-none">Email</Form.Label>
               <Form.Control
                 type="email"
                 placeholder="Enter your email"
@@ -63,7 +63,7 @@ const Login = React.memo(() => {
               </Form.Control.Feedback>
             </Form.Group>
             <Form.Group controlId="formPassword" className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label className="d-none">Password</Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Enter your password"
@@ -78,7 +78,7 @@ const Login = React.memo(() => {
           </Form>
 
           {/* Links to navigate to signup or password reset */}
-          <div className="text-center mt-3">
+          <div className="text-center mt-4">
             <p>
               Don’t have an account? <Link to="/signup">Sign Up</Link>
             </p>
@@ -86,7 +86,7 @@ const Login = React.memo(() => {
               Forgot your password?{" "}
               <Link to="/password-reset">Reset Password</Link>
             </p>
-            <hr />
+            <hr className="mt-3" />
             <SocialLogin />
           </div>
         </Card.Body>

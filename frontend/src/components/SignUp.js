@@ -1,22 +1,25 @@
-import React, { useState, useCallback } from 'react';
-import { auth, firestore } from '../firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { validateEmail } from '../utils/validateEmail';
-import { validatePassword } from '../utils/validatePassword';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import { Form, Button, Alert, Container, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import styles from '../styles/AuthPages.module.css';
+import React, { useState, useCallback } from "react";
+import { auth, firestore } from "../firebase";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { validateEmail } from "../utils/validateEmail";
+import { validatePassword } from "../utils/validatePassword";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import { Form, Button, Alert, Container, Card } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import styles from "../styles/AuthPages.module.css";
 
 const SignUp = React.memo(() => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [message, setMessage] = useState("");
 
   // Handle sign-up functionality
   const handleSignUp = useCallback(
@@ -27,41 +30,47 @@ const SignUp = React.memo(() => {
 
       // Validate email and password
       if (!validateEmail(email)) {
-        setEmailError('Please enter a valid email address.');
+        setEmailError("Please enter a valid email address.");
         valid = false;
       } else {
-        setEmailError('');
+        setEmailError("");
       }
 
       if (!validatePassword(password)) {
         setPasswordError(
-          'Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters.'
+          "Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters."
         );
         valid = false;
       } else {
-        setPasswordError('');
+        setPasswordError("");
       }
 
       if (!valid) return;
 
       try {
         // Create user and send verification email
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         const user = userCredential.user;
         await sendEmailVerification(user);
 
         // Create a user document in Firestore
-        await setDoc(doc(firestore, 'Users', user.uid), {
+        await setDoc(doc(firestore, "Users", user.uid), {
           username,
           email,
-          bio: '',
+          bio: "",
           emailVerified: user.emailVerified,
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
         });
 
-        setMessage('Registration successful! Please check your email to verify your account.');
-        setError('');
+        setMessage(
+          "Registration successful! Please check your email to verify your account."
+        );
+        setError("");
       } catch (err) {
         setError(firebaseErrorMessages(err.code));
       }
@@ -70,7 +79,9 @@ const SignUp = React.memo(() => {
   );
 
   return (
-    <Container className={`d-flex align-items-center justify-content-center ${styles.authContainer}`}>
+    <Container
+      className={`d-flex align-items-center justify-content-center ${styles.authContainer}`}
+    >
       <Card className={styles.authCard}>
         <Card.Body>
           <h2 className="text-center mb-4">Sign Up</h2>
@@ -78,7 +89,7 @@ const SignUp = React.memo(() => {
           {message && <Alert variant="success">{message}</Alert>}
           <Form onSubmit={handleSignUp}>
             <Form.Group controlId="formUsername" className="mb-3">
-              <Form.Label>Username</Form.Label>
+              <Form.Label className="d-none">Username</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter username"
@@ -88,7 +99,7 @@ const SignUp = React.memo(() => {
               />
             </Form.Group>
             <Form.Group controlId="formEmail" className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label className="d-none">Email</Form.Label>
               <Form.Control
                 type="email"
                 placeholder="Enter email"
@@ -99,7 +110,7 @@ const SignUp = React.memo(() => {
               {emailError && <Alert variant="danger">{emailError}</Alert>}
             </Form.Group>
             <Form.Group controlId="formPassword" className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label className="d-none">Password</Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Enter password"
@@ -107,7 +118,9 @@ const SignUp = React.memo(() => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              {passwordError && <Alert variant="danger">{passwordError}</Alert>}
+              {passwordError && (
+                <Alert variant="danger">{passwordError}</Alert>
+              )}
             </Form.Group>
             <Button variant="primary" type="submit" className="w-100">
               Sign Up
@@ -115,7 +128,7 @@ const SignUp = React.memo(() => {
           </Form>
 
           {/* Link to login page if already have an account */}
-          <div className="text-center mt-3">
+          <div className="text-center mt-4">
             <p>
               Already have an account? <Link to="/login">Log In</Link>
             </p>

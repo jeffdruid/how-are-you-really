@@ -58,7 +58,7 @@ const PasswordReset = React.memo(() => {
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handlePasswordReset}>
             <Form.Group controlId="formEmail">
-              <Form.Label>Enter your email</Form.Label>
+              <Form.Label className="d-none">Enter your email</Form.Label>
               <Form.Control
                 type="email"
                 placeholder="Email"
@@ -74,7 +74,7 @@ const PasswordReset = React.memo(() => {
           </Form>
 
           {/* Link to navigate back to login */}
-          <div className="text-center mt-3">
+          <div className="text-center mt-4">
             <p>
               Remember your password? <Link to="/login">Log In</Link>
             </p>
