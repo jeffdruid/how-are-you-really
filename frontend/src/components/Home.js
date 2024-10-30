@@ -1,58 +1,49 @@
 import React from 'react';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
-import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import PostFeed from './PostFeed'; 
+import PostFeed from './PostFeed';
 import CreatePost from './CreatePost';
-import { Container, Button, Alert } from 'react-bootstrap';
 import SearchBar from './SearchBar';
+import { Container, Card, Alert } from 'react-bootstrap';
+import styles from '../styles/Home.module.css';
 
 const Home = () => {
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (err) {
-      console.error('Failed to log out:', err);
-    }
-  };
-
   return (
-    <Container className="mt-4">
-      <h1 className="text-center mb-4">Welcome to "How Are You Really"</h1>
-      <div className="text-center mb-4">
-        <p>
-          Logged in as: {currentUser.email}{' '}
-          {currentUser.emailVerified ? (
-            <span className="text-success">(Verified)</span>
-          ) : (
-            <span className="text-warning">(Not Verified)</span>
+    <Container className={`mt-4 ${styles.homeContainer}`}>
+      {/* Welcome Banner */}
+      <Card className={`text-center p-4 mb-4 shadow-sm ${styles.welcomeBanner}`}>
+        <Card.Body>
+          <h1 className="display-5">Welcome to "How Are You Really"</h1>
+          <p className="lead">
+            An interactive platform where you can express, connect, and reflect.
+          </p>
+          {/* Display verification status alert if the user is not verified */}
+          {!currentUser.emailVerified && (
+            <Alert variant="warning" className="mt-3">
+              Your email is not verified. Please check your inbox for a verification email.
+            </Alert>
           )}
-        </p>
-        {!currentUser.emailVerified && (
-          <Alert variant="warning">
-            Your email is not verified. Please check your inbox for a verification email.
-          </Alert>
-        )}
-        <Button variant="danger" onClick={handleLogout} className="me-2">
-          Logout
-        </Button>
-        <Button variant="primary" as={Link} to="/profile">
-          Go to Your Profile
-        </Button>
-      </div>
+        </Card.Body>
+      </Card>
+
       {/* Search Bar Section */}
-      <SearchBar />
-      <hr />
+      <Card className="p-3 mb-4 shadow-sm">
+        <h3 className="mb-3">Find Posts and People</h3>
+        <SearchBar />
+      </Card>
+
       {/* Create Post Section */}
-      <CreatePost />
-      <hr />
+      <Card className="p-3 mb-4 shadow-sm">
+        <h3 className="mb-3">Share Your Thoughts</h3>
+        <CreatePost />
+      </Card>
+
       {/* Post Feed Section */}
-      <PostFeed />
+      <Card className="p-3 mb-4 shadow-sm">
+        <h3 className="mb-3">Recent Posts</h3>
+        <PostFeed />
+      </Card>
     </Container>
   );
 };
