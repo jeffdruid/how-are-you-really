@@ -1,0 +1,17 @@
+.headerButtons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: var(--bs-light);
+  }
+  
+  .button {
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+  }
+  
+  .button:hover {
+    transform: scale(1.1);
+  }
+  
