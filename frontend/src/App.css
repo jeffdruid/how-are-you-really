@@ -2,6 +2,12 @@
 body {
   background-color: white;
   color: black;
+  background-image: url('../src/wallpaper.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    z-index: 1;
 }
 
 .dark-mode {
