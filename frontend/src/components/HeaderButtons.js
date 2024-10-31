@@ -31,7 +31,7 @@ const HeaderButtons = () => {
   };
 
   return (
-    <div className={styles.headerButtons}>
+    <div className={styles.headerButtons} style={{ position: "sticky", top: 55, zIndex: 1000 }}>
       <Button
         variant="outline-secondary"
         onClick={toggleDarkMode}
