@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { firestore } from '../firebase';
+import React, { useEffect, useState, useCallback } from "react";
+import { firestore } from "../firebase";
 import {
   doc,
   setDoc,
@@ -9,91 +9,114 @@ import {
   collection,
   addDoc,
   serverTimestamp,
-  getDoc, // Import getDoc
-} from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from 'react-bootstrap';
-import { increment } from 'firebase/firestore';
+  getDoc,
+  increment,
+} from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "react-bootstrap";
 
-const LikeButton = ({ postId, commentId = null, replyId = null, postOwnerId = null }) => {
-  const { currentUser } = useAuth();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+const LikeButton = ({
+  postId,
+  commentId = null,
+  replyId = null,
+  postOwnerId = null,
+}) => {
+  const { currentUser } = useAuth(); // Authenticated user information
+  const [liked, setLiked] = useState(false); // Track like status
+  const [likeCount, setLikeCount] = useState(0); // Track total like count
 
-  // Memoize the function using useCallback to prevent re-creation on every render
+  // Generate the correct document reference for the like based on whether it's a post, comment, or reply
   const getLikeDocRef = useCallback(() => {
     if (replyId) {
       return doc(
         firestore,
-        'Posts',
+        "Posts",
         postId,
-        'Comments',
+        "Comments",
         commentId,
-        'Replies',
+        "Replies",
         replyId,
-        'Likes',
+        "Likes",
         currentUser.uid
       );
     } else if (commentId) {
-      return doc(firestore, 'Posts', postId, 'Comments', commentId, 'Likes', currentUser.uid);
+      return doc(
+        firestore,
+        "Posts",
+        postId,
+        "Comments",
+        commentId,
+        "Likes",
+        currentUser.uid
+      );
     } else {
-      return doc(firestore, 'Posts', postId, 'Likes', currentUser.uid);
+      return doc(firestore, "Posts", postId, "Likes", currentUser.uid);
     }
   }, [postId, commentId, replyId, currentUser.uid]);
 
+  // Generate the document reference for the item (post/comment/reply) being liked
   const getItemDocRef = useCallback(() => {
     if (replyId) {
-      return doc(firestore, 'Posts', postId, 'Comments', commentId, 'Replies', replyId);
+      return doc(
+        firestore,
+        "Posts",
+        postId,
+        "Comments",
+        commentId,
+        "Replies",
+        replyId
+      );
     } else if (commentId) {
-      return doc(firestore, 'Posts', postId, 'Comments', commentId);
+      return doc(firestore, "Posts", postId, "Comments", commentId);
     } else {
-      return doc(firestore, 'Posts', postId);
+      return doc(firestore, "Posts", postId);
     }
   }, [postId, commentId, replyId]);
 
+  // Set up listeners for both like status and total like count
   useEffect(() => {
     if (!currentUser) return;
 
-    const likeDocRef = getLikeDocRef();
-    const itemDocRef = getItemDocRef();
+    const likeDocRef = getLikeDocRef(); // Document reference for the like
+    const itemDocRef = getItemDocRef(); // Document reference for the liked item
 
-    // Listener for the user's like status
+    // Listen for changes to the user's like status (whether they've liked it or not)
     const unsubscribeLike = onSnapshot(likeDocRef, (docSnapshot) => {
       setLiked(docSnapshot.exists());
     });
 
-    // Listener for the total like count
+    // Listen for changes to the total like count for the item
     const unsubscribeCount = onSnapshot(itemDocRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        setLikeCount(data.likeCount || 0);
+        setLikeCount(docSnapshot.data().likeCount || 0);
       }
     });
 
     return () => {
-      unsubscribeLike();
-      unsubscribeCount();
+      unsubscribeLike(); // Clean up like listener
+      unsubscribeCount(); // Clean up count listener
     };
   }, [currentUser, getLikeDocRef, getItemDocRef]);
 
+  // Toggle the like status when the button is clicked
   const toggleLike = async () => {
     if (!currentUser) {
-      alert('Please log in to like posts.');
+      alert("Please log in to like posts.");
       return;
     }
 
-    const likeDocRef = getLikeDocRef();
-    const itemDocRef = getItemDocRef();
+    const likeDocRef = getLikeDocRef(); // Reference for the like document
+    const itemDocRef = getItemDocRef(); // Reference for the liked item
 
     try {
       if (liked) {
-        // Unlike: delete the like document and decrease the like count
+        // If the user has liked it, unlike the item by deleting the like document and decrementing the count
         await deleteDoc(likeDocRef);
         await updateDoc(itemDocRef, {
           likeCount: (likeCount || 1) - 1,
         });
       } else {
-        // Like: create the like document and increase the like count
+        // If the user hasn't liked it, add a like document and increment the count
         await setDoc(likeDocRef, {
           userId: currentUser.uid,
           likedAt: new Date(),
@@ -102,48 +125,50 @@ const LikeButton = ({ postId, commentId = null, replyId = null, postOwnerId = nu
           likeCount: increment(1),
         });
 
-        // Create notification if liking and not own post/comment/reply
+        // Send notification to the owner if they are not the current user
         if (currentUser.uid !== postOwnerId) {
           let notificationTargetUserId = postOwnerId;
-          console.log('postOwnerId:', postOwnerId);
           if (commentId) {
-            // Fetch comment owner ID
-            const commentDocRef = doc(firestore, 'Posts', postId, 'Comments', commentId);
-            const commentDoc = await getDoc(commentDocRef); // Use getDoc
+            // Fetch comment owner ID if this is a comment like
+            const commentDocRef = doc(
+              firestore,
+              "Posts",
+              postId,
+              "Comments",
+              commentId
+            );
+            const commentDoc = await getDoc(commentDocRef);
             if (commentDoc.exists()) {
               notificationTargetUserId = commentDoc.data().userId;
             }
           } else if (replyId) {
-            // Fetch reply owner ID
+            // Fetch reply owner ID if this is a reply like
             const replyDocRef = doc(
               firestore,
-              'Posts',
+              "Posts",
               postId,
-              'Comments',
+              "Comments",
               commentId,
-              'Replies',
+              "Replies",
               replyId
             );
-            const replyDoc = await getDoc(replyDocRef); // Use getDoc
+            const replyDoc = await getDoc(replyDocRef);
             if (replyDoc.exists()) {
               notificationTargetUserId = replyDoc.data().userId;
             }
           }
-          if (!notificationTargetUserId) {
-            console.error('Notification target user ID is undefined.');
-            return;
-          }
+          if (!notificationTargetUserId) return;
 
           if (currentUser.uid !== notificationTargetUserId) {
-            console.log('notificationTargetUserId:', notificationTargetUserId);
+            // Add the like notification to the owner's notifications collection
             const notificationsRef = collection(
               firestore,
-              'Users',
+              "Users",
               notificationTargetUserId,
-              'Notifications'
+              "Notifications"
             );
             await addDoc(notificationsRef, {
-              type: 'like',
+              type: "like",
               fromUserId: currentUser.uid,
               postId,
               commentId: commentId || null,
@@ -155,24 +180,22 @@ const LikeButton = ({ postId, commentId = null, replyId = null, postOwnerId = nu
         }
       }
     } catch (error) {
-      console.error('Error toggling like:', error);
-      alert('An error occurred while updating your like. Please try again.');
+      console.error("Error toggling like:", error);
+      alert("An error occurred while updating your like. Please try again.");
     }
   };
 
+  // Render the like button with the like count inside
   return (
-    <div className="d-flex align-items-center">
-      <Button
-        onClick={toggleLike}
-        variant={liked ? 'danger' : 'outline-secondary'}
-        size="sm"
-      >
-        {liked ? '❤️ Unlike' : '🤍 Like'}
-      </Button>
-      <span className="ms-2">
-        {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
-      </span>
-    </div>
+    <Button
+      onClick={toggleLike}
+      variant={liked ? "danger" : "outline-secondary"}
+      size="sm"
+      className="d-flex align-items-center"
+    >
+      {liked ? "❤️" : "🤍"} {likeCount}{" "}
+      {/* Show like count inside the button */}
+    </Button>
   );
 };
 
