@@ -186,11 +186,11 @@ const CreatePost = ({ onFlaggedContent }) => {
         <Button
           onClick={() => setShowModal(true)}
           variant="primary"
-          className="mb-3 d-flex align-items-center"
+          className="mb-3 d-flex align-items-center bg-dark"
           style={{
             width: "auto",
             backgroundColor: "#0000001f",
-            color: "black",
+            color: "white",
             border: "none",
             display: "flex",
             alignItems: "center",
@@ -198,6 +198,7 @@ const CreatePost = ({ onFlaggedContent }) => {
             margin: "auto",
           }}
         >
+          {/* Add this btn on small screen devices */}
           <FaRegPlusSquare size={24} />
           <span>Create Post</span>
         </Button>
