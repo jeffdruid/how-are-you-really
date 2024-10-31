@@ -267,6 +267,14 @@ const Post = ({ post, onFlaggedContent }) => {
           </Form>
         ) : (
           <>
+            {/* Post Content */}
+            <Card.Text>{post.content}</Card.Text>
+
+            {/* Mood Section */}
+            <Card.Text className="text-muted text-center mb-3">
+              <strong>Mood:</strong> <span>{moodEmojis[post.mood]}</span>
+              {/* {post.mood} */}
+            </Card.Text>
             {/* Centered Image Thumbnail */}
             {post.thumbnailUrl && (
               <div className="text-center mb-3">
@@ -281,14 +289,6 @@ const Post = ({ post, onFlaggedContent }) => {
                 />
               </div>
             )}
-            {/* Post Content */}
-            <Card.Text>{post.content}</Card.Text>
-
-            {/* Mood Section */}
-            <Card.Text className="text-muted text-center mb-3">
-              <strong>Mood:</strong> <span>{moodEmojis[post.mood]}</span>
-              {/* {post.mood} */}
-            </Card.Text>
 
             {/* Like Button and Comments */}
             <div className="d-flex justify-content-between mt-2 align-items-center">
