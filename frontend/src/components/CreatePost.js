@@ -11,11 +11,20 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import { Form, Button, Alert, Spinner, Collapse } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  Modal,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import ImageUploader from "./ImageUploader";
 import useModeration from "../hooks/useModeration";
-import ResourceModal from "./ResourceModal"; // ResourceModal imported for flagging
+import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
+import { FaRegPlusSquare } from "react-icons/fa"; // Import square plus icon
 
 const CreatePost = ({ onFlaggedContent }) => {
   const { currentUser } = useAuth();
@@ -25,16 +34,13 @@ const CreatePost = ({ onFlaggedContent }) => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false); // Modal visibility state
 
   // Image upload states
   const [images, setImages] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // Form visibility control
-  const [open, setOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const { checkModeration } = useModeration(); // Moderation hook
+  const { checkModeration } = useModeration();
 
   // Modal state for flagged content
   const [showResources, setShowResources] = useState(false);
@@ -64,8 +70,7 @@ const CreatePost = ({ onFlaggedContent }) => {
   const handleCreatePost = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); // Clear previous errors
-    setShowSuccess(false);
+    setError("");
 
     if (content.trim() === "") {
       setError("Post content cannot be empty.");
@@ -152,8 +157,7 @@ const CreatePost = ({ onFlaggedContent }) => {
       setMood("happy");
       setIsAnonymous(false);
       setImages(null);
-      setOpen(false);
-      setShowSuccess(true);
+      setShowModal(false);
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
@@ -166,41 +170,50 @@ const CreatePost = ({ onFlaggedContent }) => {
   };
 
   return (
-    <div>
-      <h3>Create a New Post</h3>
+    <>
+      {/* Supportive Message */}
+      <div className="text-center mb-3">
+        <p style={{ fontStyle: "italic", color: "#6c757d" }}>
+          Share how you're feeling today. Your thoughts matter.
+        </p>
+      </div>
 
-      {showSuccess && (
-        <Alert
-          variant="success"
-          onClose={() => setShowSuccess(false)}
-          dismissible
-        >
-          Post created successfully!
-        </Alert>
-      )}
-
-      {error && <Alert variant="danger">{error}</Alert>}
-
-      {/* Modal for flagged content */}
-      <ResourceModal
-        show={showResources}
-        handleClose={() => setShowResources(false)}
-        flaggedType={flaggedType}
-      />
-
-      {/* Toggle Button for Form */}
-      <Button
-        onClick={() => setOpen(!open)}
-        aria-controls="create-post-form"
-        aria-expanded={open}
-        variant="secondary"
-        className="mb-3"
+      {/* Plus Icon and Label Button to Show Modal */}
+      <OverlayTrigger
+        placement="top"
+        overlay={<Tooltip>Create a New Post</Tooltip>}
       >
-        {open ? "Hide Post Form" : "Show Post Form"}
-      </Button>
+        <Button
+          onClick={() => setShowModal(true)}
+          variant="primary"
+          className="mb-3 d-flex align-items-center"
+          style={{
+            width: "auto",
+            backgroundColor: "#0000001f",
+            color: "black",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            margin: "auto",
+          }}
+        >
+          <FaRegPlusSquare size={24} />
+          <span>Create Post</span>
+        </Button>
+      </OverlayTrigger>
 
-      <Collapse in={open}>
-        <div id="create-post-form">
+      {/* Modal for Creating Post */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Create a New Post</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           <Form onSubmit={handleCreatePost}>
             <Form.Group className="mb-3" controlId="postContent">
               <Form.Control
@@ -214,30 +227,36 @@ const CreatePost = ({ onFlaggedContent }) => {
             </Form.Group>
 
             {/* Image Upload Component */}
-            <ImageUploader
-              onImageSelected={(files) => setImages(files)}
-              maxSize={5 * 1024 * 1024}
-              accept="image/*"
-            />
-
-            {uploading && (
-              <div className="mt-3">
-                <Spinner animation="border" size="sm" /> Uploading image...
-              </div>
-            )}
-
             <Form.Group className="mb-3">
-              <Form.Label>Mood:</Form.Label>
+              <ImageUploader
+                onImageSelected={(files) => setImages(files)}
+                maxSize={5 * 1024 * 1024}
+                accept="image/*"
+              />
+              {uploading && (
+                <Spinner animation="border" size="sm" className="mt-2" />
+              )}
+            </Form.Group>
+
+            {/* Mood Selection */}
+            <Form.Group className="mb-3">
+              <Form.Label>Mood</Form.Label>
               <Form.Select
-                className="bg-dark text-light"
                 value={mood}
                 onChange={(e) => setMood(e.target.value)}
               >
                 <option value="happy">😊 Happy</option>
                 <option value="sad">😢 Sad</option>
                 <option value="anxious">😟 Anxious</option>
+                <option value="excited">🤩 Excited</option>
+                <option value="angry">😠 Angry</option>
+                <option value="stressed">😰 Stressed</option>
+                <option value="calm">😌 Calm</option>
+                <option value="grateful">🙏 Grateful</option>
               </Form.Select>
             </Form.Group>
+
+            {/* Anonymity Checkbox */}
             <Form.Group className="mb-3" controlId="postAnonymously">
               <Form.Check
                 type="checkbox"
@@ -246,6 +265,11 @@ const CreatePost = ({ onFlaggedContent }) => {
                 onChange={(e) => setIsAnonymous(e.target.checked)}
               />
             </Form.Group>
+
+            {/* Error Display */}
+            {error && <Alert variant="danger">{error}</Alert>}
+
+            {/* Submit Button */}
             <Button
               type="submit"
               variant="primary"
@@ -254,9 +278,16 @@ const CreatePost = ({ onFlaggedContent }) => {
               {loading ? "Posting..." : "Post"}
             </Button>
           </Form>
-        </div>
-      </Collapse>
-    </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Resource Modal for Flagged Content */}
+      <ResourceModal
+        show={showResources}
+        handleClose={() => setShowResources(false)}
+        flaggedType={flaggedType}
+      />
+    </>
   );
 };
 
