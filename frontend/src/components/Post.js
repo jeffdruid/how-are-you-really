@@ -24,17 +24,30 @@ import {
   Spinner,
   Image,
   Collapse,
+  Dropdown,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
 import ImageModal from "./ImageModal";
 import useModeration from "../hooks/useModeration";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
+import { BsThreeDotsVertical, BsChat } from "react-icons/bs";
+
+// Mood emojis
+const moodEmojis = {
+  happy: "😊",
+  sad: "😢",
+  anxious: "😟",
+  excited: "🤩",
+  angry: "😠",
+  stressed: "😰",
+  calm: "😌",
+  grateful: "🙏",
+};
 
 const Post = ({ post, onFlaggedContent }) => {
   const { currentUser } = useAuth();
-  const isOwnPost =
-    currentUser && post.userId && currentUser.uid === post.userId;
+  const isOwnPost = currentUser && post.userId === currentUser.uid;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
@@ -47,8 +60,11 @@ const Post = ({ post, onFlaggedContent }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState("");
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [isLiked, setIsLiked] = useState(false); // Track if user has liked this post
   const { checkModeration } = useModeration();
 
+  // Fetch the profile picture URL based on user and anonymity settings
   useEffect(() => {
     const fetchProfilePic = async () => {
       const url = await fetchProfilePicUrl(post.userId, post.isAnonymous);
@@ -59,44 +75,37 @@ const Post = ({ post, onFlaggedContent }) => {
     }
   }, [post.userId, post.isAnonymous]);
 
+  // Fetch comments when "Show Comments" is toggled
   useEffect(() => {
     let unsubscribe;
-    const fetchComments = () => {
+    if (showComments) {
       setCommentsLoading(true);
-      setCommentsError("");
       const commentsRef = collection(firestore, "Posts", post.id, "Comments");
       const commentsQuery = query(
         commentsRef,
-        where("is_visible", "==", true), // Only fetch visible comments
+        where("is_visible", "==", true),
         orderBy("created_at", "asc")
       );
       unsubscribe = onSnapshot(
         commentsQuery,
         (snapshot) => {
-          const commentsData = [];
-          snapshot.forEach((doc) =>
-            commentsData.push({ id: doc.id, ...doc.data() })
-          );
+          const commentsData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
           setComments(commentsData);
           setCommentsLoading(false);
         },
         (error) => {
-          console.error("Error fetching comments:", error);
           setCommentsError("Failed to load comments.");
           setCommentsLoading(false);
         }
       );
-    };
-
-    if (showComments) {
-      fetchComments();
     }
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    return () => unsubscribe && unsubscribe();
   }, [showComments, post.id]);
 
+  // Handle editing a post
   const handleEdit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -108,10 +117,11 @@ const Post = ({ post, onFlaggedContent }) => {
       return;
     }
 
-    let isVisible = true;
     const postRef = doc(firestore, "Posts", post.id);
+    let isVisible = true;
 
     try {
+      // Update post content and moderation status
       await updateDoc(postRef, {
         content: editedContent,
         content_lower: editedContent.toLowerCase(),
@@ -130,9 +140,7 @@ const Post = ({ post, onFlaggedContent }) => {
       if (!isSafe) {
         isVisible = false;
         await updateDoc(postRef, { is_visible: isVisible });
-
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
-
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
@@ -144,51 +152,96 @@ const Post = ({ post, onFlaggedContent }) => {
         );
       }
     } catch (err) {
-      const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred."
       );
-      console.error("Error updating post:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle deleting a post
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this post? This action cannot be undone."
-    );
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
     setLoading(true);
-    setError("");
 
     try {
-      const postRef = doc(firestore, "Posts", post.id);
-      await deleteDoc(postRef);
+      await deleteDoc(doc(firestore, "Posts", post.id));
     } catch (err) {
-      const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred."
       );
-      console.error("Error deleting post:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Show image in modal
   const handleImageClick = (imageUrl) => {
     setModalImageUrl(imageUrl);
     setModalShow(true);
   };
 
+  // Toggle visibility of comments
   const toggleComments = () => setShowComments((prev) => !prev);
 
   return (
-    <Card className="mb-4">
+    <Card
+      className="mb-4 shadow-sm border-0 p-3"
+      style={{ borderRadius: "10px", backgroundColor: "#f9f9f9" }}
+    >
       <Card.Body>
         {error && <Alert variant="danger">{error}</Alert>}
+
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          {/* Profile Section */}
+          <div className="d-flex align-items-center">
+            <Image
+              src={profilePicUrl}
+              roundedCircle
+              width={40}
+              height={40}
+              className="me-2"
+              loading="lazy"
+            />
+            <div>
+              <strong>
+                {post.isAnonymous ? (
+                  "Anonymous"
+                ) : (
+                  <Link
+                    to={`/users/${post.userId}`}
+                    className="text-decoration-none text-dark"
+                  >
+                    {post.username}
+                  </Link>
+                )}
+              </strong>
+              <br />
+              <span className="text-muted" style={{ fontSize: "0.85rem" }}>
+                {post.created_at?.toDate().toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Three-Dot Menu for Edit/Delete */}
+          {isOwnPost && (
+            <Dropdown align="end">
+              <Dropdown.Toggle variant="link" className="text-muted p-0">
+                <BsThreeDotsVertical size={20} />
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => setIsEditing(true)}>
+                  Edit
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleDelete}>Delete</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          )}
+        </div>
+
         {isEditing ? (
+          // Post Editing Form
           <Form onSubmit={handleEdit}>
             <Form.Group controlId="editContent">
               <Form.Control
@@ -197,54 +250,26 @@ const Post = ({ post, onFlaggedContent }) => {
                 onChange={(e) => setEditedContent(e.target.value)}
                 rows="3"
                 required
+                className="mb-2"
               />
             </Form.Group>
             <Button
               type="submit"
               variant="success"
               disabled={loading}
-              className="mt-2"
+              className="me-2"
             >
               {loading ? <Spinner animation="border" size="sm" /> : "Save"}
             </Button>
-            <Button
-              variant="secondary"
-              className="mt-2 ms-2"
-              onClick={() => setIsEditing(false)}
-            >
+            <Button variant="secondary" onClick={() => setIsEditing(false)}>
               Cancel
             </Button>
           </Form>
         ) : (
           <>
-            <div className="d-flex align-items-center mb-2">
-              <Image
-                src={profilePicUrl}
-                roundedCircle
-                width={40}
-                height={40}
-                className="me-2"
-                loading="lazy"
-              />
-              <Card.Subtitle className="text-muted">
-                <strong>
-                  {post.isAnonymous ? (
-                    "Anonymous"
-                  ) : (
-                    <Link
-                      to={`/users/${post.userId}`}
-                      className="text-decoration-none"
-                    >
-                      {post.username}
-                    </Link>
-                  )}
-                </strong>{" "}
-                | <em>{post.created_at?.toDate().toLocaleString()}</em>
-              </Card.Subtitle>
-            </div>
-            <Card.Text>{post.content}</Card.Text>
+            {/* Centered Image Thumbnail */}
             {post.thumbnailUrl && (
-              <div className="mb-3">
+              <div className="text-center mb-3">
                 <Image
                   src={post.thumbnailUrl}
                   alt="Post Thumbnail"
@@ -252,30 +277,45 @@ const Post = ({ post, onFlaggedContent }) => {
                   rounded
                   loading="lazy"
                   onClick={() => handleImageClick(post.imageUrl)}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", maxHeight: "250px" }}
                 />
               </div>
             )}
-            <Card.Text className="text-muted">
-              <strong>Mood:</strong> {post.mood}
+            {/* Post Content */}
+            <Card.Text>{post.content}</Card.Text>
+
+            {/* Mood Section */}
+            <Card.Text className="text-muted text-center mb-3">
+              <strong>Mood:</strong> <span>{moodEmojis[post.mood]}</span>
+              {/* {post.mood} */}
             </Card.Text>
-            <LikeButton
-              postId={post.id}
-              postOwnerId={post.userId}
-              commentId={null}
-              replyId={null}
-            />
-            <Button
-              variant="link"
-              onClick={toggleComments}
-              aria-controls={`comments-${post.id}`}
-              aria-expanded={showComments}
-              className="mt-3 p-0"
-            >
-              {showComments ? "Hide Comments" : "Show Comments"}
-            </Button>
+
+            {/* Like Button and Comments */}
+            <div className="d-flex justify-content-between mt-2 align-items-center">
+              <Button
+                variant="link"
+                onClick={toggleComments}
+                aria-controls={`comments-${post.id}`}
+                aria-expanded={showComments}
+                className="p-0 text-muted d-flex align-items-center"
+              >
+                <BsChat size={20} className="me-1" />
+                {showComments ? "Hide" : "Show"} Comments
+              </Button>
+              {/* TODO - fix like button design */}
+              <LikeButton
+                postId={post.id}
+                postOwnerId={post.userId}
+                isLiked={isLiked}
+                setIsLiked={setIsLiked}
+                likeCount={likeCount}
+                setLikeCount={setLikeCount}
+              />
+            </div>
+
+            {/* Comments Section */}
             <Collapse in={showComments}>
-              <div id={`comments-${post.id}`}>
+              <div>
                 <hr />
                 <h5>Comments</h5>
                 {commentsError && (
@@ -307,31 +347,11 @@ const Post = ({ post, onFlaggedContent }) => {
                 )}
               </div>
             </Collapse>
-            {isOwnPost && (
-              <div className="mt-3">
-                <Button
-                  variant="warning"
-                  onClick={() => setIsEditing(true)}
-                  className="me-2"
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={handleDelete}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Spinner animation="border" size="sm" />
-                  ) : (
-                    "Delete"
-                  )}
-                </Button>
-              </div>
-            )}
           </>
         )}
       </Card.Body>
+
+      {/* Image Modal */}
       <ImageModal
         show={modalShow}
         handleClose={() => setModalShow(false)}
