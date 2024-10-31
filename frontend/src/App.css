@@ -2,7 +2,7 @@
 body {
   background-color: white;
   color: black;
-  background-image: url('../src/wallpaper.jpg');
+  background-image: url('../src/assets/wallpaper.webp');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
