@@ -10,6 +10,10 @@ body {
     z-index: 1;
 }
 
+.card {
+  background-color: #ffffffe1 !important;
+}
+
 .dark-mode {
   background-color: #121212; /* Dark background */
   color: white; /* Light text */
