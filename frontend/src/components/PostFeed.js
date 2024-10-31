@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import Post from "./Post";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Spinner, Alert } from "react-bootstrap";
+import { Spinner, Alert, Container, Card } from "react-bootstrap";
 import ResourceModal from "./ResourceModal"; // Import ResourceModal component
 
 const PostFeed = () => {
@@ -91,37 +91,46 @@ const PostFeed = () => {
   const closeModal = () => setFlaggedContent(null);
 
   return (
-    <div>
-      <h3>Post Feed</h3>
-      {error && <Alert variant="danger">{error}</Alert>}
+    <Container className="mt-4">
+      {/* <h3 className="text-center mb-4">Post Feed</h3> */}
+
+      {error && (
+        <Alert variant="danger" className="text-center">
+          {error}
+        </Alert>
+      )}
+
       <InfiniteScroll
         dataLength={posts.length}
         next={fetchMorePosts}
         hasMore={hasMore}
         loader={
           <div className="text-center my-4">
-            <Spinner animation="border" />
+            <Spinner animation="border" variant="primary" />
           </div>
         }
         endMessage={
-          <p style={{ textAlign: "center" }}>
+          <p className="text-center mt-4" style={{ color: "#6c757d" }}>
             <b>No more posts to display.</b>
           </p>
         }
       >
-        {posts.length === 0 ? (
-          <p>No posts available.</p>
+        {posts.length === 0 && !error ? (
+          <p className="text-center text-muted mt-4">No posts available.</p>
         ) : (
           posts.map((post) => (
-            <Post
+            <Card
               key={post.id}
-              post={post}
-              onFlaggedContent={setFlaggedContent}
-            />
+              className="mb-4 shadow-sm bg-light "
+              style={{ padding: "1.5rem", borderRadius: "8px" }}
+            >
+              <Post post={post} onFlaggedContent={setFlaggedContent} />
+            </Card>
           ))
         )}
       </InfiniteScroll>
 
+      {/* Modal for Flagged Content */}
       {flaggedContent && (
         <ResourceModal
           show={!!flaggedContent}
@@ -130,7 +139,7 @@ const PostFeed = () => {
           message="This content has been flagged for moderation."
         />
       )}
-    </div>
+    </Container>
   );
 };
 
