@@ -29,19 +29,19 @@ const Home = () => {
 
       {/* Search Bar Section */}
       <Card className="p-3 mb-4 shadow-sm">
-        <h3 className="mb-3">Find Posts and People</h3>
+        <h3 className="mb-3 mt-3 text-center">Find Posts and People</h3>
         <SearchBar />
       </Card>
 
       {/* Create Post Section */}
       <Card className="p-3 mb-4 shadow-sm">
-        <h3 className="mb-3">Share Your Thoughts</h3>
+        <h3 className="mb-3 mt-3 text-center">Share Your Thoughts</h3>
         <CreatePost />
       </Card>
 
       {/* Post Feed Section */}
       <Card className="p-3 mb-4 shadow-sm">
-        <h3 className="mb-3">Recent Posts</h3>
+        <h3 className="mb-3 mt-3 text-center">Recent Posts</h3>
         <PostFeed />
       </Card>
     </Container>
