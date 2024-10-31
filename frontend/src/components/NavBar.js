@@ -132,7 +132,7 @@ const NavigationBar = () => {
                   title="Analytics"
                   id="analytics-dropdown"
                   className={styles.navLink}
-                  onClick={() => setExpanded(false)}
+                  // onClick={() => setExpanded(false)}
                 >
                   <NavDropdown.Item
                     as={NavLink}
