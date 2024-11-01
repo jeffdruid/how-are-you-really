@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, writeBatch, limit, startAfter, where } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  writeBatch,
+  limit,
+  startAfter,
+  where,
+} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationItem from './NotificationItem';
 import { Spinner, Alert, Button, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
@@ -21,7 +31,12 @@ const NotificationsList = () => {
       if (!currentUser || (!loadMore && notifications.length > 0)) return;
       setLoading(true);
 
-      const notificationsRef = collection(firestore, 'Users', currentUser.uid, 'Notifications');
+      const notificationsRef = collection(
+        firestore,
+        'Users',
+        currentUser.uid,
+        'Notifications'
+      );
       let notificationsQuery;
 
       // Filter notifications based on the selected filter
@@ -62,7 +77,9 @@ const NotificationsList = () => {
             setHasMore(false);
           }
 
-          setNotifications((prev) => (loadMore ? [...prev, ...notificationsData] : notificationsData));
+          setNotifications((prev) =>
+            loadMore ? [...prev, ...notificationsData] : notificationsData
+          );
           setLastVisible(lastDoc);
           setLoading(false);
         },
@@ -113,7 +130,12 @@ const NotificationsList = () => {
 
   // Infinite scroll event handler
   const handleScroll = useCallback(() => {
-    if (window.innerHeight + document.documentElement.scrollTop + 100 >= document.documentElement.offsetHeight && !loading && hasMore) {
+    if (
+      window.innerHeight + document.documentElement.scrollTop + 100 >=
+        document.documentElement.offsetHeight &&
+      !loading &&
+      hasMore
+    ) {
       fetchNotifications(true);
     }
   }, [loading, hasMore, fetchNotifications]);
@@ -123,12 +145,8 @@ const NotificationsList = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  if (loading && notifications.length === 0) {
-    return <Spinner animation="border" />;
-  }
-
   return (
-    <div>
+    <div className="notifications-list-container">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <ToggleButtonGroup
           type="radio"
@@ -136,16 +154,31 @@ const NotificationsList = () => {
           value={filter}
           onChange={handleFilterChange}
         >
-          <ToggleButton id="tbg-radio-1" value="all" variant="outline-primary">
+          <ToggleButton
+            id="tbg-radio-1"
+            value="all"
+            variant="outline-dark"
+            size="sm"
+          >
             All
           </ToggleButton>
-          <ToggleButton id="tbg-radio-2" value="unread" variant="outline-primary">
+          <ToggleButton
+            id="tbg-radio-2"
+            value="unread"
+            variant="outline-dark"
+            size="sm"
+          >
             Unread
           </ToggleButton>
         </ToggleButtonGroup>
 
         {notifications.some((n) => !n.read) && filter === 'all' && (
-          <Button variant="link" onClick={markAllAsRead}>
+          <Button
+            variant="link"
+            onClick={markAllAsRead}
+            className="text-decoration-none text-primary"
+            size="sm"
+          >
             Mark all as read
           </Button>
         )}
@@ -153,15 +186,19 @@ const NotificationsList = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {notifications.length === 0 ? (
-        <p>No notifications.</p>
+      {notifications.length === 0 && !loading ? (
+        <p className="text-center text-muted">No notifications.</p>
       ) : (
-        notifications.map((notification, index) => (
-          <NotificationItem key={`${notification.id}-${index}`} notification={notification} />
+        notifications.map((notification) => (
+          <NotificationItem key={notification.id} notification={notification} />
         ))
       )}
 
-      {loading && <Spinner animation="border" />}
+      {loading && (
+        <div className="text-center mt-3">
+          <Spinner animation="border" />
+        </div>
+      )}
     </div>
   );
 };
