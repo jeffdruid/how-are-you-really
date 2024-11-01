@@ -6,15 +6,23 @@ import {
   deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { Form, Button, Spinner, Alert, Image } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Spinner,
+  Alert,
+  Image,
+  Dropdown,
+} from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
-import { firebaseErrorMessages } from "../utils/firebaseErrors"; // Import firebaseErrorMessages
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { useAuth } from "../contexts/AuthContext";
 import LikeButton from "./LikeButton";
-import useModeration from "../hooks/useModeration"; // Import moderation hook
-import ResourceModal from "./ResourceModal"; // Import ResourceModal component
+import useModeration from "../hooks/useModeration";
+import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
+import { BsThreeDotsVertical, BsCheck, BsX } from "react-icons/bs";
 
 const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
   const { currentUser } = useAuth();
@@ -42,6 +50,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
     }
   }, [reply.userId]);
 
+  // Handle editing a reply
   const handleEditReply = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -108,19 +117,14 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       setError(
         friendlyMessage || "An unexpected error occurred. Please try again."
       );
-      console.error("Error updating reply:", err);
-      setError("Failed to update reply.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle deleting a reply
   const handleDeleteReply = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this reply?"
-    );
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete this reply?")) return;
     setLoading(true);
     const replyRef = doc(
       firestore,
@@ -136,15 +140,19 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       await deleteDoc(replyRef);
       console.log("Reply deleted:", reply.id);
     } catch (err) {
-      console.error("Error deleting reply:", err);
-      setError("Failed to delete reply.");
+      setError(
+        firebaseErrorMessages(err.code) || "An unexpected error occurred."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="mt-2 mb-2">
+    <div
+      className="mt-3 p-3 bg-white rounded shadow-sm"
+      style={{ borderLeft: "1px solid #ddd" }}
+    >
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Modal for sensitive content */}
@@ -155,78 +163,106 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       />
 
       {isEditing ? (
-        <Form onSubmit={handleEditReply}>
-          <Form.Group controlId={`editReply-${reply.id}`}>
+        <Form onSubmit={handleEditReply} className="d-flex align-items-center">
+          <Form.Group
+            controlId={`editReply-${reply.id}`}
+            className="flex-grow-1 me-2"
+          >
             <Form.Control
               as="textarea"
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
               rows={1}
               required
+              style={{
+                fontSize: "0.9rem",
+                borderRadius: "5px",
+                padding: "8px",
+                border: "1px solid #ddd",
+              }}
             />
           </Form.Group>
           <Button
             type="submit"
-            variant="primary"
-            className="mt-2 me-2"
+            variant="link"
+            className="text-success"
             disabled={loading}
+            style={{ padding: "0 0.5rem" }}
+            title="Save"
           >
-            {loading ? <Spinner animation="border" size="sm" /> : "Save"}
+            {loading ? (
+              <Spinner animation="border" size="sm" />
+            ) : (
+              <BsCheck size={20} />
+            )}
           </Button>
           <Button
-            variant="secondary"
-            className="mt-2"
+            variant="link"
             onClick={() => setIsEditing(false)}
+            className="text-danger"
+            style={{ padding: "0 0.5rem" }}
+            title="Cancel"
           >
-            Cancel
+            <BsX size={20} />
           </Button>
         </Form>
       ) : (
         <>
-          <div className="d-flex align-items-center">
-            <Link
-              to={`/users/${reply.userId}`}
-              className="text-decoration-none"
-            >
-              <Image
-                src={profilePicUrl}
-                roundedCircle
-                width={20}
-                height={20}
-                className="me-2"
-                loading="lazy"
-              />
-              <strong>{reply.username}</strong> |{" "}
-            </Link>
-            <em>{reply.created_at?.toDate().toLocaleString()}</em>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="d-flex align-items-center">
+              <Link
+                to={`/users/${reply.userId}`}
+                className="text-decoration-none text-dark"
+              >
+                {profilePicUrl && (
+                  <Image
+                    src={profilePicUrl}
+                    loading="lazy"
+                    roundedCircle
+                    width={25}
+                    height={25}
+                    className="me-2"
+                  />
+                )}
+                <strong style={{ color: "black" }}>{reply.username}</strong>
+              </Link>
+              <span
+                className="text-muted"
+                style={{ fontSize: "0.85rem", marginLeft: "0.5rem" }}
+              >
+                | {reply.created_at?.toDate().toLocaleString()}
+              </span>
+            </div>
+
+            {/* Three-dot dropdown menu for edit/delete */}
+            {isOwnReply && (
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="link" className="text-muted p-0">
+                  <BsThreeDotsVertical size={18} />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => setIsEditing(true)}>
+                    Edit
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={handleDeleteReply}>
+                    Delete
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
           </div>
-          <p>{reply.content}</p>
+
+          <p className="mb-2">{reply.content}</p>
+
           {/* Like Button for Reply */}
-          <LikeButton
-            postId={postId}
-            commentId={commentId}
-            replyId={reply.id}
-          />
-          {isOwnReply && (
-            <>
-              <Button
-                variant="warning"
-                className="me-2"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleDeleteReply}
-                disabled={loading}
-              >
-                {loading ? <Spinner animation="border" size="sm" /> : "Delete"}
-              </Button>
-            </>
-          )}
+          <div className="d-flex justify-content-end">
+            <LikeButton
+              postId={postId}
+              commentId={commentId}
+              replyId={reply.id}
+              likeCount={reply.likeCount}
+            />
+          </div>
         </>
       )}
     </div>
