@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { firestore } from "../firebase";
 import {
   collection,
@@ -119,7 +119,7 @@ const CommentForm = ({
       <Form
         onSubmit={(e) => e.preventDefault()}
         className={`position-relative ${
-          parentType === "reply" ? "ps-4 border-start" : ""
+          parentType === "reply" ? "ps-2 " : ""
         }`}
       >
         <Form.Control
@@ -129,7 +129,9 @@ const CommentForm = ({
           onChange={(e) => setContent(e.target.value)}
           placeholder={`Add a ${parentType}...`}
           onKeyPress={handleKeyPress}
-          className={`pr-5 ${parentType === "reply" ? "border-light" : ""}`}
+          className={`pr-5 ${
+            parentType === "reply" ? "border-light" : "border-light"
+          }`}
           style={{
             borderColor: parentType === "reply" ? "#cccccc" : "inherit",
           }}
