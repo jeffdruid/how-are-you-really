@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { firestore } from "../firebase";
+import { firestore, storage } from "../firebase";
 import {
   doc,
   updateDoc,
@@ -11,6 +11,7 @@ import {
   orderBy,
   where,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
 import LikeButton from "./LikeButton";
 import Comment from "./Comment";
@@ -28,12 +29,12 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
+import ImageUploader from "./ImageUploader";
 import ImageModal from "./ImageModal";
 import useModeration from "../hooks/useModeration";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
-import { BsThreeDotsVertical, BsChat } from "react-icons/bs";
+import { BsThreeDotsVertical, BsChat, BsCheck, BsX } from "react-icons/bs";
 
-// Mood emojis
 const moodEmojis = {
   happy: "😊",
   sad: "😢",
@@ -51,6 +52,8 @@ const Post = ({ post, onFlaggedContent }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
+  const [editedMood, setEditedMood] = useState(post.mood);
+  const [editedAnonymous, setEditedAnonymous] = useState(post.isAnonymous);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState("");
@@ -59,23 +62,21 @@ const Post = ({ post, onFlaggedContent }) => {
   const [modalImageUrl, setModalImageUrl] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState("");
+  const [commentsError] = useState("");
+  const [images, setImages] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
-  const [isLiked, setIsLiked] = useState(false); // Track if user has liked this post
+  const [isLiked, setIsLiked] = useState(false);
   const { checkModeration } = useModeration();
 
-  // Fetch the profile picture URL based on user and anonymity settings
   useEffect(() => {
     const fetchProfilePic = async () => {
       const url = await fetchProfilePicUrl(post.userId, post.isAnonymous);
       setProfilePicUrl(url);
     };
-    if (post.userId) {
-      fetchProfilePic();
-    }
+    if (post.userId) fetchProfilePic();
   }, [post.userId, post.isAnonymous]);
 
-  // Fetch comments when "Show Comments" is toggled
   useEffect(() => {
     let unsubscribe;
     if (showComments) {
@@ -86,21 +87,14 @@ const Post = ({ post, onFlaggedContent }) => {
         where("is_visible", "==", true),
         orderBy("created_at", "asc")
       );
-      unsubscribe = onSnapshot(
-        commentsQuery,
-        (snapshot) => {
-          const commentsData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setComments(commentsData);
-          setCommentsLoading(false);
-        },
-        (error) => {
-          setCommentsError("Failed to load comments.");
-          setCommentsLoading(false);
-        }
-      );
+      unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+        const commentsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setComments(commentsData);
+        setCommentsLoading(false);
+      });
     }
     return () => unsubscribe && unsubscribe();
   }, [showComments, post.id]);
@@ -125,18 +119,41 @@ const Post = ({ post, onFlaggedContent }) => {
       await updateDoc(postRef, {
         content: editedContent,
         content_lower: editedContent.toLowerCase(),
+        mood: editedMood,
+        isAnonymous: editedAnonymous,
         updated_at: serverTimestamp(),
         is_visible: isVisible,
       });
-      setIsEditing(false);
+
+      // Image upload (if edited)
+      if (images) {
+        setUploading(true);
+        const originalRef = ref(
+          storage,
+          `post_images/${post.id}/original_${images.original.name}`
+        );
+        await uploadBytes(originalRef, images.original);
+        const originalURL = await getDownloadURL(originalRef);
+
+        const thumbnailRef = ref(
+          storage,
+          `post_images/${post.id}/thumbnail_${images.thumbnail.name}`
+        );
+        await uploadBytes(thumbnailRef, images.thumbnail);
+        const thumbnailURL = await getDownloadURL(thumbnailRef);
+
+        await updateDoc(postRef, {
+          imageUrl: originalURL,
+          thumbnailUrl: thumbnailURL,
+          updated_at: serverTimestamp(),
+        });
+        setUploading(false);
+      }
 
       const isSafe = await checkModeration(
         editedContent,
-        currentUser.accessToken,
-        post.id,
-        currentUser.uid
+        currentUser.accessToken
       );
-
       if (!isSafe) {
         isVisible = false;
         await updateDoc(postRef, { is_visible: isVisible });
@@ -151,6 +168,7 @@ const Post = ({ post, onFlaggedContent }) => {
           currentUser.accessToken
         );
       }
+      setIsEditing(false);
     } catch (err) {
       setError(
         firebaseErrorMessages(err.code) || "An unexpected error occurred."
@@ -176,13 +194,6 @@ const Post = ({ post, onFlaggedContent }) => {
     }
   };
 
-  // Show image in modal
-  const handleImageClick = (imageUrl) => {
-    setModalImageUrl(imageUrl);
-    setModalShow(true);
-  };
-
-  // Toggle visibility of comments
   const toggleComments = () => setShowComments((prev) => !prev);
 
   return (
@@ -241,29 +252,76 @@ const Post = ({ post, onFlaggedContent }) => {
         </div>
 
         {isEditing ? (
-          // Post Editing Form
-          <Form onSubmit={handleEdit}>
+          <Form onSubmit={handleEdit} className="d-flex flex-column gap-2">
             <Form.Group controlId="editContent">
               <Form.Control
                 as="textarea"
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
-                rows="3"
+                rows={3}
                 required
+                placeholder="What's on your mind?"
                 className="mb-2"
               />
             </Form.Group>
-            <Button
-              type="submit"
-              variant="success"
-              disabled={loading}
-              className="me-2"
+
+            <Form.Group controlId="editMood">
+              <Form.Select
+                value={editedMood}
+                onChange={(e) => setEditedMood(e.target.value)}
+              >
+                <option value="happy">😊 Happy</option>
+                <option value="sad">😢 Sad</option>
+                <option value="anxious">😟 Anxious</option>
+                <option value="excited">🤩 Excited</option>
+                <option value="angry">😠 Angry</option>
+                <option value="stressed">😰 Stressed</option>
+                <option value="calm">😌 Calm</option>
+                <option value="grateful">🙏 Grateful</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group
+              controlId="editAnonymous"
+              className="d-flex align-items-center gap-2"
             >
-              {loading ? <Spinner animation="border" size="sm" /> : "Save"}
-            </Button>
-            <Button variant="secondary" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
+              <Form.Check
+                type="checkbox"
+                label="Post Anonymously"
+                checked={editedAnonymous}
+                onChange={(e) => setEditedAnonymous(e.target.checked)}
+              />
+            </Form.Group>
+
+            <ImageUploader
+              onImageSelected={setImages}
+              maxSize={5 * 1024 * 1024}
+              accept="image/*"
+            />
+
+            <div className="d-flex justify-content-end mt-2">
+              <Button
+                type="submit"
+                variant="link"
+                className="text-success"
+                title="Save"
+                disabled={loading || uploading}
+              >
+                {loading ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  <BsCheck size={20} />
+                )}
+              </Button>
+              <Button
+                variant="link"
+                onClick={() => setIsEditing(false)}
+                className="text-danger"
+                title="Cancel"
+              >
+                <BsX size={20} />
+              </Button>
+            </div>
           </Form>
         ) : (
           <>
@@ -275,7 +333,7 @@ const Post = ({ post, onFlaggedContent }) => {
               <strong>Mood:</strong> <span>{moodEmojis[post.mood]}</span>
               {/* {post.mood} */}
             </Card.Text>
-            {/* Centered Image Thumbnail */}
+
             {post.thumbnailUrl && (
               <div className="text-center mb-3">
                 <Image
@@ -284,7 +342,7 @@ const Post = ({ post, onFlaggedContent }) => {
                   fluid
                   rounded
                   loading="lazy"
-                  onClick={() => handleImageClick(post.imageUrl)}
+                  onClick={() => setModalImageUrl(post.imageUrl)}
                   style={{ cursor: "pointer", maxHeight: "250px" }}
                 />
               </div>
@@ -302,7 +360,6 @@ const Post = ({ post, onFlaggedContent }) => {
                 <BsChat size={20} className="me-1" />
                 {showComments ? "Hide" : "Show"} Comments
               </Button>
-              {/* TODO - fix like button design */}
               <LikeButton
                 postId={post.id}
                 postOwnerId={post.userId}
