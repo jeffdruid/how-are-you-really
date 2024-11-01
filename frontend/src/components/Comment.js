@@ -13,15 +13,23 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import { Form, Button, Spinner, Alert, Image } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Spinner,
+  Alert,
+  Image,
+  Dropdown,
+} from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
 import Reply from "./Reply";
 import LikeButton from "./LikeButton";
 import CommentForm from "./CommentForm";
-import useModeration from "../hooks/useModeration"; // Import moderation hook
-import ResourceModal from "./ResourceModal"; // Import ResourceModal for sensitive content
+import useModeration from "../hooks/useModeration";
+import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
+import { BsThreeDotsVertical, BsReply, BsCheck, BsX } from "react-icons/bs";
 
 const Comment = ({ comment, postId, onFlaggedContent }) => {
   const { currentUser } = useAuth();
@@ -33,6 +41,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
   const [loading, setLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState("");
   const [replies, setReplies] = useState([]);
+  const [showReplyForm, setShowReplyForm] = useState(false);
 
   const { checkModeration } = useModeration(); // Use moderation hook
   const [showResources, setShowResources] = useState(false); // State for modal visibility
@@ -142,27 +151,16 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this comment?"
-    );
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete this comment?"))
+      return;
     setLoading(true);
     setError("");
 
     try {
-      const commentRef = doc(
-        firestore,
-        "Posts",
-        postId,
-        "Comments",
-        comment.id
-      );
-      await deleteDoc(commentRef);
+      await deleteDoc(doc(firestore, "Posts", postId, "Comments", comment.id));
     } catch (err) {
       setError(
-        firebaseErrorMessages(err.code) ||
-          "An unexpected error occurred. Please try again."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred."
       );
     } finally {
       setLoading(false);
@@ -170,7 +168,10 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
   };
 
   return (
-    <div className="mt-3">
+    <div
+      className="mt-3 p-3 bg-white rounded shadow-sm"
+      style={{ borderLeft: "1px solid #ddd" }}
+    >
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Modal for sensitive content */}
@@ -181,61 +182,100 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
       />
 
       {isEditing ? (
-        <Form onSubmit={handleEdit}>
-          <Form.Group controlId={`editComment-${comment.id}`}>
+        <Form onSubmit={handleEdit} className="d-flex align-items-center">
+          <Form.Group
+            controlId={`editComment-${comment.id}`}
+            className="flex-grow-1 me-2"
+          >
             <Form.Control
               as="textarea"
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
-              rows={2}
+              rows={1}
+              style={{
+                fontSize: "0.9rem",
+                borderRadius: "5px",
+                padding: "8px",
+                border: "1px solid #ddd",
+              }}
               required
             />
           </Form.Group>
           <Button
             type="submit"
-            variant="primary"
-            className="mt-2 me-2"
+            variant="link"
+            className="text-success"
             disabled={loading}
+            style={{ padding: "0 0.5rem" }}
+            title="Save"
           >
-            {loading ? <Spinner animation="border" size="sm" /> : "Save"}
+            {loading ? <Spinner animation="border" size="sm" /> : <BsCheck size={20} />}
           </Button>
           <Button
-            variant="secondary"
-            className="mt-2"
+            variant="link"
             onClick={() => setIsEditing(false)}
+            className="text-danger"
+            style={{ padding: "0 0.5rem" }}
+            title="Cancel"
           >
-            Cancel
+            <BsX size={20} />
           </Button>
         </Form>
       ) : (
         <>
-          <div className="d-flex align-items-center mb-2">
-            <Link
-              to={`/users/${comment.userId}`}
-              className="text-decoration-none"
-            >
-              {profilePicUrl && (
-                <Image
-                  src={profilePicUrl}
-                  loading="lazy"
-                  roundedCircle
-                  width={30}
-                  height={30}
-                  className="me-2"
-                />
-              )}
-              <strong>
-                {comment.isAnonymous ? "Anonymous" : comment.username}
-              </strong>
-            </Link>{" "}
-            | <em>{comment.created_at?.toDate().toLocaleString()}</em>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="d-flex align-items-center">
+              <Link
+                to={`/users/${comment.userId}`}
+                className="text-decoration-none text-dark"
+              >
+                {profilePicUrl && (
+                  <Image
+                    src={profilePicUrl}
+                    loading="lazy"
+                    roundedCircle
+                    width={25}
+                    height={25}
+                    className="me-2"
+                  />
+                )}
+                <strong style={{ color: "black" }}>
+                  {comment.isAnonymous ? "Anonymous" : comment.username}
+                </strong>
+              </Link>
+              <span
+                className="text-muted"
+                style={{ fontSize: "0.85rem", marginLeft: "0.5rem" }}
+              >
+                | {comment.created_at?.toDate().toLocaleString()}
+              </span>
+            </div>
+
+            {isOwnComment && (
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="link" className="text-muted p-0">
+                  <BsThreeDotsVertical size={20} />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => setIsEditing(true)}>
+                    Edit
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={handleDelete}>Delete</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
           </div>
-          <p>{comment.content}</p>
 
-          {/* Like Button for Comment */}
-          <LikeButton postId={postId} commentId={comment.id} />
+          <p className="mb-2">{comment.content}</p>
 
-          {/* Nested replies */}
+          <div className="d-flex justify-content-end">
+            <LikeButton
+              postId={postId}
+              commentId={comment.id}
+              likeCount={comment.likeCount}
+            />
+          </div>
+
           {replies.length > 0 && (
             <div style={{ marginLeft: "20px" }}>
               {replies.map((reply) => (
@@ -250,33 +290,26 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             </div>
           )}
 
-          {/* Reply Form - Using CommentForm for replies */}
-          <CommentForm
-            postId={postId}
-            commentId={comment.id}
-            parentType="reply"
-          />
+          <div style={{ marginLeft: "20px", marginTop: "10px" }}>
+            <Button
+              variant="link"
+              onClick={() => setShowReplyForm((prev) => !prev)}
+              className="p-0 text-muted d-flex align-items-center"
+            >
+              <BsReply size={20} className="me-1" />
+              {showReplyForm ? "Cancel Reply" : "Add Reply"}
+            </Button>
 
-          {isOwnComment && (
-            <div>
-              <Button
-                variant="warning"
-                className="me-2"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleDelete}
-                disabled={loading}
-              >
-                {loading ? <Spinner animation="border" size="sm" /> : "Delete"}
-              </Button>
-            </div>
-          )}
+            {showReplyForm && (
+              <div className="mt-3">
+                <CommentForm
+                  postId={postId}
+                  commentId={comment.id}
+                  parentType="reply"
+                />
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>
