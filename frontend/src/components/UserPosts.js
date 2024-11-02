@@ -137,7 +137,11 @@ const UserPosts = ({ userId }) => {
               </p>
             ) : (
               posts.map((post) => (
-                <Card key={post.id} className="mb-4 shadow-sm">
+                <Card
+                  key={post.id}
+                  className="mb-4 shadow-sm"
+                  style={{ padding: "1.5rem", borderRadius: "8px" }}
+                >
                   <Post post={post} />
                 </Card>
               ))
