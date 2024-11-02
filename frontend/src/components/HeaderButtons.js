@@ -14,9 +14,19 @@ const HeaderButtons = () => {
     setDarkMode(savedMode);
   }, []);
 
-  // Apply dark mode class to body
+  // Apply dark mode class to body and toggle overlay
   useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
+    const overlay = document.getElementById("dark-mode-overlay");
+    if (darkMode) {
+      if (!overlay) {
+        const darkOverlay = document.createElement("div");
+        darkOverlay.id = "dark-mode-overlay";
+        darkOverlay.classList.add("dark-mode-overlay");
+        document.body.appendChild(darkOverlay);
+      }
+    } else {
+      overlay && overlay.remove();
+    }
     localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
 
@@ -31,7 +41,10 @@ const HeaderButtons = () => {
   };
 
   return (
-    <div className={styles.headerButtons} style={{ position: "sticky", top: 55, zIndex: 1000 }}>
+    <div
+      className={styles.headerButtons}
+      style={{ position: "sticky", top: 55, zIndex: 1000 }}
+    >
       <Button
         variant="outline-secondary"
         onClick={toggleDarkMode}
