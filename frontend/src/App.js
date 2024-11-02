@@ -1,23 +1,24 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import NavigationBar from './components/NavBar';
-import HeaderButtons from './components/HeaderButtons';
-import { Container } from 'react-bootstrap';
-import './App.css';
+import React, { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
+import NavigationBar from "./components/NavBar";
+import HeaderButtons from "./components/HeaderButtons";
+import Footer from "./components/Footer";
+import { Container } from "react-bootstrap";
+import "./App.css";
 
 // Lazy load main pages to split bundles and optimize performance
-const Home = lazy(() => import('./components/Home'));
-const SignUp = lazy(() => import('./components/SignUp'));
-const Login = lazy(() => import('./components/Login'));
-const PasswordReset = lazy(() => import('./components/PasswordReset'));
-const VerifyEmail = lazy(() => import('./components/VerifyEmail'));
-const ProfileView = lazy(() => import('./components/ProfileView'));
-const PostDetail = lazy(() => import('./components/PostDetail'));
-const NotificationsList = lazy(() => import('./components/NotificationsList'));
-const MoodAnalytics = lazy(() => import('./components/MoodAnalytics'));
-const PostPerformance = lazy(() => import('./components/PostPerformance'));
-const NotFound = lazy(() => import('./components/NotFound'));
-const PrivateRoute = lazy(() => import('./components/PrivateRoute'));
+const Home = lazy(() => import("./components/Home"));
+const SignUp = lazy(() => import("./components/SignUp"));
+const Login = lazy(() => import("./components/Login"));
+const PasswordReset = lazy(() => import("./components/PasswordReset"));
+const VerifyEmail = lazy(() => import("./components/VerifyEmail"));
+const ProfileView = lazy(() => import("./components/ProfileView"));
+const PostDetail = lazy(() => import("./components/PostDetail"));
+const NotificationsList = lazy(() => import("./components/NotificationsList"));
+const MoodAnalytics = lazy(() => import("./components/MoodAnalytics"));
+const PostPerformance = lazy(() => import("./components/PostPerformance"));
+const NotFound = lazy(() => import("./components/NotFound"));
+const PrivateRoute = lazy(() => import("./components/PrivateRoute"));
 
 const App = () => {
   return (
@@ -47,7 +48,8 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
+            <Route path="/users/:userId" element={<ProfileView />} />{" "}
+            {/* Viewing other users' profiles */}
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route
               path="/mood-analytics"
@@ -89,6 +91,9 @@ const App = () => {
           </Routes>
         </Suspense>
       </Container>
+
+      {/* Footer at the bottom */}
+      <Footer />
     </>
   );
 };
