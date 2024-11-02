@@ -35,7 +35,8 @@ const PostPerformance = () => {
       const postsRef = collection(firestore, "Posts");
       const postsQuery = query(
         postsRef,
-        where("userId", "==", currentUser.uid)
+        where("userId", "==", currentUser.uid),
+        where("is_visible", "==", true) // Only count visible posts
       );
 
       onSnapshot(
@@ -49,9 +50,12 @@ const PostPerformance = () => {
 
           snapshot.forEach((doc) => {
             const post = doc.data();
+            // Handle null `created_at` by setting a default date
+            const createdAt = post.created_at?.seconds
+              ? new Date(post.created_at.seconds * 1000)
+              : new Date();
             postPerformance.labels.push(
-              new Date(post.created_at.seconds * 1000).toLocaleDateString() ||
-                `Post ${doc.id}`
+              createdAt.toLocaleDateString() || `Post ${doc.id}`
             );
             postPerformance.likeCounts.push(post.likeCount || 0);
             postPerformance.postIds.push(doc.id);
