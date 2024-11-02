@@ -21,7 +21,7 @@ const MoodAnalytics = () => {
       onSnapshot(
         postsQuery,
         (snapshot) => {
-          const moodCounts = { happy: 0, sad: 0, anxious: 0 };
+          const moodCounts = { happy: 0, sad: 0, anxious: 0, excited: 0, angry: 0, stressed: 0, calm: 0, grateful: 0 };
 
           snapshot.forEach((doc) => {
             const post = doc.data();
@@ -45,19 +45,41 @@ const MoodAnalytics = () => {
   }, []);
 
   if (loading) {
-    return <Spinner animation="border" />;
+    return <div className="text-center mt-5"><Spinner animation="border" /> Loading Mood Data...</div>;
   }
 
   if (error) {
-    return <Alert variant="danger">{error}</Alert>;
+    return <Alert variant="danger" className="text-center mt-5">{error}</Alert>;
   }
 
+  const labels = Object.keys(moodData).map(mood => mood.charAt(0).toUpperCase() + mood.slice(1));
+  const dataValues = Object.values(moodData);
+
   const data = {
-    labels: ['Happy', 'Sad', 'Anxious'],
+    labels: labels,
     datasets: [
       {
-        data: [moodData.happy, moodData.sad, moodData.anxious],
-        backgroundColor: ['#ffcc00', '#ff4444', '#00ccff'],
+        data: dataValues,
+        backgroundColor: [
+          '#FFCE56',  // Bright Yellow for "Happy"
+          '#FF6384',  // Vivid Red for "Sad"
+          '#36ffff',  // Vivid Blue for "Anxious"
+          '#32CD32',  // Lime Green for "Excited"
+          '#9966FF',  // Purple for "Angry"
+          '#FFC0CB',  // Pink for "Stressed"
+          '#4BC0C0',  // Teal for "Calm"
+          '#FF9F40',  // Orange for "Grateful"
+        ],
+        hoverBackgroundColor: [
+          '#FFCE56CC', 
+          '#FF6384CC', 
+          '#36ffffCC', 
+          '#32CD32CC', 
+          '#9966FFCC', 
+          '#FFC0CBCC', 
+          '#4BC0C0CC', 
+          '#FF9F40CC'
+        ],
       },
     ],
   };
@@ -66,7 +88,13 @@ const MoodAnalytics = () => {
     plugins: {
       legend: {
         display: true,
-        position: 'bottom', // Displaying legend at the bottom
+        position: 'bottom',
+        labels: {
+          font: {
+            size: 12,
+          },
+          padding: 10,
+        },
       },
       tooltip: {
         enabled: true, // Enabling tooltips
@@ -79,12 +107,14 @@ const MoodAnalytics = () => {
         },
       },
     },
+    responsive: true,
+    maintainAspectRatio: false,
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h3>Mood Analytics</h3>
-      <div style={{ maxWidth: '50%', margin: '0 auto' }}>
+    <div className="mood-analytics-container" style={{ textAlign: 'center', padding: '2rem 0' }}>
+      <h3 className="mb-4">Mood Analytics</h3>
+      <div style={{ maxWidth: '60%', margin: '0 auto', minHeight: '300px' }}>
         <Pie data={data} options={options} />
       </div>
     </div>
