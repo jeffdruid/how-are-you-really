@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
 import {
   collection,
   query,
@@ -8,34 +8,37 @@ import {
   limit,
   startAfter,
   getDocs,
-} from 'firebase/firestore';
-import Post from './Post';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner, Alert, Button, Collapse } from 'react-bootstrap';
+} from "firebase/firestore";
+import Post from "./Post";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Spinner, Alert, Button, Collapse, Card } from "react-bootstrap";
 
 const UserPosts = ({ userId }) => {
   const [posts, setPosts] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
 
-  const POSTS_PER_PAGE = 2;
+  const POSTS_PER_PAGE = 5;
 
   // Fetch initial user posts
   const fetchInitialPosts = async () => {
     try {
       const initialQuery = query(
-        collection(firestore, 'Posts'),
-        where('userId', '==', userId),
-        where("is_visible", "==", true), // Fetch only visible posts
-        where('isAnonymous', '==', false),
-        orderBy('created_at', 'desc'),
+        collection(firestore, "Posts"),
+        where("userId", "==", userId),
+        where("is_visible", "==", true),
+        where("isAnonymous", "==", false),
+        orderBy("created_at", "desc"),
         limit(POSTS_PER_PAGE)
       );
 
       const snapshot = await getDocs(initialQuery);
-      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const postsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setPosts(postsData);
 
       const lastVisible = snapshot.docs[snapshot.docs.length - 1];
@@ -45,8 +48,8 @@ const UserPosts = ({ userId }) => {
         setHasMore(false);
       }
     } catch (err) {
-      console.error('Error fetching user posts:', err);
-      setError('Failed to load user posts. Please try again later.');
+      console.error("Error fetching user posts:", err);
+      setError("Failed to load user posts. Please try again later.");
     }
   };
 
@@ -56,18 +59,21 @@ const UserPosts = ({ userId }) => {
 
     try {
       const nextQuery = query(
-        collection(firestore, 'Posts'),
-        where('userId', '==', userId),
-        where("is_visible", "==", true), // Fetch only visible posts
-        where('isAnonymous', '==', false),
-        orderBy('created_at', 'desc'),
+        collection(firestore, "Posts"),
+        where("userId", "==", userId),
+        where("is_visible", "==", true),
+        where("isAnonymous", "==", false),
+        orderBy("created_at", "desc"),
         startAfter(lastDoc),
         limit(POSTS_PER_PAGE)
       );
 
       const snapshot = await getDocs(nextQuery);
-      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPosts(prevPosts => [...prevPosts, ...postsData]);
+      const postsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts((prevPosts) => [...prevPosts, ...postsData]);
 
       const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
       setLastDoc(newLastDoc);
@@ -76,8 +82,8 @@ const UserPosts = ({ userId }) => {
         setHasMore(false);
       }
     } catch (err) {
-      console.error('Error fetching more user posts:', err);
-      setError('Failed to load more user posts. Please try again later.');
+      console.error("Error fetching more user posts:", err);
+      setError("Failed to load more user posts. Please try again later.");
     }
   };
 
@@ -86,24 +92,24 @@ const UserPosts = ({ userId }) => {
     setPosts([]);
     setLastDoc(null);
     setHasMore(true);
-    setError('');
+    setError("");
     fetchInitialPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return (
-    <div>
-      <h3>User Posts</h3>
+    <Card className="shadow-sm border-0 p-4 mb-4">
+      <h4 className="text-center mb-3">User Posts</h4>
 
       {/* Toggle Button for Posts */}
       <Button
         onClick={() => setOpen(!open)}
         aria-controls="user-posts-list"
         aria-expanded={open}
-        variant="secondary"
-        className="mb-3"
+        variant="outline-dark"
+        className="mb-3 mx-auto d-block"
       >
-        {open ? 'Hide User Posts' : 'Show User Posts'}
+        {open ? "Hide User Posts" : "Show User Posts"}
       </Button>
 
       {/* Collapsible Posts */}
@@ -114,23 +120,32 @@ const UserPosts = ({ userId }) => {
             dataLength={posts.length}
             next={fetchMorePosts}
             hasMore={hasMore}
-            loader={<div className="text-center my-4"><Spinner animation="border" /></div>}
+            loader={
+              <div className="text-center my-4">
+                <Spinner animation="border" />
+              </div>
+            }
             endMessage={
-              <p style={{ textAlign: 'center' }}>
-                <b>No more posts to display.</b>
+              <p className="text-center text-muted">
+                <strong>No more posts to display.</strong>
               </p>
             }
           >
             {posts.length === 0 ? (
-              <p>This user hasn't posted anything yet.</p>
+              <p className="text-center text-muted">
+                This user hasn't posted anything yet.
+              </p>
             ) : (
-              posts.map(post => <Post key={post.id} post={post} />)
+              posts.map((post) => (
+                <Card key={post.id} className="mb-4 shadow-sm">
+                  <Post post={post} />
+                </Card>
+              ))
             )}
           </InfiniteScroll>
-          {hasMore && <Spinner animation="border" />}
         </div>
       </Collapse>
-    </div>
+    </Card>
   );
 };
 
