@@ -1,118 +1,120 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { firestore, storage } from '../firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useParams } from 'react-router-dom';
-import { firebaseErrorMessages } from '../utils/firebaseErrors';
-import DeleteAccount from './DeleteAccount';
-import FollowButton from './FollowButton';
-import FollowStats from './FollowStats';
-import { Form, Button, Container, Row, Col, Image, Alert, ProgressBar, Spinner } from 'react-bootstrap';
-import UserStats from './UserStats';
-import UserPosts from './UserPosts';
-import ImageUploader from './ImageUploader';
-import ImageModal from './ImageModal'; // Import ImageModal component
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { firestore, storage } from "../firebase";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useParams } from "react-router-dom";
+import { firebaseErrorMessages } from "../utils/firebaseErrors";
+import DeleteAccount from "./DeleteAccount";
+import FollowButton from "./FollowButton";
+import FollowStats from "./FollowStats";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Image,
+  Alert,
+  ProgressBar,
+  Spinner,
+  Card,
+} from "react-bootstrap";
+import UserStats from "./UserStats";
+import UserPosts from "./UserPosts";
+import ImageUploader from "./ImageUploader";
+import ImageModal from "./ImageModal";
+import { FaUserFriends, FaChartLine } from "react-icons/fa";
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
   const { userId } = useParams();
   const isOwnProfile = !userId || userId === currentUser.uid;
 
-  const [username, setUsername] = useState('');
-  const [bio, setBio] = useState('');
-  const [profilePicUrl, setProfilePicUrl] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // New states for image upload
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
-
-  // Modal state
   const [modalShow, setModalShow] = useState(false);
-  const [modalImageUrl, setModalImageUrl] = useState('');
+  const [modalImageUrl, setModalImageUrl] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const targetUserId = isOwnProfile ? currentUser.uid : userId;
-        const userDocRef = doc(firestore, 'Users', targetUserId);
+        const userDocRef = doc(firestore, "Users", targetUserId);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const data = userDoc.data();
-          setUsername(data.username || 'Anonymous');
-          setBio(data.bio || '');
-          setProfilePicUrl(data.profilePicUrl || '');
+          setUsername(data.username || "Anonymous");
+          setBio(data.bio || "");
+          setProfilePicUrl(data.profilePicUrl || "");
         } else {
-          setError('User not found.');
+          setError("User not found.");
         }
       } catch (err) {
-        const friendlyMessage = firebaseErrorMessages(err.code);
-        setError(friendlyMessage);
+        setError(firebaseErrorMessages(err.code));
       }
     };
-
     if (isOwnProfile || userId) {
       fetchUserData();
     }
   }, [currentUser, userId, isOwnProfile]);
 
   const handleProfileUpdate = async (e) => {
-    if (!isOwnProfile) return;
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
 
-    if (username.trim() === '') {
-      setError('Username cannot be empty.');
+    if (username.trim() === "") {
+      setError("Username cannot be empty.");
       setLoading(false);
       return;
     }
 
     if (bio.length > 300) {
-      setError('Bio cannot exceed 300 characters.');
+      setError("Bio cannot exceed 300 characters.");
       setLoading(false);
       return;
     }
 
     try {
-      const userDocRef = doc(firestore, 'Users', currentUser.uid);
-      const updatedData = {
-        username,
-        bio,
-        updated_at: serverTimestamp(),
-      };
+      const userDocRef = doc(firestore, "Users", currentUser.uid);
+      const updatedData = { username, bio, updated_at: serverTimestamp() };
 
       if (image) {
         setUploading(true);
 
-        // Upload original image
-        const originalRef = ref(storage, `profile_pictures/${currentUser.uid}/original_${image.original.name}`);
+        const originalRef = ref(
+          storage,
+          `profile_pictures/${currentUser.uid}/original_${image.original.name}`
+        );
         await uploadBytes(originalRef, image.original);
         const originalURL = await getDownloadURL(originalRef);
 
-        // Upload thumbnail image
-        const thumbnailRef = ref(storage, `profile_pictures/${currentUser.uid}/thumbnail_${image.thumbnail.name}`);
+        const thumbnailRef = ref(
+          storage,
+          `profile_pictures/${currentUser.uid}/thumbnail_${image.thumbnail.name}`
+        );
         await uploadBytes(thumbnailRef, image.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
 
-        // Update Firestore with both URLs
         updatedData.profilePicUrl = originalURL;
         updatedData.profilePicThumbnail = thumbnailURL;
-        setProfilePicUrl(thumbnailURL); // Display thumbnail
-
+        setProfilePicUrl(thumbnailURL);
         setUploading(false);
       }
 
       await updateDoc(userDocRef, updatedData);
-      setMessage('Profile updated successfully!');
+      setMessage("Profile updated successfully!");
       setImage(null);
     } catch (err) {
-      const friendlyMessage = firebaseErrorMessages(err.code);
-      setError(friendlyMessage);
+      setError(firebaseErrorMessages(err.code));
     } finally {
       setLoading(false);
     }
@@ -124,26 +126,38 @@ const ProfileView = () => {
   };
 
   return (
-    <>
-      <Container className="mt-5">
-        <h2>{isOwnProfile ? 'Your Profile' : `${username}'s Profile`}</h2>
-        {error && <Alert variant="danger">{error}</Alert>}
-        {message && <Alert variant="success">{message}</Alert>}
+    <Container className="mt-5">
+      <Card className="shadow-sm border-0 p-4 mb-4">
+        <h2 className="text-center">
+          {isOwnProfile ? "Your Profile" : `${username}'s Profile`}
+        </h2>
+        {error && (
+          <Alert variant="danger" className="text-center">
+            {error}
+          </Alert>
+        )}
+        {message && (
+          <Alert variant="success" className="text-center">
+            {message}
+          </Alert>
+        )}
 
         <Row className="align-items-center mb-4">
-          <Col xs={12} md={3}>
-            {profilePicUrl && (
-              <Image
-                src={profilePicUrl}
-                alt="Profile"
-                roundedCircle
-                style={{ width: '150px', height: '150px', objectFit: 'cover', cursor: 'pointer' }}
-                loading="lazy"
-                onClick={() => handleImageClick(profilePicUrl)}
-              />
-            )}
+          <Col xs={12} md={4} className="text-center mb-3 mb-md-0">
+            <Image
+              src={profilePicUrl || "/default-profile.png"}
+              alt="Profile"
+              roundedCircle
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                cursor: "pointer",
+              }}
+              onClick={() => handleImageClick(profilePicUrl)}
+            />
           </Col>
-          <Col xs={12} md={9}>
+          <Col xs={12} md={8}>
             {isOwnProfile ? (
               <Form onSubmit={handleProfileUpdate}>
                 <Form.Group controlId="username">
@@ -160,7 +174,7 @@ const ProfileView = () => {
                   <Form.Label>Bio</Form.Label>
                   <Form.Control
                     as="textarea"
-                    rows={4}
+                    rows={3}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     maxLength="300"
@@ -172,25 +186,28 @@ const ProfileView = () => {
                   />
                 </Form.Group>
 
-                {/* ImageUploader for Profile Picture */}
                 <Form.Group controlId="profilePic" className="mt-3">
                   <Form.Label>Profile Picture</Form.Label>
                   <ImageUploader
                     onImageSelected={(files) => setImage(files)}
-                    maxSize={5 * 1024 * 1024} // 5MB
+                    maxSize={5 * 1024 * 1024}
                     accept="image/*"
                   />
                 </Form.Group>
 
-                {/* Display upload progress */}
                 {uploading && (
                   <div className="mt-3">
                     <Spinner animation="border" size="sm" /> Uploading image...
                   </div>
                 )}
 
-                <Button variant="primary" type="submit" className="mt-4" disabled={loading || uploading}>
-                  {loading ? 'Updating...' : 'Update Profile'}
+                <Button
+                  variant="primary"
+                  type="submit"
+                  className="mt-4"
+                  disabled={loading || uploading}
+                >
+                  {loading ? "Updating..." : "Update Profile"}
                 </Button>
               </Form>
             ) : (
@@ -201,34 +218,48 @@ const ProfileView = () => {
                 <p>
                   <strong>Bio:</strong> {bio}
                 </p>
-                {/* Follow Button */}
                 <FollowButton targetUserId={userId} />
               </div>
             )}
-            {/* Follow Stats */}
-            <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
-            <UserStats userId={isOwnProfile ? currentUser.uid : userId} />
           </Col>
         </Row>
+      </Card>
+
+      <Card className="shadow-sm border-0 p-4 mb-4">
+        <h4 className="text-center mb-4">Activity</h4>
+        <Row className="text-center">
+          <Col xs={6}>
+            <div className="p-3 border rounded bg-light">
+              <FaUserFriends size={24} className="text-primary mb-2" />
+              <FollowStats userId={isOwnProfile ? currentUser.uid : userId} />
+            </div>
+          </Col>
+          <Col xs={6}>
+            <div className="p-3 border rounded bg-light">
+              <FaChartLine size={24} className="text-success mb-2" />
+              <UserStats userId={isOwnProfile ? currentUser.uid : userId} />
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      <Card className="shadow-sm border-0 p-4 mb-4">
         <UserPosts userId={isOwnProfile ? currentUser.uid : userId} />
+      </Card>
 
-        {isOwnProfile && (
-          <>
-            <hr />
-            {/* Delete Account Section */}
-            <DeleteAccount />
-          </>
-        )}
-      </Container>
+      {isOwnProfile && (
+        <Card className="shadow-sm border-0 p-4 mb-4">
+          <DeleteAccount />
+        </Card>
+      )}
 
-      {/* Image Modal */}
       <ImageModal
         show={modalShow}
         handleClose={() => setModalShow(false)}
         imageUrl={modalImageUrl}
         altText="Profile Picture"
       />
-    </>
+    </Container>
   );
 };
 
