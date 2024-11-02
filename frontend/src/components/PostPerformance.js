@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { firestore } from '../firebase';
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Bar } from 'react-chartjs-2';
 import { Spinner, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // For navigation
+import { useNavigate } from 'react-router-dom';
 
 const PostPerformance = () => {
-  const [performanceData, setPerformanceData] = useState({});
+  const [performanceData, setPerformanceData] = useState({ labels: [], likeCounts: [], postIds: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { currentUser } = useAuth(); 
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,16 +26,16 @@ const PostPerformance = () => {
           const postPerformance = {
             labels: [],
             likeCounts: [],
-            commentCounts: [],
-            postIds: [], // Store post IDs for linking
+            postIds: [],
           };
 
           snapshot.forEach((doc) => {
             const post = doc.data();
-            postPerformance.labels.push(new Date(post.created_at.seconds * 1000).toLocaleDateString() || `Post ${doc.id}`); // Date of post
+            postPerformance.labels.push(
+              new Date(post.created_at.seconds * 1000).toLocaleDateString() || `Post ${doc.id}`
+            );
             postPerformance.likeCounts.push(post.likeCount || 0);
-            postPerformance.commentCounts.push(post.commentCount || 0);
-            postPerformance.postIds.push(doc.id); // Store post ID
+            postPerformance.postIds.push(doc.id);
           });
 
           setPerformanceData(postPerformance);
@@ -56,7 +56,7 @@ const PostPerformance = () => {
     if (elements.length > 0) {
       const elementIndex = elements[0].index;
       const postId = performanceData.postIds[elementIndex];
-      navigate(`/posts/${postId}`); // Navigate to the post detail page
+      navigate(`/posts/${postId}`);
     }
   };
 
@@ -76,11 +76,6 @@ const PostPerformance = () => {
         data: performanceData.likeCounts,
         backgroundColor: 'rgba(153,102,255,0.6)',
       },
-      {
-        label: 'Comments',
-        data: performanceData.commentCounts,
-        backgroundColor: 'rgba(255,159,64,0.6)',
-      },
     ],
   };
 
@@ -91,7 +86,7 @@ const PostPerformance = () => {
         position: 'bottom',
       },
     },
-    onClick: (event, elements) => handleBarClick(elements), // Add click event to bars
+    onClick: (event, elements) => handleBarClick(elements),
   };
 
   return (
