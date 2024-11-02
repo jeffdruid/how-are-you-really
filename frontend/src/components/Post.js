@@ -194,6 +194,11 @@ const Post = ({ post, onFlaggedContent }) => {
     }
   };
 
+  const handleImageClick = (imageUrl) => {
+    setModalImageUrl(imageUrl);
+    setModalShow(true); // Open the modal when the image is clicked
+  };
+
   const toggleComments = () => setShowComments((prev) => !prev);
 
   return (
@@ -342,7 +347,7 @@ const Post = ({ post, onFlaggedContent }) => {
                   fluid
                   rounded
                   loading="lazy"
-                  onClick={() => setModalImageUrl(post.imageUrl)}
+                  onClick={() => handleImageClick(post.imageUrl)} // Use the handler function
                   style={{ cursor: "pointer", maxHeight: "250px" }}
                 />
               </div>
