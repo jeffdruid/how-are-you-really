@@ -30,7 +30,7 @@ const App = () => {
       <HeaderButtons />
 
       {/* Main content with suspense and lazy loading */}
-      <Container className="mt-4">
+      <Container className="content-wrapper mt-4">
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             {/* Public Routes */}

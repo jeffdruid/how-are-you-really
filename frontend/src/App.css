@@ -22,3 +22,6 @@ body {
   pointer-events: none; /* Allows interaction with elements below */
   z-index: 1050;
 }
+.content-wrapper {
+  margin-bottom: 90px; /* Adds space to prevent overlap without increasing footer size */
+}
