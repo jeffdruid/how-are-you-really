@@ -1,5 +1,5 @@
-# [How Are You Really - Full Stack Web Application](https://pp5-jeff-d4728660c25d.herokuapp.com/#home)
-<a href="https://pp5-jeff-d4728660c25d.herokuapp.com/">
+# [How Are You Really - Full Stack Web Application](https://how-are-you-really.web.app/)
+<a href="https://how-are-you-really.web.app/">
   <img src="README/images/banner.webp" alt="Blog banner" width="100%">
 </a>
 
@@ -8,7 +8,7 @@
 **How Are You Really** is a full-stack web application designed to provide users with a platform to share their feelings, thoughts, and experiences. Inspired by social media platforms, it emphasizes anonymity and genuine expression, allowing users to connect and support each other in a safe environment.
 
 ![Home Page](README/images/home.png)
-View the live project [here](https://pp5-jeff-d4728660c25d.herokuapp.com/)
+View the live project [here](https://how-are-you-really.web.app/)
 
 ## Project Objectives
 
