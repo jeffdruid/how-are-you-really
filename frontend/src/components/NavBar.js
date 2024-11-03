@@ -3,18 +3,18 @@ import { Navbar, Nav, Container, Badge, NavDropdown } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth, firestore } from "../firebase";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { onSnapshot, collection, query, where } from "firebase/firestore";
-import { FaBell } from "react-icons/fa";
+import { FaBell, FaHeart } from "react-icons/fa";
 import styles from "../styles/NavigationBar.module.css";
 
 const NavigationBar = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [expanded, setExpanded] = useState(false); // Tracks if the navbar is expanded
-  const navbarRef = useRef(null); // Ref for detecting clicks outside the navbar
+  const [expanded, setExpanded] = useState(false);
+  const navbarRef = useRef(null);
 
   // Fetch unread notifications count
   useEffect(() => {
@@ -38,10 +38,7 @@ const NavigationBar = () => {
   // Close the navbar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        navbarRef.current &&
-        !navbarRef.current.contains(event.target)
-      ) {
+      if (navbarRef.current && !navbarRef.current.contains(event.target)) {
         setExpanded(false);
       }
     };
@@ -75,8 +72,14 @@ const NavigationBar = () => {
     >
       <Container fluid className="justify-content-between">
         {/* Brand */}
-        <Navbar.Brand as={NavLink} to="/" className={styles.brand} onClick={() => setExpanded(false)}>
+        <Navbar.Brand
+          as={NavLink}
+          to="/"
+          className={styles.brand}
+          onClick={() => setExpanded(false)}
+        >
           How Are You Really
+          <FaHeart className={styles.heartIcon} />
         </Navbar.Brand>
 
         {/* Notification Icon */}
@@ -97,7 +100,10 @@ const NavigationBar = () => {
         )}
 
         {/* Navbar Toggle */}
-        <Navbar.Toggle aria-controls="navbar-nav" onClick={() => setExpanded(!expanded)} />
+        <Navbar.Toggle
+          aria-controls="navbar-nav"
+          onClick={() => setExpanded(!expanded)}
+        />
 
         {/* Collapsible Navbar */}
         <Navbar.Collapse id="navbar-nav" className={styles.navbarCollapse}>
@@ -106,8 +112,11 @@ const NavigationBar = () => {
             <Nav.Link
               as={NavLink}
               to="/"
-              className={styles.navLink}
-              activeClassName={styles.activeNavLink}
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.navLink} ${styles.activeNavLink}`
+                  : styles.navLink
+              }
               end
               onClick={() => setExpanded(false)}
             >
@@ -120,8 +129,11 @@ const NavigationBar = () => {
                 <Nav.Link
                   as={NavLink}
                   to="/profile"
-                  className={styles.navLink}
-                  activeClassName={styles.activeNavLink}
+                  className={({ isActive }) =>
+                    isActive
+                      ? `${styles.navLink} ${styles.activeNavLink}`
+                      : styles.navLink
+                  }
                   onClick={() => setExpanded(false)}
                 >
                   Profile
@@ -132,16 +144,15 @@ const NavigationBar = () => {
                   title="Analytics"
                   id="analytics-dropdown"
                   className={styles.navLink}
-                  // onClick={() => setExpanded(false)}
                 >
                   <NavDropdown.Item
                     as={NavLink}
                     to="/mood-analytics"
-                    className={`${styles.navLink} ${
-                      location.pathname === "/mood-analytics"
-                        ? styles.activeNavLink
-                        : ""
-                    }`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? `${styles.navLink} ${styles.activeNavLink}`
+                        : styles.navLink
+                    }
                     onClick={() => setExpanded(false)}
                   >
                     Mood Analytics
@@ -149,11 +160,11 @@ const NavigationBar = () => {
                   <NavDropdown.Item
                     as={NavLink}
                     to="/post-performance"
-                    className={`${styles.navLink} ${
-                      location.pathname === "/post-performance"
-                        ? styles.activeNavLink
-                        : ""
-                    }`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? `${styles.navLink} ${styles.activeNavLink}`
+                        : styles.navLink
+                    }
                     onClick={() => setExpanded(false)}
                   >
                     Post Performance
@@ -168,8 +179,11 @@ const NavigationBar = () => {
                 <Nav.Link
                   as={NavLink}
                   to="/login"
-                  className={styles.navLink}
-                  activeClassName={styles.activeNavLink}
+                  className={({ isActive }) =>
+                    isActive
+                      ? `${styles.navLink} ${styles.activeNavLink}`
+                      : styles.navLink
+                  }
                   onClick={() => setExpanded(false)}
                 >
                   Login
@@ -177,8 +191,11 @@ const NavigationBar = () => {
                 <Nav.Link
                   as={NavLink}
                   to="/signup"
-                  className={styles.navLink}
-                  activeClassName={styles.activeNavLink}
+                  className={({ isActive }) =>
+                    isActive
+                      ? `${styles.navLink} ${styles.activeNavLink}`
+                      : styles.navLink
+                  }
                   onClick={() => setExpanded(false)}
                 >
                   Sign Up

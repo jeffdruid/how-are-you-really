@@ -186,10 +186,10 @@ const CreatePost = ({ onFlaggedContent }) => {
         <Button
           onClick={() => setShowModal(true)}
           variant="primary"
-          className="mb-3 d-flex align-items-center bg-dark"
+          className="mb-3 d-flex align-items-center"
           style={{
             width: "auto",
-            backgroundColor: "#0000001f",
+            backgroundColor: "#717171",
             color: "white",
             border: "none",
             display: "flex",
