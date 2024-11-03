@@ -354,7 +354,7 @@ For more details, visit the [GitHub Project](https://github.com/users/jeffdruid/
 ### Kanban Board
 
 | **Milestone**                      | **Issue**                                      | **Priority** | **Description**                                                                             |
-| ---------------------------------- | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------- | -------------- |
+| ---------------------------------- | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------- |
 | **1. User Authentication**         | Implement Sign Up functionality                | Must Have    | Allow users to create a new account with username and email.                                |
 |                                    | Implement Login/Logout functionality           | Must Have    | Enable users to log in and out securely.                                                    |
 |                                    | Implement Password Reset feature               | Must Have    | Provide password reset via email.                                                           |
@@ -398,10 +398,10 @@ For more details, visit the [GitHub Project](https://github.com/users/jeffdruid/
 |                                    | Integrate Advertisements                       | Won't Have   | Show ads to generate revenue.                                                               |
 | **20. Gamification Elements**      | Implement Badges and Achievements              | Won't Have   | Reward users for milestones like number of posts or likes.                                  |
 |                                    | Develop Leaderboards                           | Won't Have   | Show top contributors based on engagement metrics.                                          |
-| **21. Auto Moderation**            | Implement Content Filtering Algorithm          | Must Have    | Develop a system to detect trigger words/phrases indicating distress using Cloud Functions. | 🚧 Not Started |
-|                                    | Create Basic Trigger Words/Phrases List        | Must Have    | Develop a basic list of trigger words and phrases to monitor.                               | 🚧 Not Started |
-|                                    | Develop Modal with Resources for Flagged Posts | Must Have    | Display a modal with mental health resources when a post is flagged.                        | 🚧 Not Started |
-|                                    | Hide Flagged Posts from Feed                   | Must Have    | Automatically remove or hide posts containing trigger words from the feed.                  | 🚧 Not Started |
+| **21. Auto Moderation**            | Implement Content Filtering Algorithm          | Must Have    | Develop a system to detect trigger words/phrases indicating distress using Cloud Functions. |
+|                                    | Create Basic Trigger Words/Phrases List        | Must Have    | Develop a basic list of trigger words and phrases to monitor.                               |
+|                                    | Develop Modal with Resources for Flagged Posts | Must Have    | Display a modal with mental health resources when a post is flagged.                        |
+|                                    | Hide Flagged Posts from Feed                   | Must Have    | Automatically remove or hide posts containing trigger words from the feed.                  |
 
 # Firebase Security Rules
 
