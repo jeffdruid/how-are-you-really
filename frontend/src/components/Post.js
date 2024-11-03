@@ -203,7 +203,7 @@ const Post = ({ post, onFlaggedContent }) => {
 
   return (
     <Card
-      className="mb-4 shadow-sm border-0 p-3"
+      className="mb-4 shadow-sm border-0 p-1 pt-2"
       style={{ borderRadius: "10px", backgroundColor: "#f9f9f9" }}
     >
       <Card.Body>
