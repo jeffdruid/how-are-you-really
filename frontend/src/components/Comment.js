@@ -43,11 +43,10 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
   const [replies, setReplies] = useState([]);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  const { checkModeration } = useModeration(); // Use moderation hook
-  const [showResources, setShowResources] = useState(false); // State for modal visibility
-  const [flaggedType, setFlaggedType] = useState(null); // Store flagged content type
+  const { checkModeration } = useModeration();
+  const [showResources, setShowResources] = useState(false);
+  const [flaggedType, setFlaggedType] = useState(null);
 
-  // Fetch the user's profile picture URL
   useEffect(() => {
     const fetchProfilePic = async () => {
       const url = await fetchProfilePicUrl(
@@ -144,7 +143,6 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
         firebaseErrorMessages(err.code) ||
           "An unexpected error occurred. Please try again."
       );
-      console.error("Error updating comment:", err);
     } finally {
       setLoading(false);
     }
@@ -168,10 +166,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
   };
 
   return (
-    <div
-      className="mt-3 p-3 bg-white rounded shadow-sm"
-      style={{ borderLeft: "1px solid #ddd" }}
-    >
+    <div className="mt-3 p-3 bg-white rounded shadow-sm border-start">
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Modal for sensitive content */}
@@ -192,12 +187,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
               rows={1}
-              style={{
-                fontSize: "0.9rem",
-                borderRadius: "5px",
-                padding: "8px",
-                border: "1px solid #ddd",
-              }}
+              className="text-sm border-1 p-2 rounded"
               required
             />
           </Form.Group>
@@ -223,8 +213,8 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
         </Form>
       ) : (
         <>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div className="d-flex align-items-center">
+          <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap">
+            <div className="d-flex align-items-center flex-wrap">
               <Link
                 to={`/users/${comment.userId}`}
                 className="text-decoration-none text-dark"
@@ -236,23 +226,22 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
                     roundedCircle
                     width={25}
                     height={25}
-                    className="me-2"
+                    className="me-2 mb-2 mb-md-0"
                   />
                 )}
-                <strong style={{ color: "black" }}>
+                <strong className="text-dark">
                   {comment.isAnonymous ? "Anonymous" : comment.username}
                 </strong>
               </Link>
               <span
-                className="text-muted"
-                style={{ fontSize: "0.85rem", marginLeft: "0.5rem" }}
+                className="text-muted ms-2 small"
               >
                 | {comment.created_at?.toDate().toLocaleString()}
               </span>
             </div>
 
             {isOwnComment && (
-              <Dropdown align="end">
+              <Dropdown align="end" className="ms-auto">
                 <Dropdown.Toggle variant="link" className="text-muted p-0">
                   <BsThreeDotsVertical size={20} />
                 </Dropdown.Toggle>
@@ -266,7 +255,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             )}
           </div>
 
-          <p className="mb-2">{comment.content}</p>
+          <p className="mb-2 text-wrap">{comment.content}</p>
 
           <div className="d-flex justify-content-end">
             <LikeButton
@@ -275,9 +264,10 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
               likeCount={comment.likeCount}
             />
           </div>
+          <hr />
 
           {replies.length > 0 && (
-            <div style={{ marginLeft: "20px" }}>
+            <div className="ms-0 ">
               {replies.map((reply) => (
                 <Reply
                   key={reply.id}
@@ -290,7 +280,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             </div>
           )}
 
-          <div style={{ marginLeft: "20px", marginTop: "10px" }}>
+          <div className="ms-3 mt-2">
             <Button
               variant="link"
               onClick={() => setShowReplyForm((prev) => !prev)}
