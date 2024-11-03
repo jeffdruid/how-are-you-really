@@ -34,9 +34,9 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
   const [loading, setLoading] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
-  const { checkModeration } = useModeration(); // Use moderation hook
-  const [showResources, setShowResources] = useState(false); // State for modal visibility
-  const [flaggedType, setFlaggedType] = useState(null); // Store flagged content type
+  const { checkModeration } = useModeration();
+  const [showResources, setShowResources] = useState(false);
+  const [flaggedType, setFlaggedType] = useState(null);
 
   // Fetch the user's profile picture URL
   useEffect(() => {
@@ -93,8 +93,8 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
         isVisible = false;
         await updateDoc(replyRef, { is_visible: isVisible });
 
-        setFlaggedType("self-harm"); // or any other relevant type based on moderation
-        setShowResources(true); // Display the resource modal for flagged content
+        setFlaggedType("self-harm");
+        setShowResources(true);
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
 
         // Send flagged content to DRF for further moderation
@@ -149,10 +149,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
   };
 
   return (
-    <div
-      className="mt-3 p-3 bg-white rounded shadow-sm"
-      style={{ borderLeft: "1px solid #ddd" }}
-    >
+    <div className="mt-3 p-3 bg-white rounded shadow-sm border-start">
       {error && <Alert variant="danger">{error}</Alert>}
 
       {/* Modal for sensitive content */}
@@ -174,12 +171,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
               onChange={(e) => setEditedContent(e.target.value)}
               rows={1}
               required
-              style={{
-                fontSize: "0.9rem",
-                borderRadius: "5px",
-                padding: "8px",
-                border: "1px solid #ddd",
-              }}
+              className="text-sm border-1 p-2 rounded"
             />
           </Form.Group>
           <Button
@@ -208,8 +200,8 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
         </Form>
       ) : (
         <>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div className="d-flex align-items-center">
+          <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap">
+            <div className="d-flex align-items-center flex-wrap">
               <Link
                 to={`/users/${reply.userId}`}
                 className="text-decoration-none text-dark"
@@ -221,22 +213,19 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
                     roundedCircle
                     width={25}
                     height={25}
-                    className="me-2"
+                    className="me-2 mb-2 mb-md-0"
                   />
                 )}
-                <strong style={{ color: "black" }}>{reply.username}</strong>
+                <strong className="text-dark">{reply.username}</strong>
               </Link>
-              <span
-                className="text-muted"
-                style={{ fontSize: "0.85rem", marginLeft: "0.5rem" }}
-              >
+              <span className="text-muted ms-2 small">
                 | {reply.created_at?.toDate().toLocaleString()}
               </span>
             </div>
 
             {/* Three-dot dropdown menu for edit/delete */}
             {isOwnReply && (
-              <Dropdown align="end">
+              <Dropdown align="end" className="ms-auto">
                 <Dropdown.Toggle variant="link" className="text-muted p-0">
                   <BsThreeDotsVertical size={18} />
                 </Dropdown.Toggle>
@@ -252,7 +241,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
             )}
           </div>
 
-          <p className="mb-2">{reply.content}</p>
+          <p className="mb-2 text-wrap">{reply.content}</p>
 
           {/* Like Button for Reply */}
           <div className="d-flex justify-content-end">
