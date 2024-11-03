@@ -25,3 +25,34 @@ body {
 .content-wrapper {
   margin-bottom: 90px; /* Adds space to prevent overlap without increasing footer size */
 }
+
+hr {
+  color: #c7c7c7 !important;
+}
+
+/* Media queries for small screens */
+@media (max-width: 600px) {
+  *{
+    font-size: 1rem !important;
+  }
+
+  .container {
+    padding: .2rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Jumbo H1 Styling */
+  #root > div.content-wrapper.mt-4.container > div > div.text-center.p-4.mb-4.shadow-sm.Home_welcomeBanner__4Zly7.card > div > h1{
+    font-weight: bold;
+  }
+
+  .card, .card-body {
+    padding: 0.2rem !important;
+  }
+  
+  /* Recent Posts Container Styling */
+  #root > div.content-wrapper.mt-4.container > div > div:nth-child(4){
+    padding: 0.2rem !important;
+  }
+}
