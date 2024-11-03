@@ -202,7 +202,7 @@ const ProfileView = () => {
                 )}
 
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   type="submit"
                   className="mt-4"
                   disabled={loading || uploading}

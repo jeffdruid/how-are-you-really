@@ -55,4 +55,13 @@ hr {
   #root > div.content-wrapper.mt-4.container > div > div:nth-child(4){
     padding: 0.2rem !important;
   }
+  
+  /* Footer Styling */
+  .footer, .footer .text-light {
+    padding: .1rem !important;
+    font-size: .75rem !important;
+  }
+  .footer .text-light {
+    margin: 0 10px !important;
+  }
 }

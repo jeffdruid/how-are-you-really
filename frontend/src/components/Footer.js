@@ -30,7 +30,7 @@ function Footer() {
         <Navbar
           bg="dark"
           variant="dark"
-          className="justify-content-center py-0" 
+          className="justify-content-center py-0 footer" 
           style={{ fontSize: "0.85rem" }} 
         >
           <Nav>
@@ -65,11 +65,11 @@ function Footer() {
           </Nav>
         </Navbar>
         <div
-          className="bg-dark text-center py-0 text-light"
+          className="bg-dark text-center py-0 text-light footer"
           style={{ fontSize: "0.8rem" }}
         >
           <Container>
-            <p className="mb-0">
+            <p className="mb-0 footer">
               &copy; {new Date().getFullYear()} How Are You Really
             </p>
           </Container>
