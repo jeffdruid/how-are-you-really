@@ -304,7 +304,15 @@ const AdminDashboard = () => {
                         </Button>
                         <Button
                           variant="danger"
-                          onClick={() => handleDeleteFlaggedContent(item.id)}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                "Are you sure you want to delete this?"
+                              )
+                            ) {
+                              handleDeleteFlaggedContent(item.id);
+                            }
+                          }}
                         >
                           Delete
                         </Button>
@@ -372,7 +380,15 @@ const AdminDashboard = () => {
                           <Button
                             variant="outline-danger"
                             size="sm"
-                            onClick={() => handleDeleteTriggerWord(word.id)}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to delete this?"
+                                )
+                              ) {
+                                handleDeleteTriggerWord(word.id)}
+                              }
+                            }
                           >
                             Delete
                           </Button>

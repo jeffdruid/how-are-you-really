@@ -80,17 +80,17 @@ const NotificationItem = ({ notification }) => {
 
   return (
     <Card
-      className={`mb-2 shadow-sm ${read ? 'border-light' : 'border-info'}`}
+      className={`mb-2 shadow-sm ${read ? "border-light" : "border-info"}`}
       onClick={handleMarkAsRead}
       style={{
-        cursor: 'pointer',
-        borderLeft: read ? 'none' : '3px solid #007bff',
+        cursor: "pointer",
+        borderLeft: read ? "none" : "3px solid #007bff",
       }}
     >
       <Card.Body className="d-flex justify-content-between align-items-center">
         <div>
           <Card.Text
-            className={`mb-1 ${read ? 'text-muted' : 'fw-bold text-dark'}`}
+            className={`mb-1 ${read ? "text-muted" : "fw-bold text-dark"}`}
           >
             {renderNotificationMessage()}
           </Card.Text>
@@ -101,7 +101,13 @@ const NotificationItem = ({ notification }) => {
         <Button
           variant="link"
           size="sm"
-          onClick={handleDeleteNotification}
+          onClick={(e) => {
+            if (
+              window.confirm("Are you sure you want to delete this?")
+            ) {
+              handleDeleteNotification(e);
+            }
+          }}
           className="text-danger p-0"
           title="Delete notification"
         >
