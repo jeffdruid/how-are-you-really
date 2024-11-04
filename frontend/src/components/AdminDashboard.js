@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  Button,
+  Container,
+  Card,
+  Accordion,
+  Row,
+  Col,
+  Form,
+  Alert,
+} from "react-bootstrap";
 
 const AdminDashboard = () => {
   const { currentUser, isAdmin } = useAuth();
   const [flaggedContent, setFlaggedContent] = useState([]);
-  const [expandedContentId, setExpandedContentId] = useState(null);
+  // const [expandedContentId, setExpandedContentId] = useState(null);
   const [triggerWords, setTriggerWords] = useState([]);
   const [newTriggerWord, setNewTriggerWord] = useState("");
   const [newTriggerCategory, setNewTriggerCategory] = useState("");
@@ -48,10 +58,6 @@ const AdminDashboard = () => {
     }
   }, [currentUser, isAdmin]);
 
-  // Toggle expand/collapse for flagged content details
-  const toggleExpandContent = (id) => {
-    setExpandedContentId(expandedContentId === id ? null : id);
-  };
 
   // Determine Firestore path
   const getFirestorePath = ({ post_id, comment_id, reply_id }) => {
@@ -230,129 +236,182 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div>
-      <h2>Admin Dashboard</h2>
-      {error && <p>{error}</p>}
+    <Container className="mt-4">
+      <h2 className="text-center">Admin Dashboard</h2>
+      {error && <Alert variant="danger">{error}</Alert>}
 
       {isAdmin && (
         <>
           {/* Flagged Content */}
-          <div>
-            <h3>Flagged Content</h3>
-            <ul>
-              {flaggedContent.map((item) => (
-                <li key={item.id}>
-                  <div onClick={() => toggleExpandContent(item.id)}>
-                    {item.content} - {item.reason}
-                  </div>
-                  {expandedContentId === item.id && (
-                    <div style={{ marginLeft: "20px", marginTop: "10px" }}>
-                      <p>
-                        <strong>User:</strong> {item.user}
-                      </p>
-                      <p>
-                        <strong>Post ID:</strong> {item.post_id}
-                      </p>
-                      <p>
-                        <strong>Comment ID:</strong> {item.comment_id || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Reply ID:</strong> {item.reply_id || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Reason:</strong> {item.reason}
-                      </p>
-                      <p>
-                        <strong>Flagged At:</strong> {item.flagged_at}
-                      </p>
-                      <p>
-                        <strong>Reviewed:</strong>{" "}
-                        {item.reviewed ? "Yes" : "No"}
-                      </p>
-                      <p>
-                        <strong>Visible:</strong>{" "}
-                        {item.is_visible ? "Yes" : "No"}
-                      </p>
-                      <button
-                        onClick={() => handleApproveFlaggedContent(item)}
-                      >
-                        Approve
-                      </button>
-                      <button onClick={() => handleHideFlaggedContent(item)}>
-                        Hide
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFlaggedContent(item.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Card className="mb-4">
+            <Card.Header>
+              <h4>Flagged Content</h4>
+            </Card.Header>
+            <Card.Body>
+              <Accordion>
+                {flaggedContent.map((item) => (
+                  <Accordion.Item eventKey={item.id.toString()} key={item.id}>
+                    <Accordion.Header>
+                      {item.content} - {item.reason}
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <Row>
+                        <Col md={6}>
+                          <p>
+                            <strong>User:</strong> {item.user}
+                          </p>
+                          <p>
+                            <strong>Post ID:</strong> {item.post_id}
+                          </p>
+                          <p>
+                            <strong>Comment ID:</strong>{" "}
+                            {item.comment_id || "N/A"}
+                          </p>
+                          <p>
+                            <strong>Reply ID:</strong> {item.reply_id || "N/A"}
+                          </p>
+                        </Col>
+                        <Col md={6}>
+                          <p>
+                            <strong>Reason:</strong> {item.reason}
+                          </p>
+                          <p>
+                            <strong>Flagged At:</strong>{" "}
+                            {new Date(item.flagged_at).toLocaleString()}
+                          </p>
+                          <p>
+                            <strong>Reviewed:</strong>{" "}
+                            {item.reviewed ? "Yes" : "No"}
+                          </p>
+                          <p>
+                            <strong>Visible:</strong>{" "}
+                            {item.is_visible ? "Yes" : "No"}
+                          </p>
+                        </Col>
+                      </Row>
+                      <div className="mt-3 d-flex gap-2">
+                        <Button
+                          variant="success"
+                          onClick={() => handleApproveFlaggedContent(item)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="warning"
+                          onClick={() => handleHideFlaggedContent(item)}
+                        >
+                          Hide
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDeleteFlaggedContent(item.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            </Card.Body>
+          </Card>
 
           {/* Trigger Words */}
-          <div>
-            <h3>Trigger Words</h3>
-            <ul>
-              {triggerWords.map((word) => (
-                <li key={word.id}>
-                  {editingTrigger === word.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editWord}
-                        onChange={(e) => setEditWord(e.target.value)}
-                        placeholder="Edit word"
-                      />
-                      <input
-                        type="text"
-                        value={editCategory}
-                        onChange={(e) => setEditCategory(e.target.value)}
-                        placeholder="Edit category"
-                      />
-                      <button onClick={() => handleUpdateTriggerWord(word.id)}>
-                        Save
-                      </button>
-                      <button onClick={() => setEditingTrigger(null)}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {word.word} - {word.category}
-                      <button onClick={() => handleEditClick(word)}>
-                        Edit
-                      </button>
-                      <button onClick={() => handleDeleteTriggerWord(word.id)}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+          <Card>
+            <Card.Header>
+              <h4>Trigger Words</h4>
+            </Card.Header>
+            <Card.Body>
+              <ul className="list-group list-group-flush">
+                {triggerWords.map((word) => (
+                  <li
+                    className="list-group-item d-flex justify-content-between align-items-center"
+                    key={word.id}
+                  >
+                    {editingTrigger === word.id ? (
+                      <Form className="d-flex flex-column flex-md-row gap-2 align-items-center">
+                        <Form.Control
+                          type="text"
+                          value={editWord}
+                          onChange={(e) => setEditWord(e.target.value)}
+                          placeholder="Edit word"
+                        />
+                        <Form.Control
+                          type="text"
+                          value={editCategory}
+                          onChange={(e) => setEditCategory(e.target.value)}
+                          placeholder="Edit category"
+                        />
+                        <Button
+                          variant="primary"
+                          onClick={() => handleUpdateTriggerWord(word.id)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => setEditingTrigger(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </Form>
+                    ) : (
+                      <>
+                        <span>
+                          <strong>{word.word}</strong> -{" "}
+                          <em>{word.category}</em>
+                        </span>
+                        <div>
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleEditClick(word)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleDeleteTriggerWord(word.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
 
-            {/* Add Trigger Word */}
-            <input
-              type="text"
-              value={newTriggerWord}
-              onChange={(e) => setNewTriggerWord(e.target.value)}
-              placeholder="New trigger word"
-            />
-            <input
-              type="text"
-              value={newTriggerCategory}
-              onChange={(e) => setNewTriggerCategory(e.target.value)}
-              placeholder="Category"
-            />
-            <button onClick={handleAddTriggerWord}>Add Trigger Word</button>
-          </div>
+              {/* Add Trigger Word */}
+              <Form className="mt-4">
+                <Form.Group className="mb-3">
+                  <Form.Label>New Trigger Word</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={newTriggerWord}
+                    onChange={(e) => setNewTriggerWord(e.target.value)}
+                    placeholder="Enter trigger word"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Category</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={newTriggerCategory}
+                    onChange={(e) => setNewTriggerCategory(e.target.value)}
+                    placeholder="Enter category"
+                  />
+                </Form.Group>
+                <Button variant="primary" onClick={handleAddTriggerWord}>
+                  Add Trigger Word
+                </Button>
+              </Form>
+            </Card.Body>
+          </Card>
         </>
       )}
-    </div>
+    </Container>
   );
 };
 

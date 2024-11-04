@@ -3,9 +3,9 @@ body {
   background-color: white;
   color: black;
   background-image: url('../src/assets/wallpaper.webp');
-  background-size: cover;
+  background-size: inherit;
   background-position: center;
-  background-repeat: no-repeat;
+  background-repeat:repeat;
   position: relative;
   z-index: 1;
 }
@@ -54,6 +54,11 @@ hr {
   /* Recent Posts Container Styling */
   #root > div.content-wrapper.mt-4.container > div > div:nth-child(4){
     padding: 0.2rem !important;
+  }
+
+  /* Notifcation Badge Styling */
+  #root > nav > div > a.nav-link{
+    margin-left: -50px !important;
   }
   
   /* Footer Styling */
