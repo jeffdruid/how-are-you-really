@@ -132,14 +132,32 @@ const AdminDashboard = () => {
   };
 
   // Delete Flagged Content
-  const handleDeleteFlaggedContent = async (id) => {
+  // Hide then delete flagged content
+  const handleDeleteFlaggedContent = async (id, postId) => {
     try {
+      // Update is_visible to false in Django and Firestore first
+      await axios.put(
+        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        { is_visible: false },
+        {
+          headers: {
+            Authorization: `Bearer ${currentUser.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Proceed to delete content from Django
       await axios.delete(`http://127.0.0.1:8000/api/flagged-content/${id}/`, {
         headers: { Authorization: `Bearer ${currentUser.accessToken}` },
       });
+
       setFlaggedContent(flaggedContent.filter((item) => item.id !== id));
     } catch (error) {
-      console.error("Error deleting flagged content:", error);
+      console.error(
+        "Error hiding or deleting flagged content:",
+        error.response?.data || error
+      );
     }
   };
 
@@ -236,7 +254,9 @@ const AdminDashboard = () => {
                         Hide
                       </button>
                       <button
-                        onClick={() => handleDeleteFlaggedContent(item.id)}
+                        onClick={() =>
+                          handleDeleteFlaggedContent(item.id, item.post_id)
+                        }
                       >
                         Delete
                       </button>
