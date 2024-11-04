@@ -19,6 +19,7 @@ const CommentForm = ({
   commentId,
   postOwnerId,
   parentType = "comment",
+  replyId = null, // Define replyId with a default of null
 }) => {
   const { currentUser, username } = useAuth();
   const [content, setContent] = useState("");
@@ -49,6 +50,7 @@ const CommentForm = ({
           ? `Posts/${postId}/Comments`
           : `Posts/${postId}/Comments/${commentId}/Replies`;
 
+      // Add the comment or reply to Firestore and retrieve the ID
       const contentRef = await addDoc(collection(firestore, collectionPath), {
         userId: currentUser.uid,
         username: isAnonymous ? "Anonymous" : username,
@@ -71,11 +73,19 @@ const CommentForm = ({
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
-            post_id: postId,
             reason: "Trigger words detected",
             content,
             parent_type: parentType,
-            comment_id: parentType === "reply" ? commentId : null,
+            ...(parentType === "post" && { post_id: postId }),
+            ...(parentType === "comment" && {
+              post_id: postId,
+              comment_id: contentRef.id, // Pass Firestore-generated comment ID
+            }),
+            ...(parentType === "reply" && {
+              post_id: postId,
+              comment_id: commentId,
+              reply_id: contentRef.id, // Pass Firestore-generated reply ID
+            }),
           },
           currentUser.accessToken
         );
