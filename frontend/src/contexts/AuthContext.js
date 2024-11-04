@@ -1,7 +1,7 @@
-import React, { useContext, useState, useEffect, createContext } from 'react';
-import { auth, firestore } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import React, { useContext, useState, useEffect, createContext } from "react";
+import { auth, firestore } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -11,30 +11,34 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false); // Add isAdmin state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        // Fetch user data from Firestore
         try {
-          const userDocRef = doc(firestore, 'Users', user.uid);
+          const userDocRef = doc(firestore, "Users", user.uid);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             const data = userDoc.data();
-            setUsername(data.username || 'User');
+            setUsername(data.username || "User");
+            setIsAdmin(data.isAdmin || false); // Set isAdmin from Firestore
           } else {
-            setUsername('User'); // Fallback if user document doesn't exist
+            setUsername("User");
+            setIsAdmin(false);
           }
         } catch (err) {
-          console.error('Error fetching user data:', err);
-          setUsername('User'); // Fallback on error
+          console.error("Error fetching user data:", err);
+          setUsername("User");
+          setIsAdmin(false);
         }
       } else {
         setCurrentUser(null);
-        setUsername('');
+        setUsername("");
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -44,7 +48,8 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    username, // Provide username in context
+    username,
+    isAdmin, // Provide isAdmin in context
   };
 
   return (
