@@ -53,9 +53,27 @@ const AdminDashboard = () => {
     setExpandedContentId(expandedContentId === id ? null : id);
   };
 
+  // Determine Firestore path
+  const getFirestorePath = ({ post_id, comment_id, reply_id }) => {
+    if (reply_id) {
+      return `Posts/${post_id}/Comments/${comment_id}/Replies/${reply_id}`;
+    } else if (comment_id) {
+      return `Posts/${post_id}/Comments/${comment_id}`;
+    } else {
+      return `Posts/${post_id}`;
+    }
+  };
+
   // Approve flagged content
-  const handleApproveFlaggedContent = async (id) => {
+  const handleApproveFlaggedContent = async (item) => {
     try {
+      const { id } = item;
+      const firestorePath = getFirestorePath(item);
+
+      // Log the Firestore path for confirmation
+      console.log("Approving content with Firestore path:", firestorePath);
+
+      // Update the visibility in the Django backend
       const response = await axios.put(
         `http://127.0.0.1:8000/api/flagged-content/${id}/`,
         { reviewed: true, is_visible: true },
@@ -79,8 +97,14 @@ const AdminDashboard = () => {
   };
 
   // Hide flagged content by setting is_visible to false
-  const handleHideFlaggedContent = async (id) => {
+  const handleHideFlaggedContent = async (item) => {
     try {
+      const { id } = item;
+      const firestorePath = getFirestorePath(item);
+
+      console.log("Hiding content with Firestore path:", firestorePath);
+
+      // Update the visibility in the Django backend
       const response = await axios.put(
         `http://127.0.0.1:8000/api/flagged-content/${id}/`,
         { is_visible: false },
@@ -230,6 +254,12 @@ const AdminDashboard = () => {
                         <strong>Post ID:</strong> {item.post_id}
                       </p>
                       <p>
+                        <strong>Comment ID:</strong> {item.comment_id || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Reply ID:</strong> {item.reply_id || "N/A"}
+                      </p>
+                      <p>
                         <strong>Reason:</strong> {item.reason}
                       </p>
                       <p>
@@ -244,19 +274,15 @@ const AdminDashboard = () => {
                         {item.is_visible ? "Yes" : "No"}
                       </p>
                       <button
-                        onClick={() => handleApproveFlaggedContent(item.id)}
+                        onClick={() => handleApproveFlaggedContent(item)}
                       >
                         Approve
                       </button>
-                      <button
-                        onClick={() => handleHideFlaggedContent(item.id)}
-                      >
+                      <button onClick={() => handleHideFlaggedContent(item)}>
                         Hide
                       </button>
                       <button
-                        onClick={() =>
-                          handleDeleteFlaggedContent(item.id, item.post_id)
-                        }
+                        onClick={() => handleDeleteFlaggedContent(item.id)}
                       >
                         Delete
                       </button>
