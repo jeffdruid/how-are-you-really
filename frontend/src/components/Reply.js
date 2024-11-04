@@ -82,35 +82,35 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
         updated_at: serverTimestamp(),
         is_visible: isVisible,
       });
-
-      // Run moderation check on the updated reply content
-      const isSafe = await checkModeration(
-        editedContent,
-        currentUser.accessToken
-      );
+  
+      // Run moderation check on the edited content
+      const isSafe = await checkModeration(editedContent, currentUser.accessToken);
+  
       if (!isSafe) {
         // Flag content if moderation fails and set `is_visible` to false
         isVisible = false;
         await updateDoc(replyRef, { is_visible: isVisible });
-
-        setFlaggedType("self-harm");
+  
+        setFlaggedType("selfHarm");
         setShowResources(true);
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
-
+  
         // Send flagged content to DRF for further moderation
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
+            reason: "Trigger words detected",
+            content: editedContent,
+            parent_type: "reply",
             post_id: postId,
             comment_id: commentId,
             reply_id: reply.id,
-            reason: "Trigger words detected",
-            content: editedContent,
           },
           currentUser.accessToken
         );
       } else {
-        setIsEditing(false); // Close editing mode if content is safe
+        // If content is safe, close editing mode
+        setIsEditing(false);
       }
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
@@ -121,6 +121,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       setLoading(false);
     }
   };
+  
 
   // Handle deleting a reply
   const handleDeleteReply = async () => {

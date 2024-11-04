@@ -150,29 +150,37 @@ const Post = ({ post, onFlaggedContent }) => {
         setUploading(false);
       }
 
+      // Perform moderation check on the edited content
       const isSafe = await checkModeration(
         editedContent,
         currentUser.accessToken
       );
+
       if (!isSafe) {
+        // Set visibility to false and send flagged content to DRF if flagged
         isVisible = false;
         await updateDoc(postRef, { is_visible: isVisible });
+
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
+
+        // Send flagged post data to DRF for moderation handling
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
-            post_id: post.id,
             reason: "Trigger words detected",
             content: editedContent,
+            parent_type: "post",
+            post_id: post.id, // Send post ID to DRF
           },
           currentUser.accessToken
         );
       }
+
+      // Close editing mode if content passes moderation
       setIsEditing(false);
     } catch (err) {
-      setError(
-        firebaseErrorMessages(err.code) || "An unexpected error occurred."
-      );
+      const friendlyMessage = firebaseErrorMessages(err.code);
+      setError(friendlyMessage || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }

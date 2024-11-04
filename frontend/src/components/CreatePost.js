@@ -147,6 +147,7 @@ const CreatePost = ({ onFlaggedContent }) => {
             post_id: postId,
             reason: "Trigger words detected",
             content,
+            parent_type: "post",
           },
           currentUser.accessToken
         );

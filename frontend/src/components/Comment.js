@@ -119,18 +119,19 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
         isVisible = false;
         await updateDoc(commentRef, { is_visible: isVisible });
 
-        setFlaggedType("self-harm"); // Set an appropriate flagged type
-        setShowResources(true); // Show the ResourceModal for sensitive content
+        setFlaggedType("selfHarm"); // Set flagged type for sensitive content
+        setShowResources(true); // Display the ResourceModal
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
 
         // Send flagged content to DRF backend for moderation
         await sendFlaggedContentToDRF(
           {
             user: currentUser.uid,
-            post_id: postId,
-            comment_id: comment.id,
             reason: "Trigger words detected",
             content: editedContent,
+            parent_type: "comment",
+            post_id: postId,
+            comment_id: comment.id, // Include comment ID
           },
           currentUser.accessToken
         );
@@ -139,9 +140,9 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
         setIsEditing(false);
       }
     } catch (err) {
+      const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        firebaseErrorMessages(err.code) ||
-          "An unexpected error occurred. Please try again."
+        friendlyMessage || "An unexpected error occurred. Please try again."
       );
     } finally {
       setLoading(false);
@@ -199,7 +200,11 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             style={{ padding: "0 0.5rem" }}
             title="Save"
           >
-            {loading ? <Spinner animation="border" size="sm" /> : <BsCheck size={20} />}
+            {loading ? (
+              <Spinner animation="border" size="sm" />
+            ) : (
+              <BsCheck size={20} />
+            )}
           </Button>
           <Button
             variant="link"
@@ -233,9 +238,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
                   {comment.isAnonymous ? "Anonymous" : comment.username}
                 </strong>
               </Link>
-              <span
-                className="text-muted ms-2 small"
-              >
+              <span className="text-muted ms-2 small">
                 | {comment.created_at?.toDate().toLocaleString()}
               </span>
             </div>
