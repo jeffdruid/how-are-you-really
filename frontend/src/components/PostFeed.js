@@ -25,6 +25,7 @@ const PostFeed = () => {
   const POSTS_PER_PAGE = 2;
 
   useEffect(() => {
+    // Firestore query to fetch posts with is_visible == true
     const initialQuery = query(
       collection(firestore, "Posts"),
       where("is_visible", "==", true), // Fetch only visible posts
@@ -32,6 +33,7 @@ const PostFeed = () => {
       limit(POSTS_PER_PAGE)
     );
 
+    // Fetch visible posts in real-time
     const unsubscribe = onSnapshot(
       initialQuery,
       (snapshot) => {
@@ -57,6 +59,7 @@ const PostFeed = () => {
     return () => unsubscribe();
   }, []);
 
+  // Fetch more posts when scrolling down
   const fetchMorePosts = async () => {
     if (!lastDoc) return;
 

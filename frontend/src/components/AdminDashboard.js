@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 const AdminDashboard = () => {
   const { currentUser, isAdmin } = useAuth();
   const [flaggedContent, setFlaggedContent] = useState([]);
+  const [expandedContentId, setExpandedContentId] = useState(null);
   const [triggerWords, setTriggerWords] = useState([]);
   const [newTriggerWord, setNewTriggerWord] = useState("");
   const [newTriggerCategory, setNewTriggerCategory] = useState("");
@@ -47,8 +48,12 @@ const AdminDashboard = () => {
     }
   }, [currentUser, isAdmin]);
 
+  // Toggle expand/collapse for flagged content details
+  const toggleExpandContent = (id) => {
+    setExpandedContentId(expandedContentId === id ? null : id);
+  };
+
   // Approve flagged content
-  //   TODO: Implement handleApproveFlaggedContent
   const handleApproveFlaggedContent = async (id) => {
     try {
       const response = await axios.put(
@@ -61,12 +66,37 @@ const AdminDashboard = () => {
           },
         }
       );
+      console.log("Approved flagged content:", response.data);
       setFlaggedContent(
         flaggedContent.map((item) => (item.id === id ? response.data : item))
       );
     } catch (error) {
       console.error(
         "Error approving flagged content:",
+        error.response?.data || error
+      );
+    }
+  };
+
+  // Hide flagged content by setting is_visible to false
+  const handleHideFlaggedContent = async (id) => {
+    try {
+      const response = await axios.put(
+        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        { is_visible: false },
+        {
+          headers: {
+            Authorization: `Bearer ${currentUser.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setFlaggedContent(
+        flaggedContent.map((item) => (item.id === id ? response.data : item))
+      );
+    } catch (error) {
+      console.error(
+        "Error hiding flagged content:",
         error.response?.data || error
       );
     }
@@ -170,13 +200,48 @@ const AdminDashboard = () => {
             <ul>
               {flaggedContent.map((item) => (
                 <li key={item.id}>
-                  {item.content} - {item.reason}
-                  <button onClick={() => handleApproveFlaggedContent(item.id)}>
-                    Approve
-                  </button>
-                  <button onClick={() => handleDeleteFlaggedContent(item.id)}>
-                    Delete
-                  </button>
+                  <div onClick={() => toggleExpandContent(item.id)}>
+                    {item.content} - {item.reason}
+                  </div>
+                  {expandedContentId === item.id && (
+                    <div style={{ marginLeft: "20px", marginTop: "10px" }}>
+                      <p>
+                        <strong>User:</strong> {item.user}
+                      </p>
+                      <p>
+                        <strong>Post ID:</strong> {item.post_id}
+                      </p>
+                      <p>
+                        <strong>Reason:</strong> {item.reason}
+                      </p>
+                      <p>
+                        <strong>Flagged At:</strong> {item.flagged_at}
+                      </p>
+                      <p>
+                        <strong>Reviewed:</strong>{" "}
+                        {item.reviewed ? "Yes" : "No"}
+                      </p>
+                      <p>
+                        <strong>Visible:</strong>{" "}
+                        {item.is_visible ? "Yes" : "No"}
+                      </p>
+                      <button
+                        onClick={() => handleApproveFlaggedContent(item.id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleHideFlaggedContent(item.id)}
+                      >
+                        Hide
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFlaggedContent(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
