@@ -47,6 +47,31 @@ const AdminDashboard = () => {
     }
   }, [currentUser, isAdmin]);
 
+  // Approve flagged content
+  //   TODO: Implement handleApproveFlaggedContent
+  const handleApproveFlaggedContent = async (id) => {
+    try {
+      const response = await axios.put(
+        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        { reviewed: true, is_visible: true },
+        {
+          headers: {
+            Authorization: `Bearer ${currentUser.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setFlaggedContent(
+        flaggedContent.map((item) => (item.id === id ? response.data : item))
+      );
+    } catch (error) {
+      console.error(
+        "Error approving flagged content:",
+        error.response?.data || error
+      );
+    }
+  };
+
   // Create Trigger Word with Category
   const handleAddTriggerWord = async () => {
     if (!newTriggerWord || !newTriggerCategory) {
@@ -146,6 +171,9 @@ const AdminDashboard = () => {
               {flaggedContent.map((item) => (
                 <li key={item.id}>
                   {item.content} - {item.reason}
+                  <button onClick={() => handleApproveFlaggedContent(item.id)}>
+                    Approve
+                  </button>
                   <button onClick={() => handleDeleteFlaggedContent(item.id)}>
                     Delete
                   </button>
