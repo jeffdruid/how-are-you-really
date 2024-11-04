@@ -9,9 +9,8 @@ import { FaBell, FaHeart } from "react-icons/fa";
 import styles from "../styles/NavigationBar.module.css";
 
 const NavigationBar = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const navigate = useNavigate();
-  // const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const navbarRef = useRef(null);
@@ -122,6 +121,23 @@ const NavigationBar = () => {
             >
               Home
             </Nav.Link>
+
+            {/* Admin Dashboard Link */}
+            {isAdmin && (
+              <Nav.Link
+                as={NavLink}
+                to="/admin-dashboard"
+                className={({ isActive }) =>
+                  isActive
+                    ? `${styles.navLink} ${styles.activeNavLink}`
+                    : styles.navLink
+                }
+                onClick={() => setExpanded(false)}
+              >
+                Admin Dashboard
+              </Nav.Link>
+            )}
+
 
             {currentUser && (
               <>

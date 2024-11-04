@@ -5,6 +5,7 @@ import HeaderButtons from "./components/HeaderButtons";
 import Footer from "./components/Footer";
 import { Container } from "react-bootstrap";
 import "./App.css";
+import AdminDashboard from "./components/AdminDashboard";
 
 // Lazy load main pages to split bundles and optimize performance
 const Home = lazy(() => import("./components/Home"));
@@ -48,8 +49,7 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/users/:userId" element={<ProfileView />} />{" "}
-            {/* Viewing other users' profiles */}
+            <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route
               path="/mood-analytics"
@@ -72,6 +72,16 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <NotificationsList />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Admin Route */}
+            <Route
+              path="/admin-dashboard"
+              element={
+                <PrivateRoute isAdmin={true}>
+                  <AdminDashboard />
                 </PrivateRoute>
               }
             />
