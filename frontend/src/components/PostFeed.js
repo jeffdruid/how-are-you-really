@@ -30,7 +30,7 @@ const PostFeed = () => {
       collection(firestore, "Posts"),
       where("is_visible", "==", true), // Fetch only visible posts
       orderBy("created_at", "desc"),
-      limit(POSTS_PER_PAGE)
+      limit(POSTS_PER_PAGE),
     );
 
     // Fetch visible posts in real-time
@@ -53,7 +53,7 @@ const PostFeed = () => {
       (err) => {
         console.error("Error fetching initial posts:", err);
         setError("Failed to load posts. Please try again later.");
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -69,7 +69,7 @@ const PostFeed = () => {
         where("is_visible", "==", true),
         orderBy("created_at", "desc"),
         startAfter(lastDoc),
-        limit(POSTS_PER_PAGE)
+        limit(POSTS_PER_PAGE),
       );
 
       const snapshot = await getDocs(nextQuery);

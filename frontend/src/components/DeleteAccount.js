@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
-import { auth, firestore, storage } from '../firebase';
-import { deleteUser } from 'firebase/auth';
-import { doc, deleteDoc, query, collection, where, getDocs, writeBatch } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Alert } from 'react-bootstrap';
+import React, { useState } from "react";
+import { auth, firestore, storage } from "../firebase";
+import { deleteUser } from "firebase/auth";
+import {
+  doc,
+  deleteDoc,
+  query,
+  collection,
+  where,
+  getDocs,
+  writeBatch,
+} from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
+import { Form, Button, Alert } from "react-bootstrap";
 
 const DeleteAccount = () => {
-  const [error, setError] = useState('');
-  const [confirmText, setConfirmText] = useState('');
+  const [error, setError] = useState("");
+  const [confirmText, setConfirmText] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleDeleteAccount = async () => {
-    if (confirmText !== 'DELETE') {
-      setError('Please type DELETE to confirm.');
+    if (confirmText !== "DELETE") {
+      setError("Please type DELETE to confirm.");
       return;
     }
 
@@ -22,21 +30,27 @@ const DeleteAccount = () => {
 
     if (user) {
       setLoading(true);
-      setError('');
+      setError("");
 
       try {
         // Initialize batch for Firestore deletions
         const batch = writeBatch(firestore);
 
         // 1. Delete user's posts
-        const postsQuery = query(collection(firestore, 'Posts'), where('userId', '==', user.uid));
+        const postsQuery = query(
+          collection(firestore, "Posts"),
+          where("userId", "==", user.uid),
+        );
         const postsSnapshot = await getDocs(postsQuery);
         postsSnapshot.forEach((doc) => {
           batch.delete(doc.ref);
         });
 
         // 2. Delete user's comments
-        const commentsQuery = query(collection(firestore, 'Comments'), where('userId', '==', user.uid));
+        const commentsQuery = query(
+          collection(firestore, "Comments"),
+          where("userId", "==", user.uid),
+        );
         const commentsSnapshot = await getDocs(commentsQuery);
         commentsSnapshot.forEach((doc) => {
           batch.delete(doc.ref);
@@ -48,31 +62,32 @@ const DeleteAccount = () => {
         // 4. Delete user's profile picture from Storage
         const profilePicRef = ref(storage, `profilePictures/${user.uid}`);
         await deleteObject(profilePicRef).catch((err) => {
-          if (err.code !== 'storage/object-not-found') {
+          if (err.code !== "storage/object-not-found") {
             throw err;
           }
         });
 
         // 5. Delete user document from Firestore
-        const userDocRef = doc(firestore, 'Users', user.uid);
+        const userDocRef = doc(firestore, "Users", user.uid);
         await deleteDoc(userDocRef);
 
         // 6. Delete user from Firebase Auth
-        await deleteUser(user).then(() => {
-          navigate('/signup'); // Redirect to sign-up or landing page
-        }).catch((err) => {
-          setError('Failed to delete account. Please try again.');
-          console.error('Error deleting user:', err);
-        });
-
+        await deleteUser(user)
+          .then(() => {
+            navigate("/signup"); // Redirect to sign-up or landing page
+          })
+          .catch((err) => {
+            setError("Failed to delete account. Please try again.");
+            console.error("Error deleting user:", err);
+          });
       } catch (err) {
-        setError('Failed to delete account. Please try again.');
-        console.error('Account deletion error:', err);
+        setError("Failed to delete account. Please try again.");
+        console.error("Account deletion error:", err);
       } finally {
         setLoading(false);
       }
     } else {
-      setError('No user is currently logged in.');
+      setError("No user is currently logged in.");
     }
   };
 
@@ -99,7 +114,7 @@ const DeleteAccount = () => {
           onClick={handleDeleteAccount}
           disabled={loading}
         >
-          {loading ? 'Deleting...' : 'Delete Account'}
+          {loading ? "Deleting..." : "Delete Account"}
         </Button>
       </Form>
     </div>

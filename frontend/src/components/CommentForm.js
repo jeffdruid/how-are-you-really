@@ -34,7 +34,7 @@ const CommentForm = ({
   const handleAddContent = async () => {
     if (!content.trim()) {
       setError(
-        `${parentType === "comment" ? "Comment" : "Reply"} cannot be empty.`
+        `${parentType === "comment" ? "Comment" : "Reply"} cannot be empty.`,
       );
       return;
     }
@@ -87,7 +87,7 @@ const CommentForm = ({
               reply_id: contentRef.id, // Pass Firestore-generated reply ID
             }),
           },
-          currentUser.accessToken
+          currentUser.accessToken,
         );
 
         setContent("");
@@ -100,7 +100,7 @@ const CommentForm = ({
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || `An unexpected error occurred. Please try again.`
+        friendlyMessage || `An unexpected error occurred. Please try again.`,
       );
       console.error(`Error adding ${parentType}:`, err);
     } finally {

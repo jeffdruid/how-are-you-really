@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
 import {
   collection,
   query,
@@ -9,24 +9,24 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-} from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from 'react-bootstrap';
+} from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "react-bootstrap";
 
 const FollowButton = ({ targetUserId }) => {
   const { currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followDocId, setFollowDocId] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const checkFollowingStatus = async () => {
       if (currentUser && targetUserId) {
         try {
           const q = query(
-            collection(firestore, 'Follows'),
-            where('followerId', '==', currentUser.uid),
-            where('followingId', '==', targetUserId)
+            collection(firestore, "Follows"),
+            where("followerId", "==", currentUser.uid),
+            where("followingId", "==", targetUserId),
           );
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
@@ -37,8 +37,8 @@ const FollowButton = ({ targetUserId }) => {
             setFollowDocId(null);
           }
         } catch (err) {
-          console.error('Failed to check following status:', err);
-          setError('Failed to check following status.');
+          console.error("Failed to check following status:", err);
+          setError("Failed to check following status.");
         }
       }
     };
@@ -48,7 +48,7 @@ const FollowButton = ({ targetUserId }) => {
 
   const handleFollow = async () => {
     try {
-      const docRef = await addDoc(collection(firestore, 'Follows'), {
+      const docRef = await addDoc(collection(firestore, "Follows"), {
         followerId: currentUser.uid,
         followingId: targetUserId,
         created_at: serverTimestamp(),
@@ -58,30 +58,35 @@ const FollowButton = ({ targetUserId }) => {
 
       // Create notification if not following self
       if (currentUser.uid !== targetUserId) {
-        const notificationsRef = collection(firestore, 'Users', targetUserId, 'Notifications');
+        const notificationsRef = collection(
+          firestore,
+          "Users",
+          targetUserId,
+          "Notifications",
+        );
         await addDoc(notificationsRef, {
-          type: 'follow',
+          type: "follow",
           fromUserId: currentUser.uid,
           created_at: serverTimestamp(),
           read: false,
         });
       }
     } catch (err) {
-      console.error('Failed to follow user:', err);
-      setError('Failed to follow user.');
+      console.error("Failed to follow user:", err);
+      setError("Failed to follow user.");
     }
   };
 
   const handleUnfollow = async () => {
     try {
       if (followDocId) {
-        await deleteDoc(doc(firestore, 'Follows', followDocId));
+        await deleteDoc(doc(firestore, "Follows", followDocId));
         setIsFollowing(false);
         setFollowDocId(null);
       }
     } catch (err) {
-      console.error('Failed to unfollow user:', err);
-      setError('Failed to unfollow user.');
+      console.error("Failed to unfollow user:", err);
+      setError("Failed to unfollow user.");
     }
   };
 
@@ -98,10 +103,10 @@ const FollowButton = ({ targetUserId }) => {
   return (
     <Button
       onClick={isFollowing ? handleUnfollow : handleFollow}
-      variant={isFollowing ? 'danger' : 'primary'}
+      variant={isFollowing ? "danger" : "primary"}
       className="mt-3"
     >
-      {isFollowing ? 'Unfollow' : 'Follow'}
+      {isFollowing ? "Unfollow" : "Follow"}
     </Button>
   );
 };

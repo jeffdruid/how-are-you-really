@@ -23,7 +23,7 @@ const NavigationBar = () => {
       firestore,
       "Users",
       currentUser.uid,
-      "Notifications"
+      "Notifications",
     );
     const unreadQuery = query(notificationsRef, where("read", "==", false));
 
@@ -137,7 +137,6 @@ const NavigationBar = () => {
                 Admin Dashboard
               </Nav.Link>
             )}
-
 
             {currentUser && (
               <>

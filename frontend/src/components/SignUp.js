@@ -38,7 +38,7 @@ const SignUp = React.memo(() => {
 
       if (!validatePassword(password)) {
         setPasswordError(
-          "Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters."
+          "Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters.",
         );
         valid = false;
       } else {
@@ -52,7 +52,7 @@ const SignUp = React.memo(() => {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
-          password
+          password,
         );
         const user = userCredential.user;
         await sendEmailVerification(user);
@@ -68,14 +68,14 @@ const SignUp = React.memo(() => {
         });
 
         setMessage(
-          "Registration successful! Please check your email to verify your account."
+          "Registration successful! Please check your email to verify your account.",
         );
         setError("");
       } catch (err) {
         setError(firebaseErrorMessages(err.code));
       }
     },
-    [email, password, username]
+    [email, password, username],
   );
 
   return (

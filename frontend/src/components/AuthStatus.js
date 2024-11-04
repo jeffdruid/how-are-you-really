@@ -1,5 +1,5 @@
-import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const AuthStatus = () => {
   const { currentUser } = useAuth();
@@ -8,7 +8,8 @@ const AuthStatus = () => {
     <div>
       {currentUser ? (
         <p>
-          Logged in as: {currentUser.email} {currentUser.emailVerified ? '(Verified)' : '(Not Verified)'}
+          Logged in as: {currentUser.email}{" "}
+          {currentUser.emailVerified ? "(Verified)" : "(Not Verified)"}
         </p>
       ) : (
         <p>Not logged in</p>

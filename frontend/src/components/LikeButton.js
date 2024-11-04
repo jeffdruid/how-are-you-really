@@ -37,7 +37,7 @@ const LikeButton = ({
         "Replies",
         replyId,
         "Likes",
-        currentUser.uid
+        currentUser.uid,
       );
     } else if (commentId) {
       return doc(
@@ -47,7 +47,7 @@ const LikeButton = ({
         "Comments",
         commentId,
         "Likes",
-        currentUser.uid
+        currentUser.uid,
       );
     } else {
       return doc(firestore, "Posts", postId, "Likes", currentUser.uid);
@@ -64,7 +64,7 @@ const LikeButton = ({
         "Comments",
         commentId,
         "Replies",
-        replyId
+        replyId,
       );
     } else if (commentId) {
       return doc(firestore, "Posts", postId, "Comments", commentId);
@@ -135,7 +135,7 @@ const LikeButton = ({
               "Posts",
               postId,
               "Comments",
-              commentId
+              commentId,
             );
             const commentDoc = await getDoc(commentDocRef);
             if (commentDoc.exists()) {
@@ -150,7 +150,7 @@ const LikeButton = ({
               "Comments",
               commentId,
               "Replies",
-              replyId
+              replyId,
             );
             const replyDoc = await getDoc(replyDocRef);
             if (replyDoc.exists()) {
@@ -165,7 +165,7 @@ const LikeButton = ({
               firestore,
               "Users",
               notificationTargetUserId,
-              "Notifications"
+              "Notifications",
             );
             await addDoc(notificationsRef, {
               type: "like",

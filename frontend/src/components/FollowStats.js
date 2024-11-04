@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import UserListModal from './UserListModal';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import UserListModal from "./UserListModal";
 
 const FollowStats = ({ userId }) => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState('followers');
+  const [modalType, setModalType] = useState("followers");
 
   useEffect(() => {
     let unsubscribeFollowers;
@@ -19,8 +19,8 @@ const FollowStats = ({ userId }) => {
       try {
         // Real-time listener for followers
         const followersQuery = query(
-          collection(firestore, 'Follows'),
-          where('followingId', '==', userId)
+          collection(firestore, "Follows"),
+          where("followingId", "==", userId),
         );
         unsubscribeFollowers = onSnapshot(followersQuery, (snapshot) => {
           setFollowersCount(snapshot.size);
@@ -28,15 +28,15 @@ const FollowStats = ({ userId }) => {
 
         // Real-time listener for following
         const followingQuery = query(
-          collection(firestore, 'Follows'),
-          where('followerId', '==', userId)
+          collection(firestore, "Follows"),
+          where("followerId", "==", userId),
         );
         unsubscribeFollowing = onSnapshot(followingQuery, (snapshot) => {
           setFollowingCount(snapshot.size);
         });
       } catch (err) {
-        console.error('Failed to fetch follow counts:', err);
-        setError('Failed to fetch follow counts.');
+        console.error("Failed to fetch follow counts:", err);
+        setError("Failed to fetch follow counts.");
       }
     };
 
@@ -50,12 +50,12 @@ const FollowStats = ({ userId }) => {
   }, [userId]);
 
   const handleShowFollowers = () => {
-    setModalType('followers');
+    setModalType("followers");
     setShowModal(true);
   };
 
   const handleShowFollowing = () => {
-    setModalType('following');
+    setModalType("following");
     setShowModal(true);
   };
 
@@ -66,19 +66,19 @@ const FollowStats = ({ userId }) => {
   return (
     <div className="mt-4">
       <p>
-        <strong>Followers:</strong>{' '}
+        <strong>Followers:</strong>{" "}
         <span
           onClick={handleShowFollowers}
-          style={{ cursor: 'pointer', color: 'blue' }}
+          style={{ cursor: "pointer", color: "blue" }}
         >
           {followersCount}
         </span>
       </p>
       <p>
-        <strong>Following:</strong>{' '}
+        <strong>Following:</strong>{" "}
         <span
           onClick={handleShowFollowing}
-          style={{ cursor: 'pointer', color: 'blue' }}
+          style={{ cursor: "pointer", color: "blue" }}
         >
           {followingCount}
         </span>

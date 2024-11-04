@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { firestore } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import React, { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const UserStats = ({ userId }) => {
   const [totalPosts, setTotalPosts] = useState(0);
@@ -11,8 +11,8 @@ const UserStats = ({ userId }) => {
       try {
         // Fetch total posts
         const postsQuery = query(
-          collection(firestore, 'Posts'),
-          where('userId', '==', userId)
+          collection(firestore, "Posts"),
+          where("userId", "==", userId),
         );
         const postsSnapshot = await getDocs(postsQuery);
         setTotalPosts(postsSnapshot.size);
@@ -21,13 +21,13 @@ const UserStats = ({ userId }) => {
         let likesCount = 0;
         for (const postDoc of postsSnapshot.docs) {
           const postId = postDoc.id;
-          const likesQuery = collection(firestore, 'Posts', postId, 'Likes');
+          const likesQuery = collection(firestore, "Posts", postId, "Likes");
           const likesSnapshot = await getDocs(likesQuery);
           likesCount += likesSnapshot.size;
         }
         setTotalLikes(likesCount);
       } catch (err) {
-        console.error('Error fetching user stats:', err);
+        console.error("Error fetching user stats:", err);
       }
     };
 

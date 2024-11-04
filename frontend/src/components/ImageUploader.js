@@ -1,29 +1,35 @@
-import React, { useState } from 'react';
-import { Form, Alert, Image } from 'react-bootstrap';
-import PropTypes from 'prop-types';
-import imageCompression from 'browser-image-compression';
+import React, { useState } from "react";
+import { Form, Alert, Image } from "react-bootstrap";
+import PropTypes from "prop-types";
+import imageCompression from "browser-image-compression";
 
-const ImageUploader = ({ onImageSelected, maxSize = 5 * 1024 * 1024, accept = 'image/*' }) => {
-  const [error, setError] = useState('');
-  const [previewUrl, setPreviewUrl] = useState('');
+const ImageUploader = ({
+  onImageSelected,
+  maxSize = 5 * 1024 * 1024,
+  accept = "image/*",
+}) => {
+  const [error, setError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const handleImageChange = async (e) => {
-    setError('');
+    setError("");
     const file = e.target.files[0];
 
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file.');
-        setPreviewUrl('');
+      if (!file.type.startsWith("image/")) {
+        setError("Please select a valid image file.");
+        setPreviewUrl("");
         onImageSelected(null);
         return;
       }
 
       // Validate file size
       if (file.size > maxSize) {
-        setError(`Image size should be less than ${maxSize / (1024 * 1024)}MB.`);
-        setPreviewUrl('');
+        setError(
+          `Image size should be less than ${maxSize / (1024 * 1024)}MB.`,
+        );
+        setPreviewUrl("");
         onImageSelected(null);
         return;
       }
@@ -41,11 +47,11 @@ const ImageUploader = ({ onImageSelected, maxSize = 5 * 1024 * 1024, accept = 'i
         setPreviewUrl(thumbnailUrl);
         onImageSelected({ original: file, thumbnail: compressedFile });
       } catch (err) {
-        setError('Error generating thumbnail.');
+        setError("Error generating thumbnail.");
         onImageSelected(null);
       }
     } else {
-      setPreviewUrl('');
+      setPreviewUrl("");
       onImageSelected(null);
     }
   };
@@ -64,7 +70,11 @@ const ImageUploader = ({ onImageSelected, maxSize = 5 * 1024 * 1024, accept = 'i
         </Form.Text>
       </Form.Group>
 
-      {error && <Alert variant="danger" className="mt-2">{error}</Alert>}
+      {error && (
+        <Alert variant="danger" className="mt-2">
+          {error}
+        </Alert>
+      )}
 
       {previewUrl && (
         <div className="mt-3">

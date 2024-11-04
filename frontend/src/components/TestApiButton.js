@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { getAuth } from 'firebase/auth';
+import React, { useState } from "react";
+import { getAuth } from "firebase/auth";
 
 const TestApiButton = () => {
-  const [apiResponse, setApiResponse] = useState('');
-  const [error, setError] = useState('');
+  const [apiResponse, setApiResponse] = useState("");
+  const [error, setError] = useState("");
 
   const testAuthenticatedRequest = async () => {
     try {
@@ -11,22 +11,25 @@ const TestApiButton = () => {
       const currentUser = auth.currentUser;
 
       if (!currentUser) {
-        throw new Error('User is not logged in.');
+        throw new Error("User is not logged in.");
       }
 
       const idToken = await currentUser.getIdToken(/* forceRefresh */ true);
 
       // Make the authenticated request to the Django API
-      const response = await fetch('http://127.0.0.1:8000/api/flagged-content/', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/flagged-content/",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('API request failed');
+        throw new Error("API request failed");
       }
 
       const data = await response.json();
@@ -39,22 +42,22 @@ const TestApiButton = () => {
         setApiResponse(`Flagged content received: ${JSON.stringify(data)}`);
       }
 
-      setError('');  // Clear any previous errors
+      setError(""); // Clear any previous errors
     } catch (error) {
       setError(`Error making authenticated request: ${error.message}`);
-      setApiResponse('');  // Clear previous successful responses
+      setApiResponse(""); // Clear previous successful responses
     }
   };
 
   return (
     <div>
-      <button onClick={testAuthenticatedRequest}>
-        Test API
-      </button>
-      
+      <button onClick={testAuthenticatedRequest}>Test API</button>
+
       {/* Display API response or error */}
-      {apiResponse && <div style={{ marginTop: '10px', color: 'green' }}>{apiResponse}</div>}
-      {error && <div style={{ marginTop: '10px', color: 'red' }}>{error}</div>}
+      {apiResponse && (
+        <div style={{ marginTop: "10px", color: "green" }}>{apiResponse}</div>
+      )}
+      {error && <div style={{ marginTop: "10px", color: "red" }}>{error}</div>}
     </div>
   );
 };

@@ -71,7 +71,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       "Comments",
       commentId,
       "Replies",
-      reply.id
+      reply.id,
     );
 
     try {
@@ -82,19 +82,22 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
         updated_at: serverTimestamp(),
         is_visible: isVisible,
       });
-  
+
       // Run moderation check on the edited content
-      const isSafe = await checkModeration(editedContent, currentUser.accessToken);
-  
+      const isSafe = await checkModeration(
+        editedContent,
+        currentUser.accessToken,
+      );
+
       if (!isSafe) {
         // Flag content if moderation fails and set `is_visible` to false
         isVisible = false;
         await updateDoc(replyRef, { is_visible: isVisible });
-  
+
         setFlaggedType("selfHarm");
         setShowResources(true);
         onFlaggedContent({ flaggedType: "selfHarm", content: editedContent });
-  
+
         // Send flagged content to DRF for further moderation
         await sendFlaggedContentToDRF(
           {
@@ -106,7 +109,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
             comment_id: commentId,
             reply_id: reply.id,
           },
-          currentUser.accessToken
+          currentUser.accessToken,
         );
       } else {
         // If content is safe, close editing mode
@@ -115,13 +118,12 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
+        friendlyMessage || "An unexpected error occurred. Please try again.",
       );
     } finally {
       setLoading(false);
     }
   };
-  
 
   // Handle deleting a reply
   const handleDeleteReply = async () => {
@@ -134,7 +136,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       "Comments",
       commentId,
       "Replies",
-      reply.id
+      reply.id,
     );
 
     try {
@@ -142,7 +144,7 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
       console.log("Reply deleted:", reply.id);
     } catch (err) {
       setError(
-        firebaseErrorMessages(err.code) || "An unexpected error occurred."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred.",
       );
     } finally {
       setLoading(false);

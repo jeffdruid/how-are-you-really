@@ -39,7 +39,6 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-
             {/* Private Routes */}
             <Route
               path="/profile"
@@ -49,7 +48,8 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/users/:userId" element={<ProfileView />} /> {/* Viewing other users' profiles */}
+            <Route path="/users/:userId" element={<ProfileView />} />{" "}
+            {/* Viewing other users' profiles */}
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route
               path="/mood-analytics"
@@ -75,7 +75,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
             {/* Admin Route */}
             <Route
               path="/admin-dashboard"
@@ -85,7 +84,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
             {/* Protected Home Route */}
             <Route
               path="/"
@@ -95,7 +93,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
             {/* Fallback route for unmatched paths */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -15,7 +15,7 @@ const useModeration = () => {
             Authorization: `Bearer ${token}`, // Firebase token
           },
           body: JSON.stringify({ content }),
-        }
+        },
       );
 
       const data = await response.json();

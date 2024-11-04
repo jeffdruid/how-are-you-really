@@ -36,7 +36,7 @@ const PostPerformance = () => {
       const postsQuery = query(
         postsRef,
         where("userId", "==", currentUser.uid),
-        where("is_visible", "==", true) // Only count visible posts
+        where("is_visible", "==", true), // Only count visible posts
       );
 
       onSnapshot(
@@ -55,7 +55,7 @@ const PostPerformance = () => {
               ? new Date(post.created_at.seconds * 1000)
               : new Date();
             postPerformance.labels.push(
-              createdAt.toLocaleDateString() || `Post ${doc.id}`
+              createdAt.toLocaleDateString() || `Post ${doc.id}`,
             );
             postPerformance.likeCounts.push(post.likeCount || 0);
             postPerformance.postIds.push(doc.id);
@@ -68,7 +68,7 @@ const PostPerformance = () => {
           console.error("Error fetching performance data:", err);
           setError("Failed to load performance data.");
           setLoading(false);
-        }
+        },
       );
     };
 

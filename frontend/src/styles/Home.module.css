@@ -1,22 +1,21 @@
 .homeContainer {
-    max-width: 800px;
-  }
-  
-  .welcomeBanner {
-    background-image: url(../assets/bg.webp);
-    background-size: cover;
-    color: black;
-    padding: 20px;
-    border-radius: 8px;
-  }
-  
-  .cardTitle {
-    font-size: 1.75rem;
-    font-weight: bold;
-  }
-  
-  .cardSection {
-    border-radius: 8px;
-    margin-top: 20px;
-  }
-  
+  max-width: 800px;
+}
+
+.welcomeBanner {
+  background-image: url(../assets/bg.webp);
+  background-size: cover;
+  color: black;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.cardTitle {
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.cardSection {
+  border-radius: 8px;
+  margin-top: 20px;
+}

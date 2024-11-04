@@ -33,7 +33,7 @@ const SearchBar = () => {
       const userQuery = query(
         usersRef,
         where("username", ">=", searchTerm),
-        where("username", "<=", searchTerm + "\uf8ff")
+        where("username", "<=", searchTerm + "\uf8ff"),
       );
       const userSnapshot = await getDocs(userQuery);
       const foundUsers = userSnapshot.docs.map((doc) => ({
@@ -48,7 +48,7 @@ const SearchBar = () => {
         postsRef,
         where("content", ">=", searchTerm),
         where("content", "<=", searchTerm + "\uf8ff"),
-        where("is_visible", "==", true) // Only fetch visible posts
+        where("is_visible", "==", true), // Only fetch visible posts
       );
       const postSnapshot = await getDocs(postQuery);
       const foundPosts = postSnapshot.docs.map((doc) => ({

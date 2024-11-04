@@ -1,10 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, Button } from 'react-bootstrap';
-import { firestore } from '../firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { BsHeart, BsChat, BsPersonPlus, BsTrash } from 'react-icons/bs'; // Import icons
+import React from "react";
+import { Link } from "react-router-dom";
+import { Card, Button } from "react-bootstrap";
+import { firestore } from "../firebase";
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { BsHeart, BsChat, BsPersonPlus, BsTrash } from "react-icons/bs"; // Import icons
 
 const NotificationItem = ({ notification }) => {
   const { type, postId, created_at, read, id, fromUserId } = notification;
@@ -12,36 +12,39 @@ const NotificationItem = ({ notification }) => {
 
   const renderNotificationMessage = () => {
     switch (type) {
-      case 'like':
+      case "like":
         return (
           <>
-            <BsHeart className="me-1 text-danger" /> Someone liked your{' '}
+            <BsHeart className="me-1 text-danger" /> Someone liked your{" "}
             <Link to={`/posts/${postId}`} className="text-decoration-none">
               post
-            </Link>.
+            </Link>
+            .
           </>
         );
-      case 'comment':
+      case "comment":
         return (
           <>
-            <BsChat className="me-1 text-primary" /> Someone commented on your{' '}
+            <BsChat className="me-1 text-primary" /> Someone commented on your{" "}
             <Link to={`/posts/${postId}`} className="text-decoration-none">
               post
-            </Link>.
+            </Link>
+            .
           </>
         );
-      case 'follow':
+      case "follow":
         return (
           <>
             <BsPersonPlus className="me-1 text-success" /> Someone started
-            following you.{' '}
+            following you.{" "}
             <Link to={`/users/${fromUserId}`} className="text-decoration-none">
               View profile
-            </Link>.
+            </Link>
+            .
           </>
         );
       default:
-        return 'You have a new notification.';
+        return "You have a new notification.";
     }
   };
 
@@ -50,14 +53,14 @@ const NotificationItem = ({ notification }) => {
       try {
         const notificationRef = doc(
           firestore,
-          'Users',
+          "Users",
           currentUser.uid,
-          'Notifications',
-          id
+          "Notifications",
+          id,
         );
         await updateDoc(notificationRef, { read: true });
       } catch (err) {
-        console.error('Error marking notification as read:', err);
+        console.error("Error marking notification as read:", err);
       }
     }
   };
@@ -67,14 +70,14 @@ const NotificationItem = ({ notification }) => {
     try {
       const notificationRef = doc(
         firestore,
-        'Users',
+        "Users",
         currentUser.uid,
-        'Notifications',
-        id
+        "Notifications",
+        id,
       );
       await deleteDoc(notificationRef);
     } catch (err) {
-      console.error('Error deleting notification:', err);
+      console.error("Error deleting notification:", err);
     }
   };
 
@@ -102,9 +105,7 @@ const NotificationItem = ({ notification }) => {
           variant="link"
           size="sm"
           onClick={(e) => {
-            if (
-              window.confirm("Are you sure you want to delete this?")
-            ) {
+            if (window.confirm("Are you sure you want to delete this?")) {
               handleDeleteNotification(e);
             }
           }}

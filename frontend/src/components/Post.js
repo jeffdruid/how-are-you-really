@@ -85,7 +85,7 @@ const Post = ({ post, onFlaggedContent }) => {
       const commentsQuery = query(
         commentsRef,
         where("is_visible", "==", true),
-        orderBy("created_at", "asc")
+        orderBy("created_at", "asc"),
       );
       unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
         const commentsData = snapshot.docs.map((doc) => ({
@@ -130,14 +130,14 @@ const Post = ({ post, onFlaggedContent }) => {
         setUploading(true);
         const originalRef = ref(
           storage,
-          `post_images/${post.id}/original_${images.original.name}`
+          `post_images/${post.id}/original_${images.original.name}`,
         );
         await uploadBytes(originalRef, images.original);
         const originalURL = await getDownloadURL(originalRef);
 
         const thumbnailRef = ref(
           storage,
-          `post_images/${post.id}/thumbnail_${images.thumbnail.name}`
+          `post_images/${post.id}/thumbnail_${images.thumbnail.name}`,
         );
         await uploadBytes(thumbnailRef, images.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
@@ -153,7 +153,7 @@ const Post = ({ post, onFlaggedContent }) => {
       // Perform moderation check on the edited content
       const isSafe = await checkModeration(
         editedContent,
-        currentUser.accessToken
+        currentUser.accessToken,
       );
 
       if (!isSafe) {
@@ -172,7 +172,7 @@ const Post = ({ post, onFlaggedContent }) => {
             parent_type: "post",
             post_id: post.id, // Send post ID to DRF
           },
-          currentUser.accessToken
+          currentUser.accessToken,
         );
       }
 
@@ -195,7 +195,7 @@ const Post = ({ post, onFlaggedContent }) => {
       await deleteDoc(doc(firestore, "Posts", post.id));
     } catch (err) {
       setError(
-        firebaseErrorMessages(err.code) || "An unexpected error occurred."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred.",
       );
     } finally {
       setLoading(false);

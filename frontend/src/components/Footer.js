@@ -30,8 +30,8 @@ function Footer() {
         <Navbar
           bg="dark"
           variant="dark"
-          className="justify-content-center py-0 footer" 
-          style={{ fontSize: "0.85rem" }} 
+          className="justify-content-center py-0 footer"
+          style={{ fontSize: "0.85rem" }}
         >
           <Nav>
             <Nav.Link

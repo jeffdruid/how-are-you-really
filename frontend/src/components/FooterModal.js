@@ -1,50 +1,52 @@
-import React from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import React from "react";
+import { Modal, Button } from "react-bootstrap";
 
 function FooterModal({ type, onClose }) {
   const getContent = () => {
     switch (type) {
-      case 'about':
+      case "about":
         return {
-          title: 'About How Are You Really',
+          title: "About How Are You Really",
           body: (
             <p>
-              "How Are You Really" provides a safe space for individuals to express their true feelings and connect with a supportive community.
+              "How Are You Really" provides a safe space for individuals to
+              express their true feelings and connect with a supportive
+              community.
             </p>
           ),
         };
-      case 'contact':
+      case "contact":
         return {
-          title: 'Contact Us',
+          title: "Contact Us",
           body: (
             <>
-              <p>
-                Reach out with questions or feedback at:
-              </p>
+              <p>Reach out with questions or feedback at:</p>
               <p>Email: support@howareyoureally.com</p>
             </>
           ),
         };
-      case 'privacy':
+      case "privacy":
         return {
-          title: 'Privacy Policy',
+          title: "Privacy Policy",
           body: (
             <p>
-              We value your privacy and are committed to protecting your personal information while ensuring a secure experience.
+              We value your privacy and are committed to protecting your
+              personal information while ensuring a secure experience.
             </p>
           ),
         };
-      case 'terms':
+      case "terms":
         return {
-          title: 'Terms of Service',
+          title: "Terms of Service",
           body: (
             <p>
-              By using "How Are You Really," you agree to follow our community guidelines and terms of service.
+              By using "How Are You Really," you agree to follow our community
+              guidelines and terms of service.
             </p>
           ),
         };
       default:
-        return { title: '', body: null };
+        return { title: "", body: null };
     }
   };
 

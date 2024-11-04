@@ -107,7 +107,7 @@ const CreatePost = ({ onFlaggedContent }) => {
         // Upload original image
         const originalRef = ref(
           storage,
-          `post_images/${postId}/original_${images.original.name}`
+          `post_images/${postId}/original_${images.original.name}`,
         );
         await uploadBytes(originalRef, images.original);
         const originalURL = await getDownloadURL(originalRef);
@@ -115,7 +115,7 @@ const CreatePost = ({ onFlaggedContent }) => {
         // Upload thumbnail image
         const thumbnailRef = ref(
           storage,
-          `post_images/${postId}/thumbnail_${images.thumbnail.name}`
+          `post_images/${postId}/thumbnail_${images.thumbnail.name}`,
         );
         await uploadBytes(thumbnailRef, images.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);
@@ -149,7 +149,7 @@ const CreatePost = ({ onFlaggedContent }) => {
             content,
             parent_type: "post",
           },
-          currentUser.accessToken
+          currentUser.accessToken,
         );
       }
 
@@ -162,7 +162,7 @@ const CreatePost = ({ onFlaggedContent }) => {
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
+        friendlyMessage || "An unexpected error occurred. Please try again.",
       );
       console.error("Error creating post:", err);
     } finally {

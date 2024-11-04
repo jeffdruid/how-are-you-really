@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { firestore } from '../firebase';
+import React, { useState, useEffect, useCallback } from "react";
+import { firestore } from "../firebase";
 import {
   collection,
   query,
@@ -10,17 +10,23 @@ import {
   limit,
   startAfter,
   where,
-} from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import NotificationItem from './NotificationItem';
-import { Spinner, Alert, Button, ToggleButtonGroup, ToggleButton } from 'react-bootstrap';
+} from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import NotificationItem from "./NotificationItem";
+import {
+  Spinner,
+  Alert,
+  Button,
+  ToggleButtonGroup,
+  ToggleButton,
+} from "react-bootstrap";
 
 const NotificationsList = () => {
   const { currentUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
   const [lastVisible, setLastVisible] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const NOTIFICATIONS_LIMIT = 10;
@@ -33,34 +39,34 @@ const NotificationsList = () => {
 
       const notificationsRef = collection(
         firestore,
-        'Users',
+        "Users",
         currentUser.uid,
-        'Notifications'
+        "Notifications",
       );
       let notificationsQuery;
 
       // Filter notifications based on the selected filter
-      if (filter === 'unread') {
+      if (filter === "unread") {
         notificationsQuery = query(
           notificationsRef,
-          where('read', '==', false),
-          orderBy('created_at', 'desc'),
-          limit(NOTIFICATIONS_LIMIT)
+          where("read", "==", false),
+          orderBy("created_at", "desc"),
+          limit(NOTIFICATIONS_LIMIT),
         );
       } else {
         notificationsQuery = query(
           notificationsRef,
-          orderBy('created_at', 'desc'),
-          limit(NOTIFICATIONS_LIMIT)
+          orderBy("created_at", "desc"),
+          limit(NOTIFICATIONS_LIMIT),
         );
       }
 
       if (loadMore && lastVisible) {
         notificationsQuery = query(
           notificationsRef,
-          orderBy('created_at', 'desc'),
+          orderBy("created_at", "desc"),
           startAfter(lastVisible),
-          limit(NOTIFICATIONS_LIMIT)
+          limit(NOTIFICATIONS_LIMIT),
         );
       }
 
@@ -78,21 +84,21 @@ const NotificationsList = () => {
           }
 
           setNotifications((prev) =>
-            loadMore ? [...prev, ...notificationsData] : notificationsData
+            loadMore ? [...prev, ...notificationsData] : notificationsData,
           );
           setLastVisible(lastDoc);
           setLoading(false);
         },
         (error) => {
-          console.error('Error fetching notifications:', error);
-          setError('Failed to load notifications.');
+          console.error("Error fetching notifications:", error);
+          setError("Failed to load notifications.");
           setLoading(false);
-        }
+        },
       );
 
       return () => unsubscribe();
     },
-    [currentUser, lastVisible, filter, notifications.length]
+    [currentUser, lastVisible, filter, notifications.length],
   );
 
   useEffect(() => {
@@ -106,18 +112,18 @@ const NotificationsList = () => {
         if (!notification.read) {
           const notificationRef = doc(
             firestore,
-            'Users',
+            "Users",
             currentUser.uid,
-            'Notifications',
-            notification.id
+            "Notifications",
+            notification.id,
           );
           batch.update(notificationRef, { read: true });
         }
       });
       await batch.commit();
     } catch (err) {
-      console.error('Error marking notifications as read:', err);
-      setError('Failed to mark notifications as read.');
+      console.error("Error marking notifications as read:", err);
+      setError("Failed to mark notifications as read.");
     }
   };
 
@@ -141,8 +147,8 @@ const NotificationsList = () => {
   }, [loading, hasMore, fetchNotifications]);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
   return (
@@ -172,7 +178,7 @@ const NotificationsList = () => {
           </ToggleButton>
         </ToggleButtonGroup>
 
-        {notifications.some((n) => !n.read) && filter === 'all' && (
+        {notifications.some((n) => !n.read) && filter === "all" && (
           <Button
             variant="link"
             onClick={markAllAsRead}
@@ -190,7 +196,10 @@ const NotificationsList = () => {
         <p className="text-center text-muted">No notifications.</p>
       ) : (
         notifications.map((notification) => (
-          <NotificationItem key={notification.id} notification={notification} />
+          <NotificationItem
+            key={notification.id}
+            notification={notification}
+          />
         ))
       )}
 

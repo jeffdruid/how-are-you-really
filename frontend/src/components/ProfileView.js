@@ -92,14 +92,14 @@ const ProfileView = () => {
 
         const originalRef = ref(
           storage,
-          `profile_pictures/${currentUser.uid}/original_${image.original.name}`
+          `profile_pictures/${currentUser.uid}/original_${image.original.name}`,
         );
         await uploadBytes(originalRef, image.original);
         const originalURL = await getDownloadURL(originalRef);
 
         const thumbnailRef = ref(
           storage,
-          `profile_pictures/${currentUser.uid}/thumbnail_${image.thumbnail.name}`
+          `profile_pictures/${currentUser.uid}/thumbnail_${image.thumbnail.name}`,
         );
         await uploadBytes(thumbnailRef, image.thumbnail);
         const thumbnailURL = await getDownloadURL(thumbnailRef);

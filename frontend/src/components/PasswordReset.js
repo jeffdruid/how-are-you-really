@@ -28,7 +28,7 @@ const PasswordReset = React.memo(() => {
         // Send password reset email
         await sendPasswordResetEmail(auth, email);
         setMessage(
-          "If this email is registered, a password reset link has been sent."
+          "If this email is registered, a password reset link has been sent.",
         );
         setError("");
 
@@ -38,13 +38,13 @@ const PasswordReset = React.memo(() => {
         }, 5000);
       } catch (err) {
         setMessage(
-          "If this email is registered, a password reset link has been sent."
+          "If this email is registered, a password reset link has been sent.",
         );
         setError("");
         console.error("Password reset error:", err);
       }
     },
-    [email, navigate]
+    [email, navigate],
   );
 
   return (

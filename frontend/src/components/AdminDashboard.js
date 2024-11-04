@@ -36,7 +36,7 @@ const AdminDashboard = () => {
           "http://127.0.0.1:8000/api/flagged-content/",
           {
             headers: { Authorization: `Bearer ${currentUser.accessToken}` },
-          }
+          },
         );
         setFlaggedContent(flaggedResponse.data);
 
@@ -44,7 +44,7 @@ const AdminDashboard = () => {
           "http://127.0.0.1:8000/api/triggerwords/",
           {
             headers: { Authorization: `Bearer ${currentUser.accessToken}` },
-          }
+          },
         );
         setTriggerWords(triggerWordsResponse.data);
       } catch (err) {
@@ -57,7 +57,6 @@ const AdminDashboard = () => {
       fetchData();
     }
   }, [currentUser, isAdmin]);
-
 
   // Determine Firestore path
   const getFirestorePath = ({ post_id, comment_id, reply_id }) => {
@@ -88,16 +87,16 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${currentUser.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       console.log("Approved flagged content:", response.data);
       setFlaggedContent(
-        flaggedContent.map((item) => (item.id === id ? response.data : item))
+        flaggedContent.map((item) => (item.id === id ? response.data : item)),
       );
     } catch (error) {
       console.error(
         "Error approving flagged content:",
-        error.response?.data || error
+        error.response?.data || error,
       );
     }
   };
@@ -119,15 +118,15 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${currentUser.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       setFlaggedContent(
-        flaggedContent.map((item) => (item.id === id ? response.data : item))
+        flaggedContent.map((item) => (item.id === id ? response.data : item)),
       );
     } catch (error) {
       console.error(
         "Error hiding flagged content:",
-        error.response?.data || error
+        error.response?.data || error,
       );
     }
   };
@@ -148,7 +147,7 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${currentUser.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       setTriggerWords([...triggerWords, response.data]);
       setNewTriggerWord("");
@@ -156,7 +155,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(
         "Error adding trigger word:",
-        error.response?.data || error
+        error.response?.data || error,
       );
     }
   };
@@ -174,7 +173,7 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${currentUser.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // Proceed to delete content from Django
@@ -186,7 +185,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(
         "Error hiding or deleting flagged content:",
-        error.response?.data || error
+        error.response?.data || error,
       );
     }
   };
@@ -221,16 +220,16 @@ const AdminDashboard = () => {
             Authorization: `Bearer ${currentUser.accessToken}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       setTriggerWords(
-        triggerWords.map((item) => (item.id === id ? response.data : item))
+        triggerWords.map((item) => (item.id === id ? response.data : item)),
       );
       setEditingTrigger(null); // Exit edit mode
     } catch (error) {
       console.error(
         "Error updating trigger word:",
-        error.response?.data || error
+        error.response?.data || error,
       );
     }
   };
@@ -307,7 +306,7 @@ const AdminDashboard = () => {
                           onClick={() => {
                             if (
                               window.confirm(
-                                "Are you sure you want to delete this?"
+                                "Are you sure you want to delete this?",
                               )
                             ) {
                               handleDeleteFlaggedContent(item.id);
@@ -383,12 +382,12 @@ const AdminDashboard = () => {
                             onClick={() => {
                               if (
                                 window.confirm(
-                                  "Are you sure you want to delete this?"
+                                  "Are you sure you want to delete this?",
                                 )
                               ) {
-                                handleDeleteTriggerWord(word.id)}
+                                handleDeleteTriggerWord(word.id);
                               }
-                            }
+                            }}
                           >
                             Delete
                           </Button>

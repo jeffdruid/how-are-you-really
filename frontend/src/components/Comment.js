@@ -51,7 +51,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
     const fetchProfilePic = async () => {
       const url = await fetchProfilePicUrl(
         comment.userId,
-        comment.isAnonymous
+        comment.isAnonymous,
       );
       setProfilePicUrl(url);
     };
@@ -68,12 +68,12 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
       postId,
       "Comments",
       comment.id,
-      "Replies"
+      "Replies",
     );
     const q = query(
       repliesRef,
       where("is_visible", "==", true), // Only fetch visible replies
-      orderBy("created_at", "asc")
+      orderBy("created_at", "asc"),
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const repliesData = snapshot.docs.map((doc) => ({
@@ -111,7 +111,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
       // Run moderation check on the edited content
       const isSafe = await checkModeration(
         editedContent,
-        currentUser.accessToken
+        currentUser.accessToken,
       );
 
       if (!isSafe) {
@@ -133,7 +133,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             post_id: postId,
             comment_id: comment.id, // Include comment ID
           },
-          currentUser.accessToken
+          currentUser.accessToken,
         );
       } else {
         // Close editing if content is safe
@@ -142,7 +142,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(
-        friendlyMessage || "An unexpected error occurred. Please try again."
+        friendlyMessage || "An unexpected error occurred. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -159,7 +159,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
       await deleteDoc(doc(firestore, "Posts", postId, "Comments", comment.id));
     } catch (err) {
       setError(
-        firebaseErrorMessages(err.code) || "An unexpected error occurred."
+        firebaseErrorMessages(err.code) || "An unexpected error occurred.",
       );
     } finally {
       setLoading(false);

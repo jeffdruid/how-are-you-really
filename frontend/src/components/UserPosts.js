@@ -31,7 +31,7 @@ const UserPosts = ({ userId }) => {
         where("is_visible", "==", true),
         where("isAnonymous", "==", false),
         orderBy("created_at", "desc"),
-        limit(POSTS_PER_PAGE)
+        limit(POSTS_PER_PAGE),
       );
 
       const snapshot = await getDocs(initialQuery);
@@ -65,7 +65,7 @@ const UserPosts = ({ userId }) => {
         where("isAnonymous", "==", false),
         orderBy("created_at", "desc"),
         startAfter(lastDoc),
-        limit(POSTS_PER_PAGE)
+        limit(POSTS_PER_PAGE),
       );
 
       const snapshot = await getDocs(nextQuery);

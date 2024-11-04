@@ -36,7 +36,7 @@ const Login = React.memo(() => {
         setError(firebaseErrorMessages(err.code));
       }
     },
-    [email, password, navigate]
+    [email, password, navigate],
   );
 
   return (

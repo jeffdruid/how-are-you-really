@@ -29,7 +29,7 @@ export const sendFlaggedContentToDRF = async (data, token) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     if (!response.ok) {
