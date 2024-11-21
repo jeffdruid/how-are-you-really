@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, ListGroup, Spinner } from "react-bootstrap";
+import { Modal, ListGroup, Spinner, Button } from "react-bootstrap";
 import { FiExternalLink } from "react-icons/fi";
 
 // All available resources
@@ -42,7 +42,7 @@ const ResourceModal = ({ show, handleClose }) => {
 
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" centered>
-      <Modal.Header>
+      <Modal.Header closeButton>
         <Modal.Title>Helpful Resources</Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -78,7 +78,6 @@ const ResourceModal = ({ show, handleClose }) => {
                   rel="noopener noreferrer"
                   className="text-decoration-none text-dark"
                   style={{ fontWeight: "500" }}
-                  onClick={handleClose} // Close modal on link click
                 >
                   {resource.name}
                 </a>
@@ -88,6 +87,11 @@ const ResourceModal = ({ show, handleClose }) => {
           </ListGroup>
         )}
       </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Close
+        </Button>
+      </Modal.Footer>
     </Modal>
   );
 };
