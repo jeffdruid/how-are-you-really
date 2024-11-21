@@ -8,8 +8,14 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import { Form, Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { BsFillPersonFill } from "react-icons/bs";
+import {
+  Form,
+  Spinner,
+  OverlayTrigger,
+  Tooltip,
+  Button,
+} from "react-bootstrap";
+import { BsFillPersonFill, BsCheck, BsX } from "react-icons/bs";
 import useModeration from "../hooks/useModeration";
 import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
@@ -108,11 +114,9 @@ const CommentForm = ({
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleAddContent();
-    }
+  const handleCancel = () => {
+    setContent(""); // Clear the input
+    setError(""); // Clear any existing error
   };
 
   return (
@@ -138,9 +142,8 @@ const CommentForm = ({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={`Add a ${parentType}...`}
-          onKeyPress={handleKeyPress}
           className={`pr-5 ${
-            parentType === "reply" ? "border-light" : "border-light"
+            parentType === "reply" ? "border" : "border"
           }`}
           style={{
             borderColor: parentType === "reply" ? "#cccccc" : "inherit",
@@ -165,11 +168,41 @@ const CommentForm = ({
           </span>
         </OverlayTrigger>
 
-        {loading && (
-          <div className="text-center mt-2">
-            <Spinner animation="border" size="sm" />
-          </div>
-        )}
+        <div className="d-flex justify-content-end mt-2">
+          {/* Save Button */}
+          <OverlayTrigger
+            placement="bottom"
+            overlay={<Tooltip>Save {parentType}</Tooltip>}
+          >
+            <Button
+              type="button"
+              variant="link"
+              onClick={handleAddContent}
+              className="text-success"
+              disabled={loading}
+              style={{ padding: "0 0.5rem" }}
+            >
+              {loading ? (
+                <Spinner animation="border" size="sm" />
+              ) : (
+                <BsCheck size={20} />
+              )}
+            </Button>
+          </OverlayTrigger>
+
+          {/* Cancel Button */}
+          <OverlayTrigger placement="bottom" overlay={<Tooltip>Cancel</Tooltip>}>
+            <Button
+              type="button"
+              variant="link"
+              onClick={handleCancel}
+              className="text-danger"
+              style={{ padding: "0 0.5rem" }}
+            >
+              <BsX size={20} />
+            </Button>
+          </OverlayTrigger>
+        </div>
       </Form>
     </div>
   );
