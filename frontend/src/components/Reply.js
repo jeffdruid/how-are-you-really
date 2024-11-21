@@ -38,17 +38,17 @@ const Reply = ({ reply, postId, commentId, onFlaggedContent }) => {
   const [showResources, setShowResources] = useState(false);
   const [flaggedType, setFlaggedType] = useState(null);
 
-  // Fetch the user's profile picture URL
+  // Fetch the user's profile picture URL using the utility function
   useEffect(() => {
     const fetchProfilePic = async () => {
-      const url = await fetchProfilePicUrl(reply.userId, false);
+      const url = await fetchProfilePicUrl(reply.userId, reply.isAnonymous);
       setProfilePicUrl(url);
     };
 
-    if (reply.userId) {
+    if (reply.userId || reply.isAnonymous) {
       fetchProfilePic();
     }
-  }, [reply.userId]);
+  }, [reply.userId, reply.isAnonymous]);
 
   // Handle editing a reply
   const handleEditReply = async (e) => {
