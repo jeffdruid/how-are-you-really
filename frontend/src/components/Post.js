@@ -26,6 +26,8 @@ import {
   Image,
   Collapse,
   Dropdown,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
@@ -266,22 +268,63 @@ const Post = ({ post, onFlaggedContent }) => {
 
         {isEditing ? (
           <Form onSubmit={handleEdit} className="d-flex flex-column gap-2">
-            <Form.Group controlId="editContent">
-              <Form.Control
-                as="textarea"
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                rows={3}
-                required
-                placeholder="What's on your mind?"
-                className="mb-2"
-              />
+            {/* Content Textarea */}
+            <Form.Group controlId="editContent" className="mb-3">
+              <div
+                className="position-relative"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  backgroundColor: "#f8f9fa",
+                  border: "1px solid #ced4da",
+                  borderRadius: "8px",
+                  paddingRight: "50px", // Space for save/cancel buttons
+                  paddingLeft: "10px",
+                  paddingTop: "5px",
+                  paddingBottom: "5px",
+                }}
+              >
+                <Form.Control
+                  as="textarea"
+                  value={editedContent}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 300) {
+                      setEditedContent(e.target.value);
+                    }
+                  }}
+                  onInput={(e) => {
+                    e.target.style.height = "auto";
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  placeholder="Edit your post..."
+                  maxLength={300}
+                  rows={1}
+                  className="border-0"
+                  style={{
+                    resize: "none",
+                    overflow: "hidden",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    outline: "none",
+                    backgroundColor: "transparent",
+                  }}
+                />
+              </div>
+              <div className="text-muted text-end mt-1">
+                {300 - editedContent.length} characters remaining
+              </div>
             </Form.Group>
 
-            <Form.Group controlId="editMood">
+            {/* Mood Selection */}
+            <Form.Group controlId="editMood" className="mb-3">
               <Form.Select
                 value={editedMood}
                 onChange={(e) => setEditedMood(e.target.value)}
+                style={{
+                  fontSize: "1rem",
+                  border: "1px solid #ced4da",
+                  borderRadius: "10px",
+                }}
               >
                 <option value="happy">😊 Happy</option>
                 <option value="sad">😢 Sad</option>
@@ -294,9 +337,10 @@ const Post = ({ post, onFlaggedContent }) => {
               </Form.Select>
             </Form.Group>
 
+            {/* Anonymous Toggle */}
             <Form.Group
               controlId="editAnonymous"
-              className="d-flex align-items-center gap-2"
+              className="d-flex align-items-center gap-2 mb-3"
             >
               <Form.Check
                 type="checkbox"
@@ -306,34 +350,66 @@ const Post = ({ post, onFlaggedContent }) => {
               />
             </Form.Group>
 
+            {/* Image Uploader */}
             <ImageUploader
               onImageSelected={setImages}
               maxSize={5 * 1024 * 1024}
               accept="image/*"
             />
 
-            <div className="d-flex justify-content-end mt-2">
-              <Button
-                type="submit"
-                variant="link"
-                className="text-success"
-                title="Save"
-                disabled={loading || uploading}
-              >
-                {loading ? (
-                  <Spinner animation="border" size="sm" />
-                ) : (
-                  <BsCheck size={20} />
-                )}
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => setIsEditing(false)}
-                className="text-danger"
-                title="Cancel"
-              >
-                <BsX size={20} />
-              </Button>
+            {/* Action Buttons */}
+            <div className="d-flex justify-content-between align-items-center mt-2">
+              <small className="text-muted" style={{ fontSize: "0.9rem" }}>
+                Adjust your post as needed.
+              </small>
+              <div className="d-flex">
+                {/* Save Button */}
+                <OverlayTrigger
+                  placement="bottom"
+                  overlay={<Tooltip>Save Post</Tooltip>}
+                >
+                  <Button
+                    type="submit"
+                    variant="outline-success"
+                    className="d-flex align-items-center justify-content-center"
+                    disabled={loading || uploading}
+                    style={{
+                      borderRadius: "50%",
+                      padding: "6px",
+                      width: "30px",
+                      height: "30px",
+                      marginRight: "10px",
+                    }}
+                  >
+                    {loading ? (
+                      <Spinner animation="border" size="sm" />
+                    ) : (
+                      <BsCheck size={20} />
+                    )}
+                  </Button>
+                </OverlayTrigger>
+
+                {/* Cancel Button */}
+                <OverlayTrigger
+                  placement="bottom"
+                  overlay={<Tooltip>Cancel</Tooltip>}
+                >
+                  <Button
+                    type="button"
+                    variant="outline-danger"
+                    onClick={() => setIsEditing(false)}
+                    className="d-flex align-items-center justify-content-center"
+                    style={{
+                      borderRadius: "50%",
+                      padding: "6px",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    <BsX size={20} />
+                  </Button>
+                </OverlayTrigger>
+              </div>
             </div>
           </Form>
         ) : (
