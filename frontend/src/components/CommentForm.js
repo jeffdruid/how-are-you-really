@@ -146,92 +146,133 @@ const CommentForm = ({
 
       <Form
         onSubmit={(e) => e.preventDefault()}
-        className={`position-relative ${
-          parentType === "reply" ? "ps-2 " : ""
-        }`}
+        className="position-relative p-3 rounded"
+        style={{
+          backgroundColor: "#ffffff",
+          border: "1px solid #e0e0e0",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          borderRadius: "10px",
+        }}
       >
-        {/* Anonymous Toggle Icon with Tooltip */}
-        <OverlayTrigger
-          placement="top"
-          overlay={
-            <Tooltip>
-              {isAnonymous ? "Posting as Anonymous" : "Post Anonymously"}
-            </Tooltip>
-          }
-        >
-          <span
-            onClick={() => setIsAnonymous(!isAnonymous)}
-            className="position-absolute top-0 end-0 translate-middle-x me-0 mt-2"
-            style={{ cursor: "pointer", color: isAnonymous ? "blue" : "gray" }}
-          >
-            <BsFillPersonFill size={20} />
-          </span>
-        </OverlayTrigger>
-        <Form.Control
-          as="textarea"
-          rows={1}
-          value={content}
-          ref={textareaRef}
-          onInput={handleInput}
-          maxLength={maxChars}
-          placeholder={`Add a ${parentType}...`}
-          className={`pr-5 ${parentType === "reply" ? "border" : "border"}`}
+        {/* Input Container */}
+        <div
+          className="position-relative"
           style={{
-            resize: "none", // Disable manual resizing
-            overflow: "hidden", // Prevent scrollbar
-            borderColor: parentType === "reply" ? "#cccccc" : "inherit",
-            paddingRight: "3rem",
+            display: "flex",
+            alignItems: "center",
+            backgroundColor: "#f8f9fa",
+            border: "1px solid #ced4da",
+            borderRadius: "8px",
+            paddingRight: "50px", // Space for anonymous button
+            paddingLeft: "10px", // Space for text
+            paddingTop: "5px",
+            paddingBottom: "5px",
           }}
-        />
-        <div className="d-flex justify-content-between ps-2 mt-1">
-          <small className="text-muted">
-            {maxChars - content.length} characters remaining
-          </small>
+        >
+          {/* Anonymous Toggle Icon */}
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip>
+                {isAnonymous ? "Posting as Anonymous" : "Post Anonymously"}
+              </Tooltip>
+            }
+          >
+            <span
+              onClick={() => setIsAnonymous(!isAnonymous)}
+              className="position-absolute end-0 me-3"
+              style={{
+                cursor: "pointer",
+                color: isAnonymous ? "#0d6efd" : "#6c757d",
+                fontSize: "1.4rem",
+              }}
+            >
+              <BsFillPersonFill />
+            </span>
+          </OverlayTrigger>
+
+          {/* Text Area with Expanding Behavior */}
+          <Form.Control
+            as="textarea"
+            rows={1}
+            value={content}
+            ref={textareaRef}
+            onInput={handleInput}
+            maxLength={maxChars}
+            placeholder={`Add a ${parentType}...`}
+            className="border-0"
+            style={{
+              resize: "none",
+              overflow: "hidden",
+              fontSize: "1rem",
+              lineHeight: "1.5",
+              outline: "none",
+              backgroundColor: "transparent",
+            }}
+          />
         </div>
 
-        <div
-          className="d-flex justify-content-end mt-2"
-          style={{
-            borderBottom: "1px solid #ced4da", // Add a top border to separate buttons
-            padding: "8px 0 0", // Padding for separation
-          }}
-        >
-          {/* Save Button */}
-          <OverlayTrigger
-            placement="bottom"
-            overlay={<Tooltip>Save {parentType}</Tooltip>}
+        {/* Character Count and Buttons */}
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <small
+            className="text-muted"
+            style={{
+              fontSize: "0.9rem",
+              flexGrow: 1,
+            }}
           >
-            <Button
-              type="button"
-              variant="link"
-              onClick={handleAddContent}
-              className="text-success"
-              disabled={loading}
-              style={{ padding: "0 0.5rem" }}
-            >
-              {loading ? (
-                <Spinner animation="border" size="sm" />
-              ) : (
-                <BsCheck size={20} />
-              )}
-            </Button>
-          </OverlayTrigger>
+            {maxChars - content.length} characters remaining
+          </small>
 
-          {/* Cancel Button */}
-          <OverlayTrigger
-            placement="bottom"
-            overlay={<Tooltip>Cancel</Tooltip>}
-          >
-            <Button
-              type="button"
-              variant="link"
-              onClick={handleCancel}
-              className="text-danger"
-              style={{ padding: "0 0.5rem" }}
+          <div className="d-flex">
+            {/* Save Button */}
+            <OverlayTrigger
+              placement="bottom"
+              overlay={<Tooltip>Save {parentType}</Tooltip>}
             >
-              <BsX size={20} />
-            </Button>
-          </OverlayTrigger>
+              <Button
+                type="button"
+                variant="outline-success"
+                onClick={handleAddContent}
+                className="d-flex align-items-center justify-content-center"
+                disabled={loading}
+                style={{
+                  borderRadius: "50%",
+                  padding: "6px",
+                  width: "30px",
+                  height: "30px",
+                  marginRight: "10px",
+                }}
+              >
+                {loading ? (
+                  <Spinner animation="border" size="sm" />
+                ) : (
+                  <BsCheck size={20} />
+                )}
+              </Button>
+            </OverlayTrigger>
+
+            {/* Cancel Button */}
+            <OverlayTrigger
+              placement="bottom"
+              overlay={<Tooltip>Cancel</Tooltip>}
+            >
+              <Button
+                type="button"
+                variant="outline-danger"
+                onClick={handleCancel}
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  borderRadius: "50%",
+                  padding: "6px",
+                  width: "30px",
+                  height: "30px",
+                }}
+              >
+                <BsX size={20} />
+              </Button>
+            </OverlayTrigger>
+          </div>
         </div>
       </Form>
     </div>
