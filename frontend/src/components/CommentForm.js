@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { firestore } from "../firebase";
 import {
   collection,
@@ -33,9 +33,12 @@ const CommentForm = ({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { checkModeration } = useModeration();
+  const textareaRef = useRef(null);
 
   const [showResources, setShowResources] = useState(false);
   const [flaggedType, setFlaggedType] = useState(null);
+
+  const maxChars = 200; // Set the maximum character limit
 
   const handleAddContent = async () => {
     if (!content.trim()) {
@@ -117,6 +120,17 @@ const CommentForm = ({
   const handleCancel = () => {
     setContent(""); // Clear the input
     setError(""); // Clear any existing error
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset height
+    }
+  };
+
+  const handleInput = (e) => {
+    setContent(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Adjust height to fit content
+    }
   };
 
   return (
@@ -136,20 +150,6 @@ const CommentForm = ({
           parentType === "reply" ? "ps-2 " : ""
         }`}
       >
-        <Form.Control
-          as="textarea"
-          rows={2}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={`Add a ${parentType}...`}
-          className={`pr-5 ${
-            parentType === "reply" ? "border" : "border"
-          }`}
-          style={{
-            borderColor: parentType === "reply" ? "#cccccc" : "inherit",
-          }}
-        />
-
         {/* Anonymous Toggle Icon with Tooltip */}
         <OverlayTrigger
           placement="top"
@@ -161,14 +161,41 @@ const CommentForm = ({
         >
           <span
             onClick={() => setIsAnonymous(!isAnonymous)}
-            className="position-absolute top-50 end-0 translate-middle-y me-2"
+            className="position-absolute top-0 end-0 translate-middle-x me-0 mt-2"
             style={{ cursor: "pointer", color: isAnonymous ? "blue" : "gray" }}
           >
             <BsFillPersonFill size={20} />
           </span>
         </OverlayTrigger>
+        <Form.Control
+          as="textarea"
+          rows={1}
+          value={content}
+          ref={textareaRef}
+          onInput={handleInput}
+          maxLength={maxChars}
+          placeholder={`Add a ${parentType}...`}
+          className={`pr-5 ${parentType === "reply" ? "border" : "border"}`}
+          style={{
+            resize: "none", // Disable manual resizing
+            overflow: "hidden", // Prevent scrollbar
+            borderColor: parentType === "reply" ? "#cccccc" : "inherit",
+            paddingRight: "3rem",
+          }}
+        />
+        <div className="d-flex justify-content-between ps-2 mt-1">
+          <small className="text-muted">
+            {maxChars - content.length} characters remaining
+          </small>
+        </div>
 
-        <div className="d-flex justify-content-end mt-2">
+        <div
+          className="d-flex justify-content-end mt-2"
+          style={{
+            borderBottom: "1px solid #ced4da", // Add a top border to separate buttons
+            padding: "8px 0 0", // Padding for separation
+          }}
+        >
           {/* Save Button */}
           <OverlayTrigger
             placement="bottom"
@@ -191,7 +218,10 @@ const CommentForm = ({
           </OverlayTrigger>
 
           {/* Cancel Button */}
-          <OverlayTrigger placement="bottom" overlay={<Tooltip>Cancel</Tooltip>}>
+          <OverlayTrigger
+            placement="bottom"
+            overlay={<Tooltip>Cancel</Tooltip>}
+          >
             <Button
               type="button"
               variant="link"
