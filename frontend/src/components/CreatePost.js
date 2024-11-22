@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { firestore, storage } from "../firebase";
 import {
   collection,
@@ -24,7 +24,7 @@ import ImageUploader from "./ImageUploader";
 import useModeration from "../hooks/useModeration";
 import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
-import { FaRegPlusSquare } from "react-icons/fa"; // Import square plus icon
+import { FaEdit } from "react-icons/fa";
 
 const CreatePost = ({ onFlaggedContent }) => {
   const { currentUser } = useAuth();
@@ -45,6 +45,9 @@ const CreatePost = ({ onFlaggedContent }) => {
   // Modal state for flagged content
   const [showResources, setShowResources] = useState(false);
   const [flaggedType, setFlaggedType] = useState(null);
+
+  const maxChars = 300; // Maximum character limit for post content
+  const textareaRef = useRef(null); // Ref for the textarea
 
   // Fetch username from Firestore
   useEffect(() => {
@@ -170,6 +173,14 @@ const CreatePost = ({ onFlaggedContent }) => {
     }
   };
 
+  const handleInput = (e) => {
+    setContent(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Adjust height
+    }
+  };
+
   return (
     <>
       {/* Supportive Message */}
@@ -190,18 +201,29 @@ const CreatePost = ({ onFlaggedContent }) => {
           className="mb-3 d-flex align-items-center"
           style={{
             width: "auto",
-            backgroundColor: "#717171",
+            backgroundColor: "black",
+            padding: "0.5rem 1rem",
             color: "white",
             border: "none",
+            borderRadius: "2rem",
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
             margin: "auto",
+            transition: "background-color 0.3s, color 0.3s", // Add transition for smooth hover effect
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "white";
+            e.currentTarget.style.color = "black";
+            e.currentTarget.style.border = "1px solid black";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "black";
+            e.currentTarget.style.color = "white";
           }}
         >
           {/* Add this btn on small screen devices */}
-          <FaRegPlusSquare size={24} />
-          <span>Create Post</span>
+          <FaEdit size={24} />
         </Button>
       </OverlayTrigger>
 
@@ -220,12 +242,23 @@ const CreatePost = ({ onFlaggedContent }) => {
             <Form.Group className="mb-3" controlId="postContent">
               <Form.Control
                 as="textarea"
+                ref={textareaRef}
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={handleInput}
                 placeholder="What's on your mind?"
+                maxLength={maxChars}
                 rows={4}
+                style={{
+                  resize: "none",
+                  overflow: "hidden",
+                  fontSize: "1rem",
+                  lineHeight: "1.5",
+                }}
                 required
               />
+              <div className="text-muted text-end">
+                {maxChars - content.length} characters remaining
+              </div>
             </Form.Group>
 
             {/* Image Upload Component */}
