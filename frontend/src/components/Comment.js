@@ -20,6 +20,8 @@ import {
   Alert,
   Image,
   Dropdown,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { fetchProfilePicUrl } from "../utils/fetchProfilePic";
@@ -178,47 +180,121 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
       />
 
       {isEditing ? (
-        <Form onSubmit={handleEdit} className="d-flex align-items-center">
-          <Form.Group
-            controlId={`editComment-${comment.id}`}
-            className="flex-grow-1 me-2"
+        <Form
+          onSubmit={handleEdit}
+          className="position-relative p-3 rounded"
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #e0e0e0",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            borderRadius: "10px",
+          }}
+        >
+          <div
+            className="position-relative"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#f8f9fa",
+              border: "1px solid #ced4da",
+              borderRadius: "8px",
+              paddingRight: "50px", // Space for save/cancel buttons
+              paddingLeft: "10px",
+              paddingTop: "5px",
+              paddingBottom: "5px",
+            }}
           >
             <Form.Control
               as="textarea"
               value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 200) {
+                  setEditedContent(e.target.value);
+                }
+              }}
+              onInput={(e) => {
+                e.target.style.height = "auto";
+                e.target.style.height = `${e.target.scrollHeight}px`;
+              }}
+              placeholder="Edit your comment..."
+              maxLength={200}
               rows={1}
-              className="text-sm border-1 p-2 rounded"
-              required
+              className="border-0"
+              style={{
+                resize: "none",
+                overflow: "hidden",
+                fontSize: "1rem",
+                lineHeight: "1.5",
+                outline: "none",
+                backgroundColor: "transparent",
+              }}
             />
-          </Form.Group>
-          <Button
-            type="submit"
-            variant="link"
-            className="text-success"
-            disabled={loading}
-            style={{ padding: "0 0.5rem" }}
-            title="Save"
-          >
-            {loading ? (
-              <Spinner animation="border" size="sm" />
-            ) : (
-              <BsCheck size={20} />
-            )}
-          </Button>
-          <Button
-            variant="link"
-            onClick={() => setIsEditing(false)}
-            className="text-danger"
-            style={{ padding: "0 0.5rem" }}
-            title="Cancel"
-          >
-            <BsX size={20} />
-          </Button>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mt-2">
+            <small
+              className="text-muted"
+              style={{
+                fontSize: "0.9rem",
+                flexGrow: 1,
+              }}
+            >
+              {200 - editedContent.length} characters remaining
+            </small>
+
+            <div className="d-flex">
+              {/* Save Button */}
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>Save Comment</Tooltip>}
+              >
+                <Button
+                  type="submit"
+                  variant="outline-success"
+                  className="d-flex align-items-center justify-content-center"
+                  disabled={loading}
+                  style={{
+                    borderRadius: "50%",
+                    padding: "6px",
+                    width: "30px",
+                    height: "30px",
+                    marginRight: "10px",
+                  }}
+                >
+                  {loading ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    <BsCheck size={20} />
+                  )}
+                </Button>
+              </OverlayTrigger>
+
+              {/* Cancel Button */}
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>Cancel</Tooltip>}
+              >
+                <Button
+                  type="button"
+                  variant="outline-danger"
+                  onClick={() => setIsEditing(false)}
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    borderRadius: "50%",
+                    padding: "6px",
+                    width: "30px",
+                    height: "30px",
+                  }}
+                >
+                  <BsX size={20} />
+                </Button>
+              </OverlayTrigger>
+            </div>
+          </div>
         </Form>
       ) : (
         <>
-          <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap">
+          <div className="d-flex justify-content-between align-items-start p-2 mb-2 flex-wrap">
             <div className="d-flex align-items-center flex-wrap">
               <Link
                 to={`/users/${comment.userId}`}
@@ -258,7 +334,7 @@ const Comment = ({ comment, postId, onFlaggedContent }) => {
             )}
           </div>
 
-          <p className="mb-2 text-wrap">{comment.content}</p>
+          <p className="mb-2 text-wrap p-2">{comment.content}</p>
 
           <div className="d-flex justify-content-end">
             <LikeButton
