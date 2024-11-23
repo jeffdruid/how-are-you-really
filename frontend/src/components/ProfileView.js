@@ -25,6 +25,7 @@ import UserPosts from "./UserPosts";
 import ImageUploader from "./ImageUploader";
 import ImageModal from "./ImageModal";
 import { FaUserFriends, FaChartLine } from "react-icons/fa";
+import { generateSearchableWords } from "../utils/textUtils";
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -83,9 +84,16 @@ const ProfileView = () => {
       return;
     }
 
+    const usernameWords = generateSearchableWords(username);
+
     try {
       const userDocRef = doc(firestore, "Users", currentUser.uid);
-      const updatedData = { username, bio, updated_at: serverTimestamp() };
+      const updatedData = {
+        username,
+        username_words: usernameWords, // Add normalized keywords
+        bio,
+        updated_at: serverTimestamp(),
+      };
 
       if (image) {
         setUploading(true);
@@ -111,6 +119,8 @@ const ProfileView = () => {
       }
 
       await updateDoc(userDocRef, updatedData);
+
+      console.log("Profile updated successfully with words:", usernameWords);
       setMessage("Profile updated successfully!");
       setImage(null);
     } catch (err) {
