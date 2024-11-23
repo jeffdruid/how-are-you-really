@@ -21,30 +21,26 @@ const VerifyEmail = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      navigate("/login");
-    } catch (err) {
-      setError("Failed to log out. Please try again.");
-      console.error("Logout error:", err);
-    }
+  const handleSkip = () => {
+    navigate("/");
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="mt-5 p-4 border"
+      style={{ background: "white" }}
+      >
       <h2 className="text-center">Email Verification</h2>
       {message && <Alert variant="success">{message}</Alert>}
       {error && <Alert variant="danger">{error}</Alert>}
       <p className="text-center">
-        Please verify your email to access all features of the application.
+        Verifying your email helps us keep your account secure.
       </p>
       <div className="d-flex justify-content-center gap-3">
         <Button variant="primary" onClick={handleResendVerification}>
           Resend Verification Email
         </Button>
-        <Button variant="danger" onClick={handleLogout}>
-          Logout
+        <Button variant="secondary" onClick={handleSkip}>
+          Skip for Now
         </Button>
       </div>
     </Container>

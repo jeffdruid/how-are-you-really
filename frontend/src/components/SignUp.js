@@ -9,7 +9,7 @@ import { validateEmail } from "../utils/validateEmail";
 import { validatePassword } from "../utils/validatePassword";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
 import { Form, Button, Alert, Container, Card } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import styles from "../styles/AuthPages.module.css";
 
 const SignUp = React.memo(() => {
@@ -20,6 +20,8 @@ const SignUp = React.memo(() => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [message, setMessage] = useState("");
+
+  const navigate = useNavigate(); // Initialize navigate hook
 
   // Handle sign-up functionality
   const handleSignUp = useCallback(
@@ -55,7 +57,7 @@ const SignUp = React.memo(() => {
           password,
         );
         const user = userCredential.user;
-        await sendEmailVerification(user);
+        sendEmailVerification(user); // Send verification email (non-blocking)
 
         // Create a user document in Firestore
         await setDoc(doc(firestore, "Users", user.uid), {
@@ -68,14 +70,17 @@ const SignUp = React.memo(() => {
         });
 
         setMessage(
-          "Registration successful! Please check your email to verify your account.",
+          "Registration successful! A verification email has been sent to your inbox. You can continue using the app.",
         );
         setError("");
+
+        // Redirect to home page
+        navigate("/");
       } catch (err) {
         setError(firebaseErrorMessages(err.code));
       }
     },
-    [email, password, username],
+    [email, password, username, navigate], // Include navigate in dependencies
   );
 
   return (

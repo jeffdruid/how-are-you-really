@@ -3,11 +3,17 @@ import { useAuth } from "../contexts/AuthContext";
 import PostFeed from "./PostFeed";
 import CreatePost from "./CreatePost";
 import SearchBar from "./SearchBar";
-import { Container, Card, Alert } from "react-bootstrap";
+import { Container, Card, Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import styles from "../styles/Home.module.css";
 
 const Home = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate(); // Initialize navigate hook
+
+  const handleVerifyEmailRedirect = () => {
+    navigate("/verify-email"); // Redirect to verify-email page
+  };
 
   return (
     <Container className={`mt-4 ${styles.homeContainer}`}>
@@ -24,8 +30,16 @@ const Home = () => {
           {/* Display verification status alert if the user is not verified */}
           {!currentUser.emailVerified && (
             <Alert variant="warning" className="mt-3">
-              Your email is not verified. Please check your inbox for a
-              verification email.
+              <div>
+                Your email is not verified. Please check your inbox.{" "}
+                <Button
+                  variant="link"
+                  onClick={handleVerifyEmailRedirect}
+                  className="p-0"
+                >
+                  Click here to resend verification email
+                </Button>
+              </div>
             </Alert>
           )}
         </Card.Body>
