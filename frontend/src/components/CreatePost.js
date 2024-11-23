@@ -25,6 +25,8 @@ import useModeration from "../hooks/useModeration";
 import ResourceModal from "./ResourceModal";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 import { FaEdit } from "react-icons/fa";
+import { generateSearchableWords } from "../utils/textUtils";
+
 
 const CreatePost = ({ onFlaggedContent }) => {
   const { currentUser } = useAuth();
@@ -80,6 +82,7 @@ const CreatePost = ({ onFlaggedContent }) => {
       setLoading(false);
       return;
     }
+    const contentWords = generateSearchableWords(content);
 
     let isVisible = true;
     const newPostRef = doc(collection(firestore, "Posts")); // Generate a new post reference
@@ -91,6 +94,7 @@ const CreatePost = ({ onFlaggedContent }) => {
         username: isAnonymous ? "Anonymous" : username,
         content,
         content_lower: content.toLowerCase(),
+        content_words: contentWords, // Save words as an array
         mood,
         isAnonymous,
         likeCount: 0,
@@ -155,6 +159,7 @@ const CreatePost = ({ onFlaggedContent }) => {
           currentUser.accessToken,
         );
       }
+      console.log("Post created successfully.", contentWords);
 
       // Reset form fields
       setContent("");

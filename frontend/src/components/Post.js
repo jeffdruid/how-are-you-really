@@ -36,6 +36,7 @@ import ImageModal from "./ImageModal";
 import useModeration from "../hooks/useModeration";
 import { sendFlaggedContentToDRF } from "../utils/sendFlaggedContent";
 import { BsThreeDotsVertical, BsChat, BsCheck, BsX } from "react-icons/bs";
+import { generateSearchableWords } from "../utils/textUtils";
 
 const moodEmojis = {
   happy: "😊",
@@ -114,18 +115,22 @@ const Post = ({ post, onFlaggedContent }) => {
     }
 
     const postRef = doc(firestore, "Posts", post.id);
+    const contentWords = generateSearchableWords(editedContent); // Generate searchable words
     let isVisible = true;
 
     try {
-      // Update post content and moderation status
+      // Update post content, searchable words, and moderation status
       await updateDoc(postRef, {
         content: editedContent,
         content_lower: editedContent.toLowerCase(),
+        content_words: contentWords, // Save words as an array
         mood: editedMood,
         isAnonymous: editedAnonymous,
         updated_at: serverTimestamp(),
         is_visible: isVisible,
       });
+
+      console.log("Post updated successfully.", contentWords);
 
       // Image upload (if edited)
       if (images) {
@@ -183,10 +188,12 @@ const Post = ({ post, onFlaggedContent }) => {
     } catch (err) {
       const friendlyMessage = firebaseErrorMessages(err.code);
       setError(friendlyMessage || "An unexpected error occurred.");
+      console.error("Error updating post:", err);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Handle deleting a post
   const handleDelete = async () => {

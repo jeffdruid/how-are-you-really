@@ -10,7 +10,8 @@ import {
   ListGroup,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { FaSearch } from "react-icons/fa"; // Import search icon from react-icons
+import { FaSearch } from "react-icons/fa";
+import { generateSearchableWords } from "../utils/textUtils";
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,34 +28,49 @@ const SearchBar = () => {
     setError("");
     setShowResultsModal(true);
 
+    const normalizedSearchTerm = searchTerm
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ""); // Remove punctuation
+    const searchWords = generateSearchableWords(normalizedSearchTerm);
+
+    console.log("Search initiated with term:", searchTerm);
+    console.log("Converted search term to lowercase:", normalizedSearchTerm);
+    console.log("Search words:", searchWords);
+
     try {
-      // Search for users by username
+      console.log("Searching for users...");
       const usersRef = collection(firestore, "Users");
+      // const userQuery = query(
+      //   usersRef,
+      //   where("username_lower", ">=", normalizedSearchTerm),
+      //   where("username_lower", "<=", normalizedSearchTerm + "\uf8ff"),
+      // );
       const userQuery = query(
         usersRef,
-        where("username", ">=", searchTerm),
-        where("username", "<=", searchTerm + "\uf8ff"),
+        where("username_words", "array-contains", normalizedSearchTerm), // Match normalized term
       );
+
       const userSnapshot = await getDocs(userQuery);
       const foundUsers = userSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      console.log("Users found:", foundUsers);
       setUsers(foundUsers);
 
-      // Search for posts by content and visibility
+      console.log("Searching for posts...");
       const postsRef = collection(firestore, "Posts");
       const postQuery = query(
         postsRef,
-        where("content", ">=", searchTerm),
-        where("content", "<=", searchTerm + "\uf8ff"),
-        where("is_visible", "==", true), // Only fetch visible posts
+        where("content_words", "array-contains-any", searchWords),
+        where("is_visible", "==", true),
       );
       const postSnapshot = await getDocs(postQuery);
       const foundPosts = postSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      console.log("Posts found:", foundPosts);
       setPosts(foundPosts);
     } catch (err) {
       console.error("Error fetching search results:", err);
@@ -64,8 +80,10 @@ const SearchBar = () => {
     }
   };
 
+
   // Close the modal and reset results
   const handleCloseModal = () => {
+    console.log("Closing results modal and resetting state.");
     setShowResultsModal(false);
     setUsers([]);
     setPosts([]);
@@ -81,7 +99,10 @@ const SearchBar = () => {
             type="text"
             placeholder="Search for users or posts"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              console.log("Search term updated:", e.target.value);
+            }}
           />
         </Form.Group>
         <Button
@@ -89,8 +110,7 @@ const SearchBar = () => {
           variant="primary"
           disabled={loading || searchTerm.trim() === ""}
         >
-          {loading ? <Spinner animation="border" size="sm" /> : <FaSearch />}{" "}
-          {/* Replaced text with icon */}
+          {loading ? <Spinner animation="border" size="sm" /> : <FaSearch />}
         </Button>
       </Form>
 
@@ -101,7 +121,7 @@ const SearchBar = () => {
         </Alert>
       )}
 
-      {/* Results Modal with fade animation */}
+      {/* Results Modal */}
       <Modal
         show={showResultsModal}
         onHide={handleCloseModal}
