@@ -26,6 +26,9 @@ import ImageUploader from "./ImageUploader";
 import ImageModal from "./ImageModal";
 import { FaUserFriends, FaChartLine } from "react-icons/fa";
 import { generateSearchableWords } from "../utils/textUtils";
+import { updateUsernameEverywhere } from "../utils/updateUsernameUtils";
+import ProgressModal from "./ProgressModal";
+
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -42,6 +45,9 @@ const ProfileView = () => {
   const [uploading, setUploading] = useState(false);
   const [modalShow, setModalShow] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState("");
+
+  const [progress, setProgress] = useState(0);
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -71,16 +77,20 @@ const ProfileView = () => {
     setLoading(true);
     setError("");
     setMessage("");
+    setShowProgressModal(true); // Show progress modal
+    setProgress(0);
 
     if (username.trim() === "") {
       setError("Username cannot be empty.");
       setLoading(false);
+      setShowProgressModal(false);
       return;
     }
 
     if (bio.length > 300) {
       setError("Bio cannot exceed 300 characters.");
       setLoading(false);
+      setShowProgressModal(false);
       return;
     }
 
@@ -118,15 +128,19 @@ const ProfileView = () => {
         setUploading(false);
       }
 
+      // Update user profile in Users collection
       await updateDoc(userDocRef, updatedData);
 
-      console.log("Profile updated successfully with words:", usernameWords);
+      // Update username across posts, comments, and replies
+      await updateUsernameEverywhere(currentUser.uid, username, setProgress);
+
       setMessage("Profile updated successfully!");
       setImage(null);
     } catch (err) {
       setError(firebaseErrorMessages(err.code));
     } finally {
       setLoading(false);
+      setShowProgressModal(false); // Hide progress modal when done
     }
   };
 
@@ -151,6 +165,11 @@ const ProfileView = () => {
             {message}
           </Alert>
         )}
+        <ProgressModal
+          show={showProgressModal}
+          progress={progress}
+          message="Updating username everywhere..."
+        />
 
         <Row className="align-items-center mb-4">
           <Col xs={12} md={4} className="text-center mb-3 mb-md-0">
