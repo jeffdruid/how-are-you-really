@@ -1,16 +1,8 @@
 import React, { useState } from "react";
 import { auth, firestore, storage } from "../firebase";
-import { deleteUser } from "firebase/auth";
-import {
-  doc,
-  deleteDoc,
-  query,
-  collection,
-  where,
-  getDocs,
-  writeBatch,
-} from "firebase/firestore";
-import { ref, deleteObject } from "firebase/storage";
+import { updateProfile, deleteUser } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
+import { ref, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 import { Form, Button, Alert } from "react-bootstrap";
 
@@ -28,66 +20,45 @@ const DeleteAccount = () => {
 
     const user = auth.currentUser;
 
-    if (user) {
-      setLoading(true);
-      setError("");
-
-      try {
-        // Initialize batch for Firestore deletions
-        const batch = writeBatch(firestore);
-
-        // 1. Delete user's posts
-        const postsQuery = query(
-          collection(firestore, "Posts"),
-          where("userId", "==", user.uid),
-        );
-        const postsSnapshot = await getDocs(postsQuery);
-        postsSnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-
-        // 2. Delete user's comments
-        const commentsQuery = query(
-          collection(firestore, "Comments"),
-          where("userId", "==", user.uid),
-        );
-        const commentsSnapshot = await getDocs(commentsQuery);
-        commentsSnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-
-        // 3. Commit Firestore batch deletions
-        await batch.commit();
-
-        // 4. Delete user's profile picture from Storage
-        const profilePicRef = ref(storage, `profilePictures/${user.uid}`);
-        await deleteObject(profilePicRef).catch((err) => {
-          if (err.code !== "storage/object-not-found") {
-            throw err;
-          }
-        });
-
-        // 5. Delete user document from Firestore
-        const userDocRef = doc(firestore, "Users", user.uid);
-        await deleteDoc(userDocRef);
-
-        // 6. Delete user from Firebase Auth
-        await deleteUser(user)
-          .then(() => {
-            navigate("/signup"); // Redirect to sign-up or landing page
-          })
-          .catch((err) => {
-            setError("Failed to delete account. Please try again.");
-            console.error("Error deleting user:", err);
-          });
-      } catch (err) {
-        setError("Failed to delete account. Please try again.");
-        console.error("Account deletion error:", err);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+    if (!user) {
       setError("No user is currently logged in.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Step 1: Set profile to default
+      const defaultProfilePic = await getDownloadURL(
+        ref(storage, "default_profile.jpg"),
+      );
+
+      await updateDoc(doc(firestore, "Users", user.uid), {
+        username: "Deleted Profile",
+        profilePicUrl: defaultProfilePic,
+        email: null, // Remove email
+        updated_at: new Date(),
+      });
+
+      await updateProfile(user, {
+        displayName: "Deleted Profile",
+        photoURL: defaultProfilePic,
+      });
+
+      // Step 2: Logout user
+      await auth.signOut();
+
+      // Step 3: Delete user from Firebase Authentication
+      await deleteUser(user);
+
+      // Step 4: Redirect to GoodbyePage
+      navigate("/goodbye");
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      setError("Failed to delete account. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,10 +67,11 @@ const DeleteAccount = () => {
       <h3>Delete Your Account</h3>
       {error && <Alert variant="danger">{error}</Alert>}
       <p>
-        This action is irreversible. All your data will be permanently deleted.
-        Please type <strong>DELETE</strong> to confirm.
+        This action will anonymize your profile. All your posts and comments
+        will remain but will be attributed to a "Deleted Profile." Please type{" "}
+        <strong>DELETE</strong> to confirm.
       </p>
-      <Form>
+      <Form onSubmit={(e) => e.preventDefault()}>
         <Form.Group controlId="confirmDelete">
           <Form.Control
             type="text"
@@ -114,7 +86,7 @@ const DeleteAccount = () => {
           onClick={handleDeleteAccount}
           disabled={loading}
         >
-          {loading ? "Deleting..." : "Delete Account"}
+          {loading ? "Processing..." : "Delete Account"}
         </Button>
       </Form>
     </div>
