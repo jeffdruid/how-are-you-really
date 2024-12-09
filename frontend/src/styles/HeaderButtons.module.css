@@ -1,16 +1,37 @@
 .headerButtons {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
   background-color: #ffffff00;
+  backdrop-filter: blur(2px);
 }
 
 .button {
-  margin-left: 10px;
   transition: transform 0.3s ease;
 }
 
 .button:hover {
   transform: scale(1.1);
+}
+
+/* Align "Back" button to the left */
+.backButton {
+  margin-right: 10px;
+}
+
+/* Center SearchBar and set it to 85% width */
+.searchBarContainer {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.searchBarContainer > * {
+  width: 85%;
+}
+
+/* Align "Dark Mode" button to the right */
+.darkModeButton {
+  margin-left: 10px;
 }

@@ -1,11 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button, Container, Row, Col, Card } from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
 import styles from "../styles/LandingPage.module.css";
 
 const LandingPage = () => {
+  const { currentUser } = useAuth();
+
   return (
     <div className={styles.landingWrapper}>
+      {/* Hero Section */}
       <header className={styles.landingHeader}>
         <Container>
           <Row className="align-items-center text-center">
@@ -17,20 +21,46 @@ const LandingPage = () => {
                 A safe space to express, connect, and reflect on your journey.
               </p>
               <div className={styles.buttonGroup}>
-                <Link to="/signup">
-                  <Button className={styles.ctaButton}>Get Started</Button>
-                </Link>
-                <Link to="/login">
-                  <Button variant="outline-light" className={styles.ctaButton}>
-                    Login
-                  </Button>
-                </Link>
+                {currentUser ? (
+                  <>
+                    <p className={styles.welcomeUser}>
+                      Welcome back,{" "}
+                      <strong>{currentUser.displayName || "User"}</strong>!
+                    </p>
+                    <Link to="/home">
+                      <Button className={styles.ctaButton}>Home</Button>
+                    </Link>
+                    <Link to="/profile">
+                      <Button
+                        variant="outline-light"
+                        className={styles.ctaButton}
+                      >
+                        Profile
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/signup">
+                      <Button className={styles.ctaButton}>Get Started</Button>
+                    </Link>
+                    <Link to="/login">
+                      <Button
+                        variant="outline-light"
+                        className={styles.ctaButton}
+                      >
+                        Login
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </Col>
           </Row>
         </Container>
       </header>
 
+      {/* Feature Section */}
       <main className={styles.featureSection}>
         <Container>
           <h2 className="text-center mb-5">Why Join Us?</h2>

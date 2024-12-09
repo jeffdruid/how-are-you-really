@@ -1,14 +1,31 @@
-/* Hero Section */
+/* General Styles */
 .landingWrapper {
   font-family: "Inter", sans-serif;
   color: #333;
+  height: 100vh; /* Full height for the hero section */
+  overflow-y: scroll; /* Enable scrolling */
+  scroll-snap-type: y mandatory; /* Enable scroll-snap behavior */
 }
 
+.landingWrapper::-webkit-scrollbar {
+  display: none; /* Hide scrollbar in WebKit browsers */
+}
+
+.landingWrapper {
+  -ms-overflow-style: none; /* Hide scrollbar in Internet Explorer */
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Hero Section */
 .landingHeader {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
-  padding: 100px 0;
+  height: 100vh; /* Full height for the hero section */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
+  scroll-snap-align: start; /* Snap to start on scroll */
 }
 
 .heading {
@@ -27,10 +44,16 @@
   padding: 10px 20px;
   font-size: 1.1rem;
 }
+
 /* Feature Section */
 .featureSection {
-  padding: 60px 0;
+  height: 100vh; /* Full height for the feature section */
   background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  scroll-snap-align: start; /* Snap to start on scroll */
+  padding: 60px 0;
 }
 
 .featureTitle {
@@ -53,10 +76,10 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
   margin-bottom: 30px;
-  height: 100%; 
+  height: 100%;
   display: flex;
-  flex-direction: column; 
-  justify-content: space-between; 
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .featureCard:hover {
@@ -69,4 +92,9 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
 }
