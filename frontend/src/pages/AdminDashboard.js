@@ -372,6 +372,7 @@ const AdminDashboard = () => {
                           <Button
                             variant="outline-secondary"
                             size="sm"
+                            className="me-1"
                             onClick={() => handleEditClick(word)}
                           >
                             Edit
