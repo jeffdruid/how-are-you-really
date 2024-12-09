@@ -5,20 +5,21 @@ import HeaderButtons from "./components/HeaderButtons";
 import Footer from "./components/Footer";
 import { Container } from "react-bootstrap";
 import "./App.css";
-import AdminDashboard from "./components/AdminDashboard";
 
-// Lazy load main pages to split bundles and optimize performance
-const Home = lazy(() => import("./components/Home"));
-const SignUp = lazy(() => import("./components/SignUp"));
-const Login = lazy(() => import("./components/Login"));
-const PasswordReset = lazy(() => import("./components/PasswordReset"));
-const VerifyEmail = lazy(() => import("./components/VerifyEmail"));
-const ProfileView = lazy(() => import("./components/ProfileView"));
-const PostDetail = lazy(() => import("./components/PostDetail"));
-const NotificationsList = lazy(() => import("./components/NotificationsList"));
-const MoodAnalytics = lazy(() => import("./components/MoodAnalytics"));
-const PostPerformance = lazy(() => import("./components/PostPerformance"));
-const NotFound = lazy(() => import("./components/NotFound"));
+// Lazy load pages to split bundles and optimize performance
+const Home = lazy(() => import("./pages/Home"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const Login = lazy(() => import("./pages/Login"));
+const PasswordReset = lazy(() => import("./pages/PasswordReset"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const ProfileView = lazy(() => import("./pages/ProfileView"));
+const PostDetail = lazy(() => import("./pages/PostDetail"));
+const NotificationsList = lazy(() => import("./pages/NotificationsList"));
+const MoodAnalytics = lazy(() => import("./pages/MoodAnalytics"));
+const PostPerformance = lazy(() => import("./pages/PostPerformance"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const GoodbyePage = lazy(() => import("./pages/GoodbyePage"));
 const PrivateRoute = lazy(() => import("./components/PrivateRoute"));
 
 const App = () => {
@@ -39,6 +40,8 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/goodbye" element={<GoodbyePage />} />
+
             {/* Private Routes */}
             <Route
               path="/profile"
@@ -48,8 +51,7 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/users/:userId" element={<ProfileView />} />{" "}
-            {/* Viewing other users' profiles */}
+            <Route path="/users/:userId" element={<ProfileView />} />
             <Route path="/posts/:id" element={<PostDetail />} />
             <Route
               path="/mood-analytics"
@@ -75,7 +77,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            {/* Admin Route */}
             <Route
               path="/admin-dashboard"
               element={
@@ -84,7 +85,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            {/* Protected Home Route */}
             <Route
               path="/"
               element={
@@ -93,7 +93,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-            {/* Fallback route for unmatched paths */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
