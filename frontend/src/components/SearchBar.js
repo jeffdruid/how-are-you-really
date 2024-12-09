@@ -93,7 +93,7 @@ const SearchBar = () => {
   return (
     <>
       {/* Search Form */}
-      <Form onSubmit={handleSearch} className="d-flex mb-3">
+      <Form onSubmit={handleSearch} className="d-flex mt-1">
         <Form.Group controlId="searchTerm" className="flex-grow-1 me-2">
           <Form.Control
             type="text"
@@ -107,7 +107,7 @@ const SearchBar = () => {
         </Form.Group>
         <Button
           type="submit"
-          variant="primary"
+          variant="secondary"
           disabled={loading || searchTerm.trim() === ""}
         >
           {loading ? <Spinner animation="border" size="sm" /> : <FaSearch />}
