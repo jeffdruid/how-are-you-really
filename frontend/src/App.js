@@ -7,6 +7,7 @@ import { Container } from "react-bootstrap";
 import "./App.css";
 
 // Lazy load pages to split bundles and optimize performance
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Home = lazy(() => import("./pages/Home"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const Login = lazy(() => import("./pages/Login"));
@@ -36,6 +37,7 @@ const App = () => {
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/password-reset" element={<PasswordReset />} />
