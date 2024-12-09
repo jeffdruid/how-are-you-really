@@ -110,7 +110,7 @@ const NavigationBar = () => {
             {/* Home Link */}
             <Nav.Link
               as={NavLink}
-              to="/"
+              to="/home"
               className={({ isActive }) =>
                 isActive
                   ? `${styles.navLink} ${styles.activeNavLink}`

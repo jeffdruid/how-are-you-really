@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { BsSun, BsMoon, BsArrowLeft } from "react-icons/bs";
+import SearchBar from "../components/SearchBar";
 import styles from "../styles/HeaderButtons.module.css";
 
 const HeaderButtons = () => {
@@ -47,17 +48,20 @@ const HeaderButtons = () => {
     >
       <Button
         variant="outline-secondary"
-        onClick={toggleDarkMode}
-        className={styles.button}
-      >
-        {darkMode ? <BsSun /> : <BsMoon />}
-      </Button>
-      <Button
-        variant="outline-secondary"
         onClick={handleGoBack}
-        className={styles.button}
+        className={`${styles.button} ${styles.backButton}`}
       >
         <BsArrowLeft />
+      </Button>
+      <div className={styles.searchBarContainer}>
+        <SearchBar />
+      </div>
+      <Button
+        variant="outline-secondary"
+        onClick={toggleDarkMode}
+        className={`${styles.button} ${styles.darkModeButton}`}
+      >
+        {darkMode ? <BsSun /> : <BsMoon />}
       </Button>
     </div>
   );
