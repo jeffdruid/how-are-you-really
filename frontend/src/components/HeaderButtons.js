@@ -3,11 +3,13 @@ import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { BsSun, BsMoon, BsArrowLeft } from "react-icons/bs";
 import SearchBar from "../components/SearchBar";
+import { useAuth } from "../contexts/AuthContext"; // Import Auth Context
 import styles from "../styles/HeaderButtons.module.css";
 
 const HeaderButtons = () => {
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Access current user details
 
   // Load dark mode preference
   useEffect(() => {
@@ -53,9 +55,11 @@ const HeaderButtons = () => {
       >
         <BsArrowLeft />
       </Button>
-      <div className={styles.searchBarContainer}>
-        <SearchBar />
-      </div>
+      {currentUser && ( // Render the SearchBar only if the user is logged in
+        <div className={styles.searchBarContainer}>
+          <SearchBar />
+        </div>
+      )}
       <Button
         variant="outline-secondary"
         onClick={toggleDarkMode}
