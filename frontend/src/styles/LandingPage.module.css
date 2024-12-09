@@ -2,7 +2,7 @@
 .landingWrapper {
   font-family: "Inter", sans-serif;
   color: #333;
-  height: 100vh; /* Full height for the hero section */
+  height: 80vh; /* Full height for the hero section */
   overflow-y: scroll; /* Enable scrolling */
   scroll-snap-type: y mandatory; /* Enable scroll-snap behavior */
 }
@@ -20,7 +20,7 @@
 .landingHeader {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
-  height: 100vh; /* Full height for the hero section */
+  height: 80vh; /* Full height for the hero section */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -47,7 +47,7 @@
 
 /* Feature Section */
 .featureSection {
-  height: 100vh; /* Full height for the feature section */
+  height: 80vh; /* Full height for the feature section */
   background: #f9f9f9;
   display: flex;
   flex-direction: column;
