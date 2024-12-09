@@ -107,21 +107,6 @@ const NavigationBar = () => {
         {/* Collapsible Navbar */}
         <Navbar.Collapse id="navbar-nav" className={styles.navbarCollapse}>
           <Nav className="ms-auto">
-            {/* Home Link */}
-            <Nav.Link
-              as={NavLink}
-              to="/home"
-              className={({ isActive }) =>
-                isActive
-                  ? `${styles.navLink} ${styles.activeNavLink}`
-                  : styles.navLink
-              }
-              end
-              onClick={() => setExpanded(false)}
-            >
-              Home
-            </Nav.Link>
-
             {/* Admin Dashboard Link */}
             {isAdmin && (
               <Nav.Link
@@ -140,6 +125,20 @@ const NavigationBar = () => {
 
             {currentUser && (
               <>
+                {/* Home Link */}
+                <Nav.Link
+                  as={NavLink}
+                  to="/home"
+                  className={({ isActive }) =>
+                    isActive
+                      ? `${styles.navLink} ${styles.activeNavLink}`
+                      : styles.navLink
+                  }
+                  end
+                  onClick={() => setExpanded(false)}
+                >
+                  Home
+                </Nav.Link>
                 {/* Profile Link */}
                 <Nav.Link
                   as={NavLink}
