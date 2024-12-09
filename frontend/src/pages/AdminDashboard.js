@@ -112,7 +112,7 @@ const AdminDashboard = () => {
       // Update the visibility in the Django backend
       const response = await axios.put(
         `http://127.0.0.1:8000/api/flagged-content/${id}/`,
-        { is_visible: false },
+        { reviewed: true, is_visible: false },
         {
           headers: {
             Authorization: `Bearer ${currentUser.accessToken}`,
