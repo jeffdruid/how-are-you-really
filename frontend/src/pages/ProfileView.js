@@ -5,9 +5,9 @@ import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams } from "react-router-dom";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import DeleteAccount from "./DeleteAccount";
-import FollowButton from "./FollowButton";
-import FollowStats from "./FollowStats";
+import DeleteAccount from "../components/DeleteAccount";
+import FollowButton from "../components/FollowButton";
+import FollowStats from "../components/FollowStats";
 import {
   Form,
   Button,
@@ -20,15 +20,14 @@ import {
   Spinner,
   Card,
 } from "react-bootstrap";
-import UserStats from "./UserStats";
-import UserPosts from "./UserPosts";
-import ImageUploader from "./ImageUploader";
-import ImageModal from "./ImageModal";
+import UserStats from "../components/UserStats";
+import UserPosts from "../components/UserPosts";
+import ImageUploader from "../components/ImageUploader";
+import ImageModal from "../components/ImageModal";
 import { FaUserFriends, FaChartLine } from "react-icons/fa";
 import { generateSearchableWords } from "../utils/textUtils";
 import { updateUsernameEverywhere } from "../utils/updateUsernameUtils";
-import ProgressModal from "./ProgressModal";
-
+import ProgressModal from "../components/ProgressModal";
 
 const ProfileView = () => {
   const { currentUser } = useAuth();

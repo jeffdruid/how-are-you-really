@@ -12,7 +12,7 @@ import {
   where,
 } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
-import NotificationItem from "./NotificationItem";
+import NotificationItem from "../components/NotificationItem";
 import {
   Spinner,
   Alert,

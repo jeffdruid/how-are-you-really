@@ -1,8 +1,8 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import PostFeed from "./PostFeed";
-import CreatePost from "./CreatePost";
-import SearchBar from "./SearchBar";
+import PostFeed from "../components/PostFeed";
+import CreatePost from "../components/CreatePost";
+import SearchBar from "../components/SearchBar";
 import { Container, Card, Alert, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/Home.module.css";

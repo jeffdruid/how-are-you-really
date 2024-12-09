@@ -4,7 +4,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { validateEmail } from "../utils/validateEmail";
 import { firebaseErrorMessages } from "../utils/firebaseErrors";
-import SocialLogin from "./SocialLogin";
+import SocialLogin from "../components/SocialLogin";
 import { Form, Button, Container, Alert, Card } from "react-bootstrap";
 import styles from "../styles/AuthPages.module.css";
 

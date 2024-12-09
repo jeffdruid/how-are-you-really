@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { firestore } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { Spinner, Alert } from "react-bootstrap";
-import Post from "./Post";
+import Post from "../components/Post";
 
 const PostDetail = () => {
   const { id } = useParams(); // Get the post ID from the URL
