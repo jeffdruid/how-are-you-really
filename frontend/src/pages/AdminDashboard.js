@@ -33,7 +33,7 @@ const AdminDashboard = () => {
 
       try {
         const flaggedResponse = await axios.get(
-          "http://127.0.0.1:8000/api/flagged-content/",
+          "https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/",
           {
             headers: { Authorization: `Bearer ${currentUser.accessToken}` },
           },
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
         setFlaggedContent(flaggedResponse.data);
 
         const triggerWordsResponse = await axios.get(
-          "http://127.0.0.1:8000/api/triggerwords/",
+          "https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/triggerwords/",
           {
             headers: { Authorization: `Bearer ${currentUser.accessToken}` },
           },
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
 
       // Update the visibility in the Django backend
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/${id}/`,
         { reviewed: true, is_visible: true },
         {
           headers: {
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
 
       // Update the visibility in the Django backend
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/${id}/`,
         { reviewed: true, is_visible: false },
         {
           headers: {
@@ -140,7 +140,7 @@ const AdminDashboard = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/triggerwords/",
+        "https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/triggerwords/",
         { word: newTriggerWord, category: newTriggerCategory },
         {
           headers: {
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
     try {
       // Update is_visible to false in Django and Firestore first
       await axios.put(
-        `http://127.0.0.1:8000/api/flagged-content/${id}/`,
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/${id}/`,
         { is_visible: false },
         {
           headers: {
@@ -177,9 +177,12 @@ const AdminDashboard = () => {
       );
 
       // Proceed to delete content from Django
-      await axios.delete(`http://127.0.0.1:8000/api/flagged-content/${id}/`, {
-        headers: { Authorization: `Bearer ${currentUser.accessToken}` },
-      });
+      await axios.delete(
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/${id}/`,
+        {
+          headers: { Authorization: `Bearer ${currentUser.accessToken}` },
+        },
+      );
 
       setFlaggedContent(flaggedContent.filter((item) => item.id !== id));
     } catch (error) {
@@ -193,9 +196,12 @@ const AdminDashboard = () => {
   // Delete Trigger Word
   const handleDeleteTriggerWord = async (id) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/triggerwords/${id}/`, {
-        headers: { Authorization: `Bearer ${currentUser.accessToken}` },
-      });
+      await axios.delete(
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/triggerwords/${id}/`,
+        {
+          headers: { Authorization: `Bearer ${currentUser.accessToken}` },
+        },
+      );
       setTriggerWords(triggerWords.filter((word) => word.id !== id));
     } catch (error) {
       console.error("Error deleting trigger word:", error);
@@ -213,7 +219,7 @@ const AdminDashboard = () => {
   const handleUpdateTriggerWord = async (id) => {
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/triggerwords/${id}/`,
+        `https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/triggerwords/${id}/`,
         { word: editWord, category: editCategory },
         {
           headers: {
@@ -251,7 +257,7 @@ const AdminDashboard = () => {
                 {flaggedContent.map((item) => (
                   <Accordion.Item eventKey={item.id.toString()} key={item.id}>
                     <Accordion.Header>
-                      {item.content} - {item.reason}
+                      {item.content}
                     </Accordion.Header>
                     <Accordion.Body>
                       <Row>

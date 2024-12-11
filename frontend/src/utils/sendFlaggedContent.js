@@ -21,7 +21,7 @@ export const sendFlaggedContentToDRF = async (data, token) => {
 
   try {
     const response = await fetch(
-      "http://127.0.0.1:8000/api/flagged-content/",
+      "https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/flagged-content/",
       {
         method: "POST",
         headers: {

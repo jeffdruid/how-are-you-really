@@ -7,7 +7,7 @@ const useModeration = () => {
     try {
       // Connect to the backend to check for trigger words
       const response = await fetch(
-        "http://127.0.0.1:8000/api/triggerwords/check/",
+        "https://drf-api-jeff-00b8a22f06d7.herokuapp.com/api/triggerwords/check/",
         {
           method: "POST",
           headers: {
