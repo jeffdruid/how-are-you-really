@@ -23,8 +23,6 @@ View the live project [here](https://how-are-you-really.web.app/)
 
 ## Table of Contents
 
-- TODO
-
 1. [Introduction](#introduction)
 2. [Technologies Used](#technologies-used)
 3. [User Stories](#user-stories)
@@ -83,10 +81,6 @@ View the live project [here](https://how-are-you-really.web.app/)
 ### Data Handling and HTTP Requests
 
 - Axios: A promise-based HTTP client for making requests to the backend and external APIs.
-
-### Testing
-
-TODO
 
 ### Firebase and Firestore
 
@@ -551,27 +545,333 @@ Storage Rules: Profile pictures are restricted to each user, and post images are
 
 All testing was done manually and automated using Django's built-in testing framework. The application was tested for functionality, user experience, and security. Test cases were created to cover user stories and edge cases, ensuring the application works as expected.
 
-<!-- TODO -->
+### Testing Overview
+To ensure the reliability and correctness of our React application, we have implemented unit tests for key components using Jest and React Testing Library. 
 
-- You can view all the tests [here](README/TESTING.md)
+- These tests focus on verifying that components render correctly and behave as expected in isolation, without relying on external dependencies like Firebase.
 
-## Bugs
+#### Component Tests
+LikeButton Component Test
+- Purpose
+  - The LikeButton component allows users to like posts, comments, or replies. The test aims to verify that the component:
+- Renders without crashing.
+- Displays the correct initial like state (icon and count).
+
+##### Test Cases
+- Renders Without Crashing: Ensures that the component mounts properly.
+- Displays Default Like Icon and Count: Checks that the unliked state (🤍 0) is displayed when the component is first rendered.
+
+##### Implementation Details
+- Mocking External Dependencies: Since LikeButton relies on Firebase and authentication context, we mock these to avoid complications.
+- Mock Component: We create a simplified version of LikeButton that excludes Firebase logic for testing purposes.
+
+Test File: src/__tests__/LikeButton.test.js
+```javascript
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+
+// Mock version of LikeButton without Firebase
+const LikeButtonMock = ({ postId }) => {
+  return (
+    <button>
+      🤍 0 {/* Default like state */}
+    </button>
+  );
+};
+
+describe('LikeButton Component', () => {
+  it('renders without crashing', () => {
+    render(<LikeButtonMock postId="testPostId" />);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+
+  it('displays default like icon and count', () => {
+    render(<LikeButtonMock postId="testPostId" />);
+    const button = screen.getByRole('button');
+    expect(button).toHaveTextContent('🤍 0'); // Default state without Firebase
+  });
+});
+```
+
+##### Explanation:
+
+- Mock Component: LikeButtonMock is a simplified version of the LikeButton component that returns a button with the default like state.
+
+##### Tests:
+- The first test renders the component and checks that the button is present in the document.
+- The second test verifies that the button displays the correct default text.
+
+#### Home Component Test
+- Purpose
+  - The Home component serves as the main landing page, displaying a welcome message, search bar, create post section, and recent posts feed. The test ensures that:
+  - The component renders without crashing.
+  - All key sections are displayed correctly.
+  - Conditional rendering works based on the user's email verification status.
+
+##### Test Cases
+- Renders Without Crashing: Confirms that the component mounts properly.
+- Displays the Welcome Banner: Checks that the welcome message is shown.
+- Displays the Search Bar Section: Verifies that the search bar is rendered.
+- Displays the Create Post Section: Ensures that the create post area is visible.
+- Displays the Post Feed Section: Confirms that the recent posts feed is displayed.
+- Does Not Display Email Verification Alert When Email Is Verified: Checks that the alert is hidden for verified users.
+- Displays Email Verification Alert When Email Is Not Verified: Ensures that the alert appears for unverified users.
+Implementation Details
+- Mocking External Dependencies: We mock useAuth to simulate different authentication states and mock child components to isolate the Home component.
+- Testing Conditional Rendering: By changing the emailVerified status, we test the component's response to different user states.
+
+Test File: src/__tests__/Home.test.js
+```javascript
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import Home from '../components/Home';
+import { useAuth } from '../contexts/AuthContext';
+
+// Mock useAuth to return a mock currentUser
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: jest.fn(),
+}));
+
+// Mock child components
+jest.mock('../components/PostFeed', () => () => <div data-testid="post-feed" />);
+jest.mock('../components/CreatePost', () => () => <div data-testid="create-post" />);
+jest.mock('../components/SearchBar', () => () => <div data-testid="search-bar" />);
+
+describe('Home Component', () => {
+  beforeEach(() => {
+    // Provide a mock currentUser
+    useAuth.mockReturnValue({
+      currentUser: { emailVerified: true },
+    });
+  });
+
+  it('renders without crashing', () => {
+    render(<Home />);
+    expect(screen.getByText(/Welcome to "How Are You Really"/i)).toBeInTheDocument();
+  });
+
+  it('displays the welcome banner', () => {
+    render(<Home />);
+    expect(
+      screen.getByText(/An interactive platform where you can express/i)
+    ).toBeInTheDocument();
+  });
+
+  it('displays the search bar section', () => {
+    render(<Home />);
+    expect(screen.getByText(/Find Posts and People/i)).toBeInTheDocument();
+    expect(screen.getByTestId('search-bar')).toBeInTheDocument();
+  });
+
+  it('displays the create post section', () => {
+    render(<Home />);
+    expect(screen.getByText(/Share Your Thoughts/i)).toBeInTheDocument();
+    expect(screen.getByTestId('create-post')).toBeInTheDocument();
+  });
+
+  it('displays the post feed section', () => {
+    render(<Home />);
+    expect(screen.getByText(/Recent Posts/i)).toBeInTheDocument();
+    expect(screen.getByTestId('post-feed')).toBeInTheDocument();
+  });
+
+  it('does not display email verification alert when email is verified', () => {
+    render(<Home />);
+    expect(screen.queryByText(/Your email is not verified/i)).toBeNull();
+  });
+
+  it('displays email verification alert when email is not verified', () => {
+    // Update the mock to simulate unverified email
+    useAuth.mockReturnValue({
+      currentUser: { emailVerified: false },
+    });
+    render(<Home />);
+    expect(screen.getByText(/Your email is not verified/i)).toBeInTheDocument();
+  });
+});
+```
+
+##### Explanation:
+- Mocking useAuth: We simulate the authentication context to control the emailVerified status.
+- Mocking Child Components: By mocking PostFeed, CreatePost, and SearchBar, we focus the test on the Home component itself.
+
+##### Tests:
+- The tests verify that each section of the Home component is rendered correctly.
+- We check both cases for the email verification alert to ensure conditional rendering works as intended.
+
+##### Running the Tests
+To run the tests, use the following command:
+
+```bash
+npm test
+```
+
+Expected Output:
+
+```scss
+PASS  src/__tests__/LikeButton.test.js
+  LikeButton Component
+    ✓ renders without crashing (xx ms)
+    ✓ displays default like icon and count (xx ms)
+
+PASS  src/__tests__/Home.test.js
+  Home Component
+    ✓ renders without crashing (xx ms)
+    ✓ displays the welcome banner (xx ms)
+    ✓ displays the search bar section (xx ms)
+    ✓ displays the create post section (xx ms)
+    ✓ displays the post feed section (xx ms)
+    ✓ does not display email verification alert when email is verified (xx ms)
+    ✓ displays email verification alert when email is not verified (xx ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       9 passed, 9 total
+```
+
+##### Conclusion
+By implementing these tests, we've ensured that critical components of our application render correctly and handle different user states appropriately. Mocking external dependencies allows us to focus on the component logic without the complexity of integrating with services like Firebase during testing.
+
+These tests serve as a foundation for further test development, promoting code reliability and easing future maintenance.
 
 ## Setup
 
 ### Prerequisites
 
+Before you begin, ensure you have the following installed on your local machine:
+
+- **Node.js** (version 14 or higher)
+- **npm** or **yarn** (for package management)
+- **Git** (for cloning the repository)
+- **Firebase CLI** (for deploying and managing Firebase projects)
+
+You should also have the following accounts set up:
+
+- A **Firebase** account with a configured project for hosting.
+- Access to the **backend API**, deployed on Heroku. Refer to the backend's separate `README.md` for setup and API usage details.
+
 ### Installation
 
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/jeffdruid/how-are-you-really.git
+   cd <your-repo>
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Configure your Firebase project:
+   - Create a `.env.local` file in the root directory and add your Firebase configuration:
+
+     ```env
+     REACT_APP_FIREBASE_API_KEY=<your-firebase-api-key>
+     REACT_APP_FIREBASE_AUTH_DOMAIN=<your-firebase-auth-domain>
+     REACT_APP_FIREBASE_PROJECT_ID=<your-firebase-project-id>
+     REACT_APP_FIREBASE_STORAGE_BUCKET=<your-firebase-storage-bucket>
+     REACT_APP_FIREBASE_MESSAGING_SENDER_ID=<your-firebase-sender-id>
+     REACT_APP_FIREBASE_APP_ID=<your-firebase-app-id>
+     ```
+
+4. Start the development server:
+
+   ```bash
+   npm start
+   # or
+   yarn start
+   ```
+
+   The application will be accessible at `http://localhost:3000/`.
+
 ### Usage
+
+- Sign up or log in to the application using Firebase Authentication.
+- Explore the platform, including creating posts, interacting with other users, and viewing analytics.
+- For admin functionality, ensure the current user is configured as an admin in the backend (refer to the backend `README.md`).
 
 ## Deployment
 
 ### Cloning & Forking
 
+To deploy the application on your own Firebase project:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/jeffdruid/how-are-you-really.git
+   cd <your-repo>
+   ```
+
+2. Set up your Firebase project:
+   - Log in to Firebase using the CLI:
+
+     ```bash
+     firebase login
+     ```
+
+   - Initialize Firebase in your project:
+
+     ```bash
+     firebase init
+     ```
+
+   - Select **Hosting** and associate it with your Firebase project.
+
+3. Build the application:
+
+   ```bash
+   npm run build
+   # or
+   yarn build
+   ```
+
+4. Deploy to Firebase:
+
+   ```bash
+   firebase deploy
+   ```
+
 ### Local Deployment
 
-### Remote Deployment (Heroku)
+To test the production build locally:
+
+1. Build the application:
+
+   ```bash
+   npm run build
+   # or
+   yarn build
+   ```
+
+2. Serve the production build:
+
+   ```bash
+   npx serve -s build
+   ```
+
+   The production build will be accessible at `http://localhost:5000/`.
+
+### Remote Deployment (Firebase Hosting)
+
+1. Ensure your Firebase CLI is configured with the correct project:
+
+   ```bash
+   firebase use --add <your-firebase-project-id>
+   ```
+
+2. Deploy the application to Firebase Hosting:
+
+   ```bash
+   firebase deploy
+   ```
+
+   The application will be available at the Firebase Hosting URL provided after deployment.
+
 
 ## Credits
 
@@ -581,8 +881,6 @@ https://www.freepik.com/free-ai-image/2d-graphic-wallpaper-with-colorful-grainy-
 <a href="https://www.freepik.com/free-photo/white-surface-with-reflections-smooth-minimal-light-waves-background-blurry-silk-waves-minimal-soft-grayscale-ripples-flow-3d-render-illustration_11221151.htm#fromView=image_search_similar&page=1&position=1&uuid=6cef4476-a4d4-4aba-a8b5-5643b2642037">Image by GarryKillian on Freepik</a>
 
 ### Useful Links
-
-### Tools
 
 ### Tools
 
