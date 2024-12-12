@@ -39,7 +39,8 @@ const LandingPage = () => {
           <Row className="align-items-center text-center">
             <Col>
               <h1 className={styles.heading}>
-                Welcome to "How Are You Really"
+                Welcome to <br />
+                <span className={styles.siteName}>"How Are You Really"</span>
               </h1>
               <p className={styles.subHeading}>
                 A safe space to express, connect, and reflect on your journey.

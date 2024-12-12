@@ -32,6 +32,11 @@
   font-size: 3rem;
   font-weight: bold;
   margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.siteName {
+  white-space: nowrap; /* Ensure the site name stays on one line */
 }
 
 .subHeading {
@@ -97,4 +102,13 @@
 /* Smooth Scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+@media (max-width: 768px) {
+  .heading {
+    font-size: 2rem !important;
+  }
+  .siteName {
+    font-size: 1.75rem !important;
+  }
 }
