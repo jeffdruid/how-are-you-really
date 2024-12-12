@@ -28,6 +28,7 @@ import { FaUserFriends, FaChartLine } from "react-icons/fa";
 import { generateSearchableWords } from "../utils/textUtils";
 import { updateUsernameEverywhere } from "../utils/updateUsernameUtils";
 import ProgressModal from "../components/ProgressModal";
+import { fetchDefaultProfilePicUrl } from "../utils/fetchProfilePic";
 
 const ProfileView = () => {
   const { currentUser } = useAuth();
@@ -56,9 +57,10 @@ const ProfileView = () => {
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const data = userDoc.data();
+          const defaultPicUrl = await fetchDefaultProfilePicUrl(); // Fetch the default profile picture
           setUsername(data.username || "Anonymous");
           setBio(data.bio || "");
-          setProfilePicUrl(data.profilePicUrl || "");
+          setProfilePicUrl(data.profilePicUrl || defaultPicUrl); // Use default if no custom picture
         } else {
           setError("User not found.");
         }
