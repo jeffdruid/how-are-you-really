@@ -1,11 +1,35 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button, Container, Row, Col, Card } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "../firebase";
 import styles from "../styles/LandingPage.module.css";
 
 const LandingPage = () => {
   const { currentUser } = useAuth();
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (currentUser) {
+        try {
+          const userDocRef = doc(firestore, "Users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUsername(userDoc.data().username || "User");
+          } else {
+            setUsername("User");
+          }
+        } catch (error) {
+          console.error("Error fetching username:", error);
+          setUsername("User");
+        }
+      }
+    };
+
+    fetchUsername();
+  }, [currentUser]);
 
   return (
     <div className={styles.landingWrapper}>
@@ -24,8 +48,7 @@ const LandingPage = () => {
                 {currentUser ? (
                   <>
                     <p className={styles.welcomeUser}>
-                      Welcome back,{" "}
-                      <strong>{currentUser.displayName || "User"}</strong>!
+                      Welcome back, <strong>{username}</strong>!
                     </p>
                     <Link to="/home">
                       <Button className={styles.ctaButton}>Home</Button>
